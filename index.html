@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marvel Legendary Randomizer</title>
+  <meta name="description" content="Randomize a full Marvel Legendary deck-building game setup: Mastermind, Scheme, Villain Groups, Henchmen, and Heroes." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23ed1d24'/%3E%3Ctext x='50' y='68' font-family='Impact,Arial' font-size='60' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <h1><span class="accent">LEGENDARY</span> Randomizer</h1>
+      <p class="tagline">A Marvel Deck-Building Game setup generator</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel controls">
+      <section class="control-block">
+        <div class="control-block-header">
+          <h2>Expansions</h2>
+          <div class="control-block-actions">
+            <button type="button" id="select-all-expansions" class="text-btn">all</button>
+            <button type="button" id="select-none-expansions" class="text-btn">none</button>
+          </div>
+        </div>
+        <div id="expansion-list" class="expansion-list"></div>
+      </section>
+
+      <section class="control-block">
+        <h2>Setup Size</h2>
+        <div class="option-row">
+          <label for="hero-count">Heroes</label>
+          <input type="range" id="hero-count" min="3" max="8" step="1" />
+          <span id="hero-count-value" class="option-value"></span>
+        </div>
+        <div class="option-row">
+          <label for="villain-count">Villain Groups</label>
+          <input type="range" id="villain-count" min="1" max="6" step="1" />
+          <span id="villain-count-value" class="option-value"></span>
+        </div>
+        <div class="option-row">
+          <label for="henchmen-count">Henchmen</label>
+          <input type="range" id="henchmen-count" min="1" max="3" step="1" />
+          <span id="henchmen-count-value" class="option-value"></span>
+        </div>
+      </section>
+
+      <div id="warnings" class="warnings hidden"></div>
+
+      <button type="button" id="randomize-all" class="primary-btn">🎲 Randomize Setup</button>
+      <button type="button" id="copy-setup" class="secondary-btn hidden">Copy Setup</button>
+    </aside>
+
+    <section class="panel results-panel">
+      <div id="results" class="results"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Fan-made, unofficial companion tool. Not affiliated with Upper Deck Entertainment or Marvel.
+      Card data is a best-effort starting set — see <code>js/data.js</code> to correct or extend it.
+    </p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
