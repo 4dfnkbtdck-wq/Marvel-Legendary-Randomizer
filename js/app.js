@@ -793,10 +793,12 @@
     });
   }
 
-  /** A read-only reference section for the Scheme Twist mechanic: how many
-   * Twist cards go in the Villain Deck (mirrors the Twists stepper in Setup
-   * Size — editable there, not here) plus the current Scheme's Twist effect
-   * and Evil Wins text, since both get referenced throughout the game. */
+  /** A reference section for the Scheme Twist mechanic, shown once you've
+   * randomized: how many Twist cards go in the Villain Deck (its own
+   * self-contained stepper — Twists has no home in Setup Size since it's
+   * meaningless before you know the Scheme) plus the current Scheme's
+   * Twist effect and Evil Wins text, since both get referenced throughout
+   * the game, not just at setup. */
   function schemeTwistsSection(schemeItem) {
     const scheme = SCHEMES.find((s) => s.name === schemeItem.name && s.exp === schemeItem.exp);
 
@@ -822,12 +824,41 @@
     const countText = document.createElement("span");
     countText.className = "row-text";
     countText.textContent = "Twists in Villain Deck";
-    const countValue = document.createElement("span");
-    countValue.className = "row-trailing";
-    countValue.textContent = state.options.twists;
+
+    const min = 0;
+    const max = 12;
+    const stepper = document.createElement("span");
+    stepper.className = "stepper";
+    const decBtn = document.createElement("button");
+    decBtn.type = "button";
+    decBtn.className = "stepper-btn";
+    decBtn.textContent = "−";
+    decBtn.setAttribute("aria-label", "Decrease twists");
+    decBtn.disabled = state.options.twists <= min;
+    const valueSpan = document.createElement("span");
+    valueSpan.className = "stepper-value";
+    valueSpan.textContent = state.options.twists;
+    const incBtn = document.createElement("button");
+    incBtn.type = "button";
+    incBtn.className = "stepper-btn";
+    incBtn.textContent = "+";
+    incBtn.setAttribute("aria-label", "Increase twists");
+    incBtn.disabled = state.options.twists >= max;
+    stepper.appendChild(decBtn);
+    stepper.appendChild(valueSpan);
+    stepper.appendChild(incBtn);
+    stepper.addEventListener("click", (e) => {
+      const btn = e.target.closest(".stepper-btn");
+      if (!btn) return;
+      const delta = btn === incBtn ? 1 : -1;
+      state.options.twists = clampOption(state.options.twists + delta, min, max);
+      saveState();
+      renderResults();
+    });
+
     countRow.appendChild(countIcon);
     countRow.appendChild(countText);
-    countRow.appendChild(countValue);
+    countRow.appendChild(stepper);
     list.appendChild(countRow);
     section.appendChild(list);
 
