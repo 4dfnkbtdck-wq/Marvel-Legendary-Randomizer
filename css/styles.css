@@ -371,6 +371,12 @@ body {
   letter-spacing: 0.03em;
 }
 
+.scheme-note--evil {
+  background: var(--banner-bg);
+  border-left-color: var(--red);
+  color: var(--banner-text);
+}
+
 .ios-banner p {
   margin: 0.15rem 0;
 }

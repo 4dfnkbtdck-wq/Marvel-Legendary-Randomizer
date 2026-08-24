@@ -37,7 +37,7 @@
   function defaultState() {
     return {
       expansions: new Set(["core"]),
-      options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, masterStrikes: 5, players: 3 },
+      options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, masterStrikes: 5, twists: 5, players: 3 },
       exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
       teamFilter: new Set(),
       history: [],
@@ -141,8 +141,16 @@
   }
 
   function randomizeAll() {
-    CATEGORIES.forEach((category) => randomizeCategory(category, { keepLocked: true }));
-    syncMastermindSignature();
+    // Mastermind and Scheme first, so the Scheme's numeric overrides (e.g.
+    // an extra Henchman group) are in effect before Villains/Henchmen/
+    // Heroes get rolled against those counts.
+    randomizeCategory(CATEGORY_BY_KEY.mastermind, { keepLocked: true });
+    randomizeCategory(CATEGORY_BY_KEY.scheme, { keepLocked: true });
+    syncSchemeNumbers();
+    randomizeCategory(CATEGORY_BY_KEY.villains, { keepLocked: true });
+    randomizeCategory(CATEGORY_BY_KEY.henchmen, { keepLocked: true });
+    randomizeCategory(CATEGORY_BY_KEY.heroes, { keepLocked: true });
+    syncRequiredCards();
     saveToHistory();
     render();
   }
@@ -157,7 +165,10 @@
       state.result[categoryKey] = existing;
     }
     if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
-    if (categoryKey === "mastermind") syncMastermindSignature();
+    if (categoryKey === "mastermind" || categoryKey === "scheme") {
+      if (categoryKey === "scheme") syncSchemeNumbers();
+      syncRequiredCards();
+    }
     render();
   }
 
@@ -176,14 +187,18 @@
     const locks = state.locks[categoryKey] || [];
     locks[index] = true;
     state.locks[categoryKey] = locks;
-    if (categoryKey === "mastermind") syncMastermindSignature();
+    if (categoryKey === "mastermind" || categoryKey === "scheme") {
+      if (categoryKey === "scheme") syncSchemeNumbers();
+      syncRequiredCards();
+    }
     render();
   }
 
-  // ---------- Mastermind "always leads" ----------
+  // ---------- Mastermind "always leads" / Scheme requirements ----------
 
   // Runtime-only bookkeeping (not persisted): which result slots were filled
-  // by forceIncludeSignature rather than chosen by the player, per category.
+  // by forceIncludeSignature (a required card) rather than chosen by the
+  // player, per category.
   const signatureFlags = { villains: [], henchmen: [] };
 
   function currentMastermindData() {
@@ -192,24 +207,44 @@
     return MASTERMINDS.find((m) => m.name === mm.name && m.exp === mm.exp) || null;
   }
 
-  /** Release any slot a *previous* Mastermind's signature card claimed, if it
-   * no longer matches the current Mastermind (or was excluded/expansion'd
-   * out from under it) — replacing it with a fresh random pick so a stale
-   * forced card doesn't permanently squat a slot and starve room for the
-   * next Mastermind's own signature. */
-  function clearStaleSignatures(exceptCategoryKey, exceptName) {
+  function currentSchemeData() {
+    const sc = (state.result.scheme || [])[0];
+    if (!sc) return null;
+    return SCHEMES.find((s) => s.name === sc.name && s.exp === sc.exp) || null;
+  }
+
+  /** Every card name that MUST be in play for this category right now,
+   * from the current Mastermind's "always leads" and/or the current
+   * Scheme's required Villain Group. */
+  function requiredCardNames(categoryKey) {
+    const names = [];
+    const mmData = currentMastermindData();
+    if (mmData && mmData.leadsCategory === categoryKey && mmData.leadsName) names.push(mmData.leadsName);
+    const scheme = currentSchemeData();
+    const requiredGroup = scheme && scheme.overrides && scheme.overrides.requiredVillainGroup;
+    if (categoryKey === "villains" && requiredGroup) names.push(requiredGroup);
+    return names;
+  }
+
+  /** Release any slot a previously-required card claimed, if it's no longer
+   * required (Mastermind or Scheme changed) or was excluded/expansion'd out
+   * from under it — replacing it with a fresh random pick so a stale forced
+   * card doesn't permanently squat a slot and starve room for whatever's
+   * required now. */
+  function clearStaleRequiredCards() {
     ["villains", "henchmen"].forEach((categoryKey) => {
+      const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+      const required = new Set(requiredCardNames(categoryKey).filter((name) => pool.some((c) => c.name === name)));
       const flags = signatureFlags[categoryKey];
       const items = state.result[categoryKey] || [];
       const locks = state.locks[categoryKey] || [];
-      const stillCurrent = categoryKey === exceptCategoryKey && exceptName && poolFor(CATEGORY_BY_KEY[categoryKey]).some((c) => c.name === exceptName);
 
       for (let i = 0; i < items.length; i++) {
         if (!flags[i]) continue;
-        if (stillCurrent && items[i].name === exceptName) continue;
+        if (required.has(items[i].name)) continue;
         flags[i] = false;
         locks[i] = false;
-        const [fresh] = pickRandom(poolFor(CATEGORY_BY_KEY[categoryKey]), 1, items);
+        const [fresh] = pickRandom(pool, 1, items);
         if (fresh) items[i] = fresh;
       }
       state.result[categoryKey] = items;
@@ -217,10 +252,10 @@
     });
   }
 
-  /** If the current Mastermind "always leads" a specific card, make sure it's
-   * in play: reuse it if already present, otherwise fill the first unlocked
-   * slot (or an empty one). Never evicts a slot the player locked themselves,
-   * and does nothing if that card is excluded or its expansion isn't on. */
+  /** Make sure one required card is in play: reuse it if already present,
+   * otherwise fill the first unlocked slot (or an empty one). Never evicts
+   * a slot the player locked themselves, and does nothing if that card is
+   * excluded or its expansion isn't on. */
   function forceIncludeSignature(categoryKey, name) {
     const category = CATEGORY_BY_KEY[categoryKey];
     const pool = poolFor(category);
@@ -250,27 +285,84 @@
     state.locks[categoryKey] = locks;
   }
 
-  function syncMastermindSignature() {
-    const mmData = currentMastermindData();
-    const categoryKey = mmData && mmData.leadsCategory;
-    const name = mmData && mmData.leadsName;
-    clearStaleSignatures(categoryKey, name);
-    if (categoryKey && name) forceIncludeSignature(categoryKey, name);
+  /** Reconciles Villain Groups / Henchmen against whatever the current
+   * Mastermind and Scheme require. Safe to call any time either changes. */
+  function syncRequiredCards() {
+    clearStaleRequiredCards();
+    ["villains", "henchmen"].forEach((categoryKey) => {
+      requiredCardNames(categoryKey).forEach((name) => forceIncludeSignature(categoryKey, name));
+    });
   }
 
-  function isMastermindSignature(categoryKey, item) {
+  function clampOption(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  /** Recomputes Heroes / Twists / Bystanders / Henchmen from the current
+   * Player count (falling back to the Core Set solo/no-preset defaults)
+   * plus whatever the current Scheme's `overrides` layer on top — e.g.
+   * Negative Zone Prison Breakout's extra Henchman group, or Secret
+   * Invasion's required 6 Heroes. Never touches Villain Group count,
+   * since no Core Set Scheme overrides it. Only called on a Scheme or
+   * Player-count change — never fights a manual stepper edit. */
+  function syncSchemeNumbers() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    const players = state.options.players;
+    const preset = players ? PLAYER_COUNT_TABLE[players] : null;
+
+    const baseHeroCount = preset ? preset.heroCount : 5;
+    const baseHenchmenCount = preset ? preset.henchmenCount : 1;
+    const baseBystanders = preset ? preset.bystanders : 8;
+
+    let heroCount = baseHeroCount;
+    if (overrides.heroCountByPlayers && players && overrides.heroCountByPlayers[players] != null) {
+      heroCount = overrides.heroCountByPlayers[players];
+    } else if (overrides.heroCount != null) {
+      heroCount = overrides.heroCount;
+    }
+
+    let twists = 5;
+    if (overrides.twistsByPlayers && players && overrides.twistsByPlayers[players] != null) {
+      twists = overrides.twistsByPlayers[players];
+    } else if (overrides.twists != null) {
+      twists = overrides.twists;
+    }
+
+    const bystanders = overrides.bystanders != null ? overrides.bystanders : baseBystanders;
+    const henchmenCount = baseHenchmenCount + (overrides.henchmenDelta || 0);
+
+    state.options.heroCount = clampOption(heroCount, 3, 8);
+    state.options.twists = clampOption(twists, 0, 12);
+    state.options.bystanders = clampOption(bystanders, 1, 20);
+    state.options.henchmenCount = clampOption(henchmenCount, 1, 3);
+
+    renderSteppers();
+    renderHenchmenNote();
+    saveState();
+  }
+
+  function requiredReason(categoryKey, item) {
     const mmData = currentMastermindData();
-    return !!(mmData && mmData.leadsCategory === categoryKey && mmData.leadsName === item.name);
+    if (mmData && mmData.leadsCategory === categoryKey && mmData.leadsName === item.name) {
+      return `always led by ${mmData.name}`;
+    }
+    const scheme = currentSchemeData();
+    const requiredGroup = scheme && scheme.overrides && scheme.overrides.requiredVillainGroup;
+    if (categoryKey === "villains" && requiredGroup === item.name) {
+      return `required by ${scheme.name}`;
+    }
+    return null;
   }
 
   /** Sub-line text for a card row: expansion name, plus a Team tag for
-   * Heroes, plus a "always led by ___" tag when it's the current
-   * Mastermind's signature Villain Group / Henchman. */
+   * Heroes, plus why a Villain Group / Henchman is required, if it is. */
   function subText(category, item) {
     const expName = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
     const parts = [expName];
     if (category.key === "heroes" && item.team) parts.push(item.team);
-    if (isMastermindSignature(category.key, item)) parts.push(`always led by ${currentMastermindData().name}`);
+    const reason = requiredReason(category.key, item);
+    if (reason) parts.push(reason);
     return parts.join(" · ");
   }
 
@@ -388,7 +480,7 @@
         if (input.checked) state.expansions.add(exp.id);
         else state.expansions.delete(exp.id);
         pruneTeamFilter();
-        syncMastermindSignature();
+        syncRequiredCards();
         saveState();
         renderWarnings();
         renderToggleAllLabel();
@@ -504,14 +596,9 @@
     const preset = PLAYER_COUNT_TABLE[n];
     if (!preset) return;
     state.options.players = n;
-    state.options.heroCount = preset.heroCount;
     state.options.villainCount = preset.villainCount;
-    state.options.henchmenCount = preset.henchmenCount;
-    state.options.bystanders = preset.bystanders;
+    syncSchemeNumbers(); // sets heroCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
     renderPlayersSegmented();
-    renderSteppers();
-    renderHenchmenNote();
-    saveState();
     renderWarnings();
   }
 
@@ -680,7 +767,8 @@
       rerollSection.textContent = "Reroll All";
       rerollSection.addEventListener("click", () => {
         randomizeCategory(category, { keepLocked: true });
-        syncMastermindSignature();
+        if (category.key === "scheme") syncSchemeNumbers();
+        syncRequiredCards();
         render();
       });
       header.appendChild(span);
@@ -692,15 +780,71 @@
       items.forEach((item, index) => list.appendChild(resultRow(category, item, index)));
       section.appendChild(list);
 
-      if (category.key === "scheme" && items[0] && items[0].note) {
+      if (category.key === "scheme" && items[0] && items[0].setupNote) {
         const note = document.createElement("div");
         note.className = "scheme-note";
-        note.innerHTML = `<strong>Setup note</strong><br>${items[0].note.replace(/\n/g, "<br>")}`;
+        note.innerHTML = `<strong>Setup note</strong><br>${items[0].setupNote.replace(/\n/g, "<br>")}`;
         section.appendChild(note);
       }
 
       el.results.appendChild(section);
+
+      if (category.key === "scheme") el.results.appendChild(schemeTwistsSection(items[0]));
     });
+  }
+
+  /** A read-only reference section for the Scheme Twist mechanic: how many
+   * Twist cards go in the Villain Deck (mirrors the Twists stepper in Setup
+   * Size — editable there, not here) plus the current Scheme's Twist effect
+   * and Evil Wins text, since both get referenced throughout the game. */
+  function schemeTwistsSection(schemeItem) {
+    const scheme = SCHEMES.find((s) => s.name === schemeItem.name && s.exp === schemeItem.exp);
+
+    const section = document.createElement("section");
+    section.className = "ios-group";
+
+    const header = document.createElement("div");
+    header.className = "group-header";
+    const span = document.createElement("span");
+    span.textContent = "Scheme Twists";
+    header.appendChild(span);
+    section.appendChild(header);
+
+    const list = document.createElement("ul");
+    list.className = "ios-list";
+
+    const countRow = document.createElement("li");
+    countRow.className = "ios-row";
+    const countIcon = document.createElement("span");
+    countIcon.className = "row-icon";
+    countIcon.style.background = "#5AC8FA";
+    countIcon.textContent = "🌀";
+    const countText = document.createElement("span");
+    countText.className = "row-text";
+    countText.textContent = "Twists in Villain Deck";
+    const countValue = document.createElement("span");
+    countValue.className = "row-trailing";
+    countValue.textContent = state.options.twists;
+    countRow.appendChild(countIcon);
+    countRow.appendChild(countText);
+    countRow.appendChild(countValue);
+    list.appendChild(countRow);
+    section.appendChild(list);
+
+    if (scheme && scheme.twist) {
+      const twistNote = document.createElement("div");
+      twistNote.className = "scheme-note";
+      twistNote.innerHTML = `<strong>On a Twist</strong><br>${scheme.twist.replace(/\n/g, "<br>")}`;
+      section.appendChild(twistNote);
+    }
+    if (scheme && scheme.evilWins) {
+      const evilNote = document.createElement("div");
+      evilNote.className = "scheme-note scheme-note--evil";
+      evilNote.innerHTML = `<strong>Evil Wins</strong><br>${scheme.evilWins}`;
+      section.appendChild(evilNote);
+    }
+
+    return section;
   }
 
   function renderHistoryCount() {
@@ -715,14 +859,18 @@
       if (!items.length) return;
       lines.push(`${category.label}:`);
       items.forEach((item) => lines.push(`  - ${item.name} (${item.exp})`));
-      if (category.key === "scheme" && items[0] && items[0].note) {
+      if (category.key === "scheme" && items[0] && items[0].setupNote) {
         lines.push("  Setup note:");
-        items[0].note.split("\n").forEach((line) => lines.push(`    ${line}`));
+        items[0].setupNote.split("\n").forEach((line) => lines.push(`    ${line}`));
       }
       lines.push("");
     });
     lines.push(`Bystanders: ${state.options.bystanders}`);
     lines.push(`Master Strikes: ${state.options.masterStrikes}`);
+    lines.push(`Twists: ${state.options.twists}`);
+    const scheme = currentSchemeData();
+    if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);
+    if (scheme && scheme.evilWins) lines.push("", `Evil Wins: ${scheme.evilWins}`);
     return lines.join("\n").trim();
   }
 
@@ -861,7 +1009,7 @@
     input.addEventListener("change", () => {
       if (input.checked) state.exclusions[category.key].delete(item.name);
       else state.exclusions[category.key].add(item.name);
-      syncMastermindSignature();
+      syncRequiredCards();
       saveState();
       renderWarnings();
       renderCardPool();
@@ -1004,7 +1152,7 @@
         } else {
           pool.forEach((c) => state.exclusions[category.key].add(c.name));
         }
-        syncMastermindSignature();
+        syncRequiredCards();
         saveState();
         renderWarnings();
         renderCardPool();
@@ -1036,7 +1184,7 @@
       const allSelected = state.expansions.size === EXPANSIONS.length;
       state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
       pruneTeamFilter();
-      syncMastermindSignature();
+      syncRequiredCards();
       saveState();
       renderExpansions();
       renderWarnings();
