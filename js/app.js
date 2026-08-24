@@ -864,7 +864,7 @@
     if (scheme && scheme.evilWins) {
       const evilNote = document.createElement("div");
       evilNote.className = "scheme-note scheme-note--evil";
-      evilNote.innerHTML = `<strong>Evil Wins</strong><br>${scheme.evilWins}`;
+      evilNote.innerHTML = `<strong>${scheme.winLabel || "Evil Wins"}</strong><br>${scheme.evilWins}`;
       section.appendChild(evilNote);
     }
 
@@ -894,7 +894,7 @@
     lines.push(`Twists: ${state.options.twists}`);
     const scheme = currentSchemeData();
     if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);
-    if (scheme && scheme.evilWins) lines.push("", `Evil Wins: ${scheme.evilWins}`);
+    if (scheme && scheme.evilWins) lines.push("", `${(scheme.winLabel || "Evil Wins")}: ${scheme.evilWins}`);
     return lines.join("\n").trim();
   }
 
