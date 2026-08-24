@@ -14,6 +14,21 @@
     { key: "heroes", label: "Heroes", icon: "⭐️", color: "#007AFF", pool: HEROES, countKey: "heroCount", fixedCount: null },
   ];
 
+  // Original glyphs themed to each team (not the trademarked team logos) —
+  // same colored-square treatment as every other icon in the app. Falls
+  // back to the generic Heroes star for an unrecognized or missing team.
+  const TEAM_ICONS = {
+    "X-Men": { icon: "X", color: "#1c1c1e" },
+    Avengers: { icon: "A", color: "#ed1d24" },
+    "Spider-Friends": { icon: "🕷️", color: "#1b2a6b" },
+    "S.H.I.E.L.D.": { icon: "🛡️", color: "#2c2c2e" },
+  };
+
+  function heroIconMeta(category, item) {
+    if (category.key === "heroes" && item.team && TEAM_ICONS[item.team]) return TEAM_ICONS[item.team];
+    return { icon: category.icon, color: category.color };
+  }
+
   const CATEGORY_BY_KEY = {};
   CATEGORIES.forEach((c) => (CATEGORY_BY_KEY[c.key] = c));
 
@@ -581,10 +596,11 @@
     const locked = !!(state.locks[category.key] || [])[index];
     if (locked) li.classList.add("locked");
 
+    const iconMeta = heroIconMeta(category, item);
     const icon = document.createElement("span");
     icon.className = "row-icon";
-    icon.style.background = category.color;
-    icon.textContent = category.icon;
+    icon.style.background = iconMeta.color;
+    icon.textContent = iconMeta.icon;
 
     const text = document.createElement("div");
     text.className = "result-row-text";
@@ -803,10 +819,11 @@
     const li = document.createElement("li");
     li.className = "ios-row";
 
+    const iconMeta = heroIconMeta(category, item);
     const icon = document.createElement("span");
     icon.className = "row-icon";
-    icon.style.background = category.color;
-    icon.textContent = category.icon;
+    icon.style.background = iconMeta.color;
+    icon.textContent = iconMeta.icon;
 
     const text = document.createElement("span");
     text.className = "row-text";
@@ -859,10 +876,11 @@
     btn.type = "button";
     btn.className = "ios-row sheet-row";
 
+    const iconMeta = heroIconMeta(category, item);
     const icon = document.createElement("span");
     icon.className = "row-icon";
-    icon.style.background = category.color;
-    icon.textContent = category.icon;
+    icon.style.background = iconMeta.color;
+    icon.textContent = iconMeta.icon;
 
     const text = document.createElement("span");
     text.className = "row-text";
