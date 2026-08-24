@@ -37,7 +37,7 @@
   function defaultState() {
     return {
       expansions: new Set(["core"]),
-      options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, players: 3 },
+      options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, masterStrikes: 5, players: 3 },
       exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
       teamFilter: new Set(),
       history: [],
@@ -692,6 +692,13 @@
       items.forEach((item, index) => list.appendChild(resultRow(category, item, index)));
       section.appendChild(list);
 
+      if (category.key === "scheme" && items[0] && items[0].note) {
+        const note = document.createElement("div");
+        note.className = "scheme-note";
+        note.innerHTML = `<strong>Setup note</strong><br>${items[0].note.replace(/\n/g, "<br>")}`;
+        section.appendChild(note);
+      }
+
       el.results.appendChild(section);
     });
   }
@@ -708,9 +715,14 @@
       if (!items.length) return;
       lines.push(`${category.label}:`);
       items.forEach((item) => lines.push(`  - ${item.name} (${item.exp})`));
+      if (category.key === "scheme" && items[0] && items[0].note) {
+        lines.push("  Setup note:");
+        items[0].note.split("\n").forEach((line) => lines.push(`    ${line}`));
+      }
       lines.push("");
     });
     lines.push(`Bystanders: ${state.options.bystanders}`);
+    lines.push(`Master Strikes: ${state.options.masterStrikes}`);
     return lines.join("\n").trim();
   }
 

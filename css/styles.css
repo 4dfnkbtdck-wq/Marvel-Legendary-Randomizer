@@ -13,6 +13,9 @@
   --banner-bg: #fff3e0;
   --banner-border: #ff9500;
   --banner-text: #9a5b00;
+  --info-bg: #e8f2ff;
+  --info-border: #007aff;
+  --info-text: #0a4d94;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -29,6 +32,9 @@
     --banner-bg: #3a2a12;
     --banner-border: #ff9f0a;
     --banner-text: #ffcf8a;
+    --info-bg: #0f2540;
+    --info-border: #0a84ff;
+    --info-text: #9fcbff;
   }
 }
 
@@ -344,6 +350,25 @@ body {
   margin-bottom: 1.25rem;
   font-size: 0.85rem;
   color: var(--banner-text);
+}
+
+.scheme-note {
+  background: var(--info-bg);
+  border-left: 3px solid var(--info-border);
+  border-radius: 0 10px 10px 0;
+  margin-top: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--info-text);
+}
+
+.scheme-note strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .ios-banner p {
