@@ -151,8 +151,8 @@ const MASTERMINDS = [
 //                  applies (see syncSchemeNumbers/syncRequiredCards in
 //                  app.js): `twists` (or `twistsByPlayers`), `bystanders`,
 //                  `henchmenDelta`, `heroCount` (or `heroCountByPlayers`),
-//                  `requiredVillainGroup` (forced in like a Mastermind's
-//                  "always leads", by name).
+//                  `requiredVillainGroup` / `requiredHenchmen` (forced in
+//                  like a Mastermind's "always leads", by name).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -279,9 +279,8 @@ const SCHEMES = [
   {
     name: "Mass Produce War Machine Armor",
     exp: "villains",
-    overrides: { twists: 8 },
-    setupNote:
-      "Include 10 S.H.I.E.L.D. Assault Squads as one of the Backup Adversary groups.\nSpecial Rules: Assault Squads get +1 Attack for each War Machine Technology next to the Plot.",
+    overrides: { twists: 8, requiredHenchmen: "S.H.I.E.L.D. Assault Squad" },
+    setupNote: "Special Rules: Assault Squads get +1 Attack for each War Machine Technology next to the Plot.",
     twist: 'Stack this Twist next to the Plot as "War Machine Technology." An Assault Squad from the current player\'s Victory Pile enters the Bridge.',
     evilWins: "When there are 3 Assault Squads in the Overrun Pile.",
     winLabel: "Good Wins",
