@@ -24,6 +24,7 @@
       expansions: new Set(["core"]),
       options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, players: 3 },
       exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
+      teamFilter: new Set(),
       history: [],
       result: {},
       locks: {},
@@ -44,6 +45,7 @@
         expansions: new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions),
         options: { ...defaults.options, ...(parsed.options || {}) },
         exclusions,
+        teamFilter: new Set(parsed.teamFilter || []),
         history: Array.isArray(parsed.history) ? parsed.history : [],
         result: {},
         locks: {},
@@ -63,6 +65,7 @@
           expansions: Array.from(state.expansions),
           options: state.options,
           exclusions,
+          teamFilter: Array.from(state.teamFilter),
           history: state.history,
         })
       );
@@ -71,9 +74,21 @@
     }
   }
 
+  function availableTeams() {
+    const teams = new Set();
+    HEROES.forEach((h) => {
+      if (h.team && state.expansions.has(h.exp)) teams.add(h.team);
+    });
+    return Array.from(teams).sort();
+  }
+
   function poolFor(category) {
     const excluded = state.exclusions[category.key];
-    return category.pool.filter((card) => state.expansions.has(card.exp) && !excluded.has(card.name));
+    let pool = category.pool.filter((card) => state.expansions.has(card.exp) && !excluded.has(card.name));
+    if (category.key === "heroes" && state.teamFilter.size) {
+      pool = pool.filter((card) => card.team && state.teamFilter.has(card.team));
+    }
+    return pool;
   }
 
   function pickRandom(list, n, exclude) {
@@ -233,12 +248,24 @@
     return !!(mmData && mmData.leadsCategory === categoryKey && mmData.leadsName === item.name);
   }
 
+  /** Sub-line text for a card row: expansion name, plus a Team tag for
+   * Heroes, plus a "always led by ___" tag when it's the current
+   * Mastermind's signature Villain Group / Henchman. */
+  function subText(category, item) {
+    const expName = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
+    const parts = [expName];
+    if (category.key === "heroes" && item.team) parts.push(item.team);
+    if (isMastermindSignature(category.key, item)) parts.push(`always led by ${currentMastermindData().name}`);
+    return parts.join(" · ");
+  }
+
   function poolWarnings() {
     return CATEGORIES.map((category) => {
       const pool = poolFor(category);
       const n = countFor(category);
       if (pool.length < n) {
-        return `${category.label}: need ${n}, only ${pool.length} available with current expansions/exclusions.`;
+        const teamNote = category.key === "heroes" && state.teamFilter.size ? "/team filter" : "";
+        return `${category.label}: need ${n}, only ${pool.length} available with current expansions/exclusions${teamNote}.`;
       }
       return null;
     }).filter(Boolean);
@@ -284,6 +311,9 @@
     expansionList: document.getElementById("expansion-list"),
     toggleAllExpansions: document.getElementById("toggle-all-expansions"),
     cardPoolList: document.getElementById("card-pool-list"),
+    teamThemeSection: document.getElementById("team-theme-section"),
+    teamChips: document.getElementById("team-chips"),
+    clearTeamFilter: document.getElementById("clear-team-filter"),
     playersSegmented: document.getElementById("players-segmented"),
     henchmenNote: document.getElementById("henchmen-note"),
     randomizeAll: document.getElementById("randomize-all"),
@@ -342,11 +372,13 @@
       input.addEventListener("change", () => {
         if (input.checked) state.expansions.add(exp.id);
         else state.expansions.delete(exp.id);
+        pruneTeamFilter();
         syncMastermindSignature();
         saveState();
         renderWarnings();
         renderToggleAllLabel();
         renderCardPool();
+        renderTeamChips();
         renderResults();
       });
 
@@ -370,6 +402,40 @@
   function renderToggleAllLabel() {
     const allSelected = state.expansions.size === EXPANSIONS.length;
     el.toggleAllExpansions.textContent = allSelected ? "Deselect All" : "Select All";
+  }
+
+  /** Drop any selected team that's no longer available now that expansions
+   * changed, so the hero pool doesn't silently zero out against a team
+   * filter the user can no longer see or clear from the chip row. */
+  function pruneTeamFilter() {
+    const avail = new Set(availableTeams());
+    state.teamFilter.forEach((t) => {
+      if (!avail.has(t)) state.teamFilter.delete(t);
+    });
+  }
+
+  function renderTeamChips() {
+    const teams = availableTeams();
+    el.teamThemeSection.classList.toggle("hidden", teams.length === 0);
+    if (!teams.length) return;
+
+    el.teamChips.innerHTML = "";
+    teams.forEach((team) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "team-chip";
+      if (state.teamFilter.has(team)) chip.classList.add("active");
+      chip.textContent = team;
+      chip.addEventListener("click", () => {
+        if (state.teamFilter.has(team)) state.teamFilter.delete(team);
+        else state.teamFilter.add(team);
+        saveState();
+        renderTeamChips();
+        renderWarnings();
+        renderCardPool();
+      });
+      el.teamChips.appendChild(chip);
+    });
   }
 
   function renderCardPool() {
@@ -527,8 +593,7 @@
     mainSpan.textContent = item.name;
     const subSpan = document.createElement("span");
     subSpan.className = "row-text-sub";
-    const expName = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
-    subSpan.textContent = isMastermindSignature(category.key, item) ? `${expName} · always led by ${currentMastermindData().name}` : expName;
+    subSpan.textContent = subText(category, item);
     text.appendChild(mainSpan);
     text.appendChild(subSpan);
 
@@ -745,7 +810,18 @@
 
     const text = document.createElement("span");
     text.className = "row-text";
-    text.textContent = item.name;
+    if (category.key === "heroes" && item.team) {
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = item.name;
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      sub.textContent = item.team;
+      text.appendChild(main);
+      text.appendChild(sub);
+    } else {
+      text.textContent = item.name;
+    }
 
     const switchWrap = document.createElement("span");
     switchWrap.className = "ios-switch";
@@ -790,7 +866,18 @@
 
     const text = document.createElement("span");
     text.className = "row-text";
-    text.textContent = item.name;
+    if (category.key === "heroes" && item.team) {
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = item.name;
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      sub.textContent = item.team;
+      text.appendChild(main);
+      text.appendChild(sub);
+    } else {
+      text.textContent = item.name;
+    }
 
     btn.appendChild(icon);
     btn.appendChild(text);
@@ -905,6 +992,7 @@
   function init() {
     renderExpansions();
     renderCardPool();
+    renderTeamChips();
     renderPlayersSegmented();
     renderSteppers();
     renderHenchmenNote();
@@ -917,12 +1005,22 @@
     el.toggleAllExpansions.addEventListener("click", () => {
       const allSelected = state.expansions.size === EXPANSIONS.length;
       state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
+      pruneTeamFilter();
       syncMastermindSignature();
       saveState();
       renderExpansions();
       renderWarnings();
       renderCardPool();
+      renderTeamChips();
       renderResults();
+    });
+
+    el.clearTeamFilter.addEventListener("click", () => {
+      state.teamFilter.clear();
+      saveState();
+      renderTeamChips();
+      renderWarnings();
+      renderCardPool();
     });
 
     el.playersSegmented.addEventListener("click", (e) => {
