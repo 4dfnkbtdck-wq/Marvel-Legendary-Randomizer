@@ -37,7 +37,7 @@
   function defaultState() {
     return {
       expansions: new Set(["core"]),
-      options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, players: 3 },
+      options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, masterStrikes: 5, players: 3 },
       exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
       teamFilter: new Set(),
       history: [],
@@ -722,6 +722,7 @@
       lines.push("");
     });
     lines.push(`Bystanders: ${state.options.bystanders}`);
+    lines.push(`Master Strikes: ${state.options.masterStrikes}`);
     return lines.join("\n").trim();
   }
 
