@@ -15,11 +15,23 @@
  *   "light"    — a handful of headline cards only, likely incomplete.
  *   "none"     — name only, no card data yet. Contributions welcome.
  *
- * "Legendary: Villains" is NOT included at all: it flips the game so
- * players control villains against a hero Mastermind, which doesn't fit
- * the Mastermind/Scheme/Villain/Hero shape this randomizer generates.
- * "Legendary: Civil War" IS included, but only for its ordinary Heroes —
- * its special "Team Iron Man vs. Team Cap" mode isn't modeled here.
+ * "Legendary: Villains" flips the game: players control Villain
+ * characters (recruiting into their own deck) against a good-guy
+ * Mastermind who leads a Hero Group, opposed by Adversaries (its
+ * "Henchmen" equivalent). It's mapped onto this app's existing
+ * Mastermind/Scheme/Villain Groups/Henchmen/Heroes shape by relabeling
+ * roles into those slots (its Villain characters go in HEROES, its Hero
+ * Groups go in VILLAIN_GROUPS, etc.) rather than modeling a second game
+ * mode — which means its card pool must never be mixed with a normal
+ * expansion's (a "Heroes" list combining Iron Man with Doctor Octopus
+ * would be nonsense). It carries `exclusiveMode: true` in EXPANSIONS so
+ * the app enforces that at the expansion-selection level: turning it on
+ * clears every other expansion, and turning on any normal expansion
+ * clears it. Its Scheme ("Plot") cards use "Good Wins" instead of "Evil
+ * Wins" — see `winLabel` below.
+ * "Legendary: Civil War" IS included normally, but only for its ordinary
+ * Heroes — its special "Team Iron Man vs. Team Cap" mode isn't modeled
+ * here.
  *
  * To add an expansion: add one entry to EXPANSIONS, then push entries
  * into any of HEROES / MASTERMINDS / SCHEMES / VILLAIN_GROUPS / HENCHMEN
@@ -42,12 +54,16 @@
  * team filter.
  *
  * A Scheme entry can optionally carry `overrides`, `setupNote`, `twist`,
- * and `evilWins` — see the comment directly above the SCHEMES array
- * below for the full shape. `overrides` fields are mechanically applied
- * by the app (see syncSchemeNumbers/syncRequiredCards in app.js);
- * `setupNote`/`twist`/`evilWins` are shown as reference text only. A
- * Scheme with none of these behaves exactly like one with no data at
- * all — nothing here is required.
+ * `evilWins`, and `winLabel` — see the comment directly above the
+ * SCHEMES array below for the full shape. `overrides` fields are
+ * mechanically applied by the app (see syncSchemeNumbers/syncRequiredCards
+ * in app.js); `setupNote`/`twist`/`evilWins` are shown as reference text
+ * only. `evilWins` always holds the players' loss-condition text even
+ * when the printed heading isn't literally "Evil Wins" (e.g. Legendary:
+ * Villains' Plots say "Good Wins," since there the players ARE the
+ * villains) — set `winLabel` to override the displayed heading in that
+ * case. A Scheme with none of these behaves exactly like one with no
+ * data at all — nothing here is required.
  *
  * Official icon/term legend (confirmed from a card-back reference image),
  * for transcribing future card text accurately:
@@ -90,6 +106,7 @@ const EXPANSIONS = [
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
   { id: "dimensions", name: "Dimensions", confidence: "none" },
   { id: "revelations", name: "Revelations", confidence: "none" },
+  { id: "villains", name: "Legendary: Villains", confidence: "verified", exclusiveMode: true },
 ];
 
 const MASTERMINDS = [
@@ -121,6 +138,11 @@ const MASTERMINDS = [
   { name: "Annihilus", exp: "annihilation" },
   { name: "Sin", exp: "fear_itself" },
   { name: "Doctor Doom (Battleworld)", exp: "secret_wars" },
+
+  { name: "Doctor Strange", exp: "villains", leadsCategory: "villains", leadsName: "Defenders" },
+  { name: "Nick Fury", exp: "villains", leadsCategory: "villains", leadsName: "Avengers" },
+  { name: "Odin", exp: "villains", leadsCategory: "henchmen", leadsName: "Asgardian Warrior" },
+  { name: "Professor X", exp: "villains", leadsCategory: "villains", leadsName: "X-Men First Class" },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -228,6 +250,94 @@ const SCHEMES = [
   { name: "Fall of the Mutants", exp: "x_men" },
 
   { name: "Prove Yourselves, Champions", exp: "champions" },
+
+  // The eight Legendary: Villains Plots below are transcribed directly
+  // from the physical cards, same as Core Set. "Setup: 8 Twists" is
+  // printed on all eight. Where a card stacks its own side-pile of
+  // Bystanders/Bindings/Cops next to the Plot ("Stack 8 Bystanders...as
+  // 'Young Mutants'"), that's a distinct physical stack the Plot itself
+  // creates — not the ordinary Bystanders-in-the-deck count — so it's
+  // captured in setupNote text only, not as a numeric override.
+  {
+    name: "Graduation at Xavier's X-Academy",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote: 'Stack 8 Bystanders next to this Plot as "Young Mutants."',
+    twist: "Put a Bystander from next to this Plot into the Overrun Pile.",
+    evilWins: "When there are 8 Bystanders in the Overrun Pile.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Infiltrate the Lair with Spies",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote:
+      'Stack 21 Bystanders next to this Plot as "Infiltrating Spies."\nSpecial Rules: When you recruit an Ally, kidnap any Bystander in that Lair space. When an Ally leaves the Lair in any other way, put any Bystander from that Lair space into the Overrun Pile.',
+    twist: "Put all Bystanders from the Lair into the Overrun Pile. Then put a Bystander from next to this Plot into each Lair space under the Bridge, Streets, and Sewers.",
+    evilWins: "When there are 12 Bystanders in the Overrun Pile.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Mass Produce War Machine Armor",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote:
+      "Include 10 S.H.I.E.L.D. Assault Squads as one of the Backup Adversary groups.\nSpecial Rules: Assault Squads get +1 Attack for each War Machine Technology next to the Plot.",
+    twist: 'Stack this Twist next to the Plot as "War Machine Technology." An Assault Squad from the current player\'s Victory Pile enters the Bridge.',
+    evilWins: "When there are 3 Assault Squads in the Overrun Pile.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Resurrect Heroes with the Norn Stones",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      "Twists 1–6: An Adversary from the current player's Victory Pile enters the Bridge. Then play the top card of the Adversary Deck.\nTwists 7–8: Each player puts an Adversary from their Victory Pile into the Overrun Pile.",
+    evilWins: "When there are 3 Adversaries per player in the Overrun Pile.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Build an Underground Mega-Vault Prison",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote: "The Bindings stack holds 5 Bindings per player.",
+    twist:
+      "If there is an Adversary in the Sewers, each player gains a Bindings. Otherwise, reveal the top card of the Adversary Deck. If that card is an Adversary, it enters the Sewers.",
+    evilWins: "When the Bindings stack runs out.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Cage Villains in Power-Suppressing Cells",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote:
+      "Stack 2 Cops per player next to this Plot.\nSpecial Rules: You can fight any Cop on top of Allies. If you do, the player of your choice gains that Ally.",
+    twist:
+      "Each player returns all Cops from their Victory Pile to the Cop Stack. Then each player puts a non-grey Ally from their hand in front of them. Put a Cop from the Cop Stack on top of each of those Allies.",
+    evilWins: "When a Twist must put out a Cop, but the Cop Stack is already empty.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Crown Thor King of Asgard",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote:
+      'Put the Thor Adversary next to this Plot.\nSpecial Rules: Whenever Thor overruns, stack a Plot Twist from the KO pile next to this Plot as a "Triumph of Asgard."',
+    twist: "If Thor is in the city, he overruns. Otherwise, Thor enters the Bridge from wherever he is, and Thor guards 3 Bystanders.",
+    evilWins: "When there are 3 Triumphs of Asgard next to this Plot.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Crush Hydra",
+    exp: "villains",
+    overrides: { twists: 8 },
+    setupNote: "Special Rules: An Adversary gets +1 Attack for each Ally it has captured. When you fight that Adversary, gain those Allies.",
+    twist:
+      "Twists 1–7: Each Adversary in the city captures a New Recruit, or if there are no more New Recruits, a Madame HYDRA.\nTwist 8: Put all captured Allies from the city into the Overrun Pile.",
+    evilWins: "When there are 11 Allies in the Overrun Pile.",
+    winLabel: "Good Wins",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -260,6 +370,17 @@ const VILLAIN_GROUPS = [
   { name: "Klyntar Symbiotes", exp: "venom" },
   { name: "Mindless Ones", exp: "dr_strange" },
   { name: "The Worthy", exp: "fear_itself" },
+
+  // Legendary: Villains — these are Hero Groups (the opposition), not
+  // Villain Groups in-fiction; see the exclusiveMode note at the top of
+  // this file for why they live in this pool anyway.
+  { name: "Avengers", exp: "villains" },
+  { name: "Defenders", exp: "villains" },
+  { name: "Marvel Knights", exp: "villains" },
+  { name: "Spider-Friends", exp: "villains" },
+  { name: "Uncanny Avengers", exp: "villains" },
+  { name: "Uncanny X-Men", exp: "villains" },
+  { name: "X-Men First Class", exp: "villains" },
 ];
 
 const HENCHMEN = [
@@ -274,6 +395,12 @@ const HENCHMEN = [
   { name: "Chitauri Foot Soldiers", exp: "guardians" },
 
   { name: "Prime Sentinels", exp: "x_men" },
+
+  // Legendary: Villains — these are the good guys' Adversary squads.
+  { name: "Asgardian Warrior", exp: "villains" },
+  { name: "Cops", exp: "villains" },
+  { name: "Multiple Man", exp: "villains" },
+  { name: "S.H.I.E.L.D. Assault Squad", exp: "villains" },
 ];
 
 const HEROES = [
@@ -397,6 +524,25 @@ const HEROES = [
   { name: "Amadeus Cho", exp: "world_war_hulk" },
   { name: "Skaar", exp: "world_war_hulk" },
   { name: "Red Hulk", exp: "world_war_hulk" },
+
+  // Legendary: Villains — these are Villain characters (the deck-building
+  // pool players actually recruit from in this expansion), not Heroes
+  // in-fiction; `team` here is each one's Villain Group affiliation.
+  { name: "Bullseye", exp: "villains", team: "Crime Syndicate" },
+  { name: "Dr. Octopus", exp: "villains", team: "Sinister Six" },
+  { name: "Electro", exp: "villains", team: "Sinister Six" },
+  { name: "Enchantress", exp: "villains", team: "Foes of Asgard" },
+  { name: "Green Goblin", exp: "villains", team: "Sinister Six" },
+  { name: "Juggernaut", exp: "villains", team: "Brotherhood" },
+  { name: "Kingpin", exp: "villains", team: "Crime Syndicate" },
+  { name: "Kraven", exp: "villains", team: "Sinister Six" },
+  { name: "Loki", exp: "villains", team: "Foes of Asgard" },
+  { name: "Magneto", exp: "villains", team: "Brotherhood" },
+  { name: "Mysterio", exp: "villains", team: "Sinister Six" },
+  { name: "Mystique", exp: "villains", team: "Brotherhood" },
+  { name: "Sabretooth", exp: "villains", team: "Brotherhood" },
+  { name: "Ultron", exp: "villains" },
+  { name: "Venom", exp: "villains", team: "Sinister Six" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck

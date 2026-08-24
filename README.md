@@ -71,12 +71,16 @@ before your first game and fix anything that's off — or send along the
 real text (a photo of the card, the rulebook, whatever) and it'll get
 transcribed in properly.
 
-One expansion is intentionally not included at all: **Legendary:
-Villains** flips the game so players control villains against a hero
-Mastermind, which doesn't fit the Mastermind/Scheme/Villain/Hero shape
-this randomizer generates. **Legendary: Civil War** *is* included, but
-only for its ordinary Heroes — its special "Team Iron Man vs. Team Cap"
-mode isn't modeled here.
+**Legendary: Villains** flips the game so players control Villain
+characters against a good-guy Mastermind — the opposite shape from every
+other expansion. It's mapped onto the same Mastermind/Scheme/Villain
+Groups/Henchmen/Heroes structure (its Villains go in Heroes, its Hero
+Groups go in Villain Groups, and so on), which means its card pool can't
+be mixed with a normal expansion's without producing nonsense. Selecting
+it in Expansions automatically clears every other expansion, and
+selecting any other expansion clears it. **Legendary: Civil War** *is*
+included normally, but only for its ordinary Heroes — its special "Team
+Iron Man vs. Team Cap" mode isn't modeled here.
 
 To add an expansion or correct an entry:
 

@@ -40,7 +40,7 @@
         exclusions[c.key] = new Set((parsed.exclusions && parsed.exclusions[c.key]) || []);
       });
       return {
-        expansions: new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions),
+        expansions: normalizeExpansionExclusivity(new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions)),
         options: { ...defaults.options, ...(parsed.options || {}) },
         exclusions,
         teamFilter: new Set(parsed.teamFilter || []),
@@ -462,6 +462,36 @@
     sheetList: document.getElementById("sheet-list"),
   };
 
+  /** Expansions flagged `exclusiveMode` (currently just Legendary:
+   * Villains) flip who you play as, so their card pool can't be mixed
+   * with a normal expansion's without producing nonsense (a "Heroes"
+   * list combining Iron Man with Doctor Octopus). Enforced here rather
+   * than left to the honor system: turning one on drops every other
+   * expansion, and turning on any normal expansion drops it. */
+  /** Safety net for a saved expansion selection that predates (or
+   * otherwise violates) the exclusiveMode invariant enforced by
+   * setExpansionEnabled below: if an exclusiveMode expansion is selected
+   * alongside anything else, keep only it. */
+  function normalizeExpansionExclusivity(expansions) {
+    const exclusive = EXPANSIONS.filter((e) => e.exclusiveMode && expansions.has(e.id));
+    if (exclusive.length && expansions.size > exclusive.length) return new Set([exclusive[0].id]);
+    return expansions;
+  }
+
+  function setExpansionEnabled(id, enabled) {
+    const exp = EXPANSIONS.find((e) => e.id === id);
+    if (!enabled) {
+      state.expansions.delete(id);
+      return;
+    }
+    if (exp.exclusiveMode) {
+      state.expansions = new Set([id]);
+    } else {
+      EXPANSIONS.filter((e) => e.exclusiveMode).forEach((e) => state.expansions.delete(e.id));
+      state.expansions.add(id);
+    }
+  }
+
   function renderExpansions() {
     el.expansionList.innerHTML = "";
     EXPANSIONS.forEach((exp) => {
@@ -471,13 +501,20 @@
 
       const text = document.createElement("span");
       text.className = "row-text";
-      if (exp.confidence === "light" || exp.confidence === "none") {
+      const subText = exp.exclusiveMode
+        ? "Different game mode — clears other expansions"
+        : exp.confidence === "none"
+        ? "No card data yet"
+        : exp.confidence === "light"
+        ? "Limited card data"
+        : null;
+      if (subText) {
         const main = document.createElement("span");
         main.className = "row-text-main";
         main.textContent = exp.name;
         const sub = document.createElement("span");
         sub.className = "row-text-sub";
-        sub.textContent = exp.confidence === "none" ? "No card data yet" : "Limited card data";
+        sub.textContent = subText;
         text.appendChild(main);
         text.appendChild(sub);
       } else {
@@ -493,13 +530,12 @@
       input.setAttribute("aria-label", exp.name);
       input.checked = state.expansions.has(exp.id);
       input.addEventListener("change", () => {
-        if (input.checked) state.expansions.add(exp.id);
-        else state.expansions.delete(exp.id);
+        setExpansionEnabled(exp.id, input.checked);
         pruneTeamFilter();
         syncRequiredCards();
         saveState();
+        renderExpansions();
         renderWarnings();
-        renderToggleAllLabel();
         renderCardPool();
         renderTeamChips();
         renderResults();
@@ -522,7 +558,8 @@
   }
 
   function renderToggleAllLabel() {
-    const allSelected = state.expansions.size === EXPANSIONS.length;
+    const selectableCount = EXPANSIONS.filter((e) => !e.exclusiveMode).length;
+    const allSelected = state.expansions.size === selectableCount && EXPANSIONS.filter((e) => e.exclusiveMode).every((e) => !state.expansions.has(e.id));
     el.toggleAllExpansions.textContent = allSelected ? "Deselect All" : "Select All";
   }
 
@@ -864,7 +901,7 @@
     if (scheme && scheme.evilWins) {
       const evilNote = document.createElement("div");
       evilNote.className = "scheme-note scheme-note--evil";
-      evilNote.innerHTML = `<strong>Evil Wins</strong><br>${scheme.evilWins}`;
+      evilNote.innerHTML = `<strong>${scheme.winLabel || "Evil Wins"}</strong><br>${scheme.evilWins}`;
       section.appendChild(evilNote);
     }
 
@@ -894,7 +931,7 @@
     lines.push(`Twists: ${state.options.twists}`);
     const scheme = currentSchemeData();
     if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);
-    if (scheme && scheme.evilWins) lines.push("", `Evil Wins: ${scheme.evilWins}`);
+    if (scheme && scheme.evilWins) lines.push("", `${(scheme.winLabel || "Evil Wins")}: ${scheme.evilWins}`);
     return lines.join("\n").trim();
   }
 
@@ -1182,8 +1219,9 @@
     el.randomizeAll.addEventListener("click", randomizeAll);
 
     el.toggleAllExpansions.addEventListener("click", () => {
-      const allSelected = state.expansions.size === EXPANSIONS.length;
-      state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
+      const selectable = EXPANSIONS.filter((e) => !e.exclusiveMode);
+      const allSelected = state.expansions.size === selectable.length && selectable.every((e) => state.expansions.has(e.id));
+      state.expansions = allSelected ? new Set() : new Set(selectable.map((e) => e.id));
       pruneTeamFilter();
       syncRequiredCards();
       saveState();
