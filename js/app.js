@@ -3,15 +3,16 @@
 
   const STORAGE_KEY = "legendary-randomizer/v1";
 
+  const EXPANSION_COLORS = ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#007AFF", "#5856D6", "#AF52DE"];
+
   const CATEGORIES = [
-    { key: "mastermind", label: "Mastermind", pool: MASTERMINDS, countKey: null, fixedCount: 1 },
-    { key: "scheme", label: "Scheme", pool: SCHEMES, countKey: null, fixedCount: 1 },
-    { key: "villains", label: "Villain Groups", pool: VILLAIN_GROUPS, countKey: "villainCount", fixedCount: null },
-    { key: "henchmen", label: "Henchmen", pool: HENCHMEN, countKey: "henchmenCount", fixedCount: null },
-    { key: "heroes", label: "Heroes", pool: HEROES, countKey: "heroCount", fixedCount: null },
+    { key: "mastermind", label: "Mastermind", icon: "👑", color: "#AF52DE", pool: MASTERMINDS, countKey: null, fixedCount: 1 },
+    { key: "scheme", label: "Scheme", icon: "📜", color: "#FFCC00", pool: SCHEMES, countKey: null, fixedCount: 1 },
+    { key: "villains", label: "Villain Groups", icon: "🎭", color: "#FF3B30", pool: VILLAIN_GROUPS, countKey: "villainCount", fixedCount: null },
+    { key: "henchmen", label: "Henchmen", icon: "👊", color: "#FF9500", pool: HENCHMEN, countKey: "henchmenCount", fixedCount: null },
+    { key: "heroes", label: "Heroes", icon: "⭐️", color: "#007AFF", pool: HEROES, countKey: "heroCount", fixedCount: null },
   ];
 
-  /** @type {{expansions: Set<string>, options: {heroCount:number, villainCount:number, henchmenCount:number}, result: Object, locks: Object}} */
   let state = loadState();
 
   function loadState() {
@@ -124,55 +125,99 @@
 
   const el = {
     expansionList: document.getElementById("expansion-list"),
-    heroCount: document.getElementById("hero-count"),
-    villainCount: document.getElementById("villain-count"),
-    henchmenCount: document.getElementById("henchmen-count"),
-    heroCountValue: document.getElementById("hero-count-value"),
-    villainCountValue: document.getElementById("villain-count-value"),
-    henchmenCountValue: document.getElementById("henchmen-count-value"),
+    toggleAllExpansions: document.getElementById("toggle-all-expansions"),
     randomizeAll: document.getElementById("randomize-all"),
     warnings: document.getElementById("warnings"),
     results: document.getElementById("results"),
+    copyGroup: document.getElementById("copy-group"),
     copyBtn: document.getElementById("copy-setup"),
-    selectAll: document.getElementById("select-all-expansions"),
-    selectNone: document.getElementById("select-none-expansions"),
+    steppers: Array.from(document.querySelectorAll(".stepper")),
   };
 
   function renderExpansions() {
     el.expansionList.innerHTML = "";
-    EXPANSIONS.forEach((exp) => {
+    EXPANSIONS.forEach((exp, i) => {
       const id = `exp-${exp.id}`;
-      const wrap = document.createElement("label");
-      wrap.className = "expansion-chip";
-      wrap.htmlFor = id;
+      const li = document.createElement("li");
+      li.className = "ios-row";
+
+      const icon = document.createElement("span");
+      icon.className = "row-icon";
+      icon.style.background = EXPANSION_COLORS[i % EXPANSION_COLORS.length];
+      icon.textContent = "🃏";
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      text.textContent = exp.name;
+
+      const switchWrap = document.createElement("span");
+      switchWrap.className = "ios-switch";
 
       const input = document.createElement("input");
       input.type = "checkbox";
       input.id = id;
+      input.setAttribute("aria-label", exp.name);
       input.checked = state.expansions.has(exp.id);
       input.addEventListener("change", () => {
         if (input.checked) state.expansions.add(exp.id);
         else state.expansions.delete(exp.id);
         saveState();
         renderWarnings();
+        renderToggleAllLabel();
       });
 
-      const span = document.createElement("span");
-      span.textContent = exp.name;
+      const track = document.createElement("span");
+      track.className = "track";
+      const thumb = document.createElement("span");
+      thumb.className = "thumb";
 
-      wrap.appendChild(input);
-      wrap.appendChild(span);
-      el.expansionList.appendChild(wrap);
+      switchWrap.appendChild(input);
+      switchWrap.appendChild(track);
+      switchWrap.appendChild(thumb);
+
+      li.appendChild(icon);
+      li.appendChild(text);
+      li.appendChild(switchWrap);
+      el.expansionList.appendChild(li);
+    });
+    renderToggleAllLabel();
+  }
+
+  function renderToggleAllLabel() {
+    const allSelected = state.expansions.size === EXPANSIONS.length;
+    el.toggleAllExpansions.textContent = allSelected ? "Deselect All" : "Select All";
+  }
+
+  function renderSteppers() {
+    el.steppers.forEach((stepper) => {
+      const key = stepper.dataset.option;
+      const min = Number(stepper.dataset.min);
+      const max = Number(stepper.dataset.max);
+      const valueEl = stepper.querySelector(".stepper-value");
+      const decBtn = stepper.querySelector('[data-action="dec"]');
+      const incBtn = stepper.querySelector('[data-action="inc"]');
+      const value = state.options[key];
+      valueEl.textContent = value;
+      decBtn.disabled = value <= min;
+      incBtn.disabled = value >= max;
     });
   }
 
-  function renderOptions() {
-    el.heroCount.value = state.options.heroCount;
-    el.villainCount.value = state.options.villainCount;
-    el.henchmenCount.value = state.options.henchmenCount;
-    el.heroCountValue.textContent = state.options.heroCount;
-    el.villainCountValue.textContent = state.options.villainCount;
-    el.henchmenCountValue.textContent = state.options.henchmenCount;
+  function bindSteppers() {
+    el.steppers.forEach((stepper) => {
+      const key = stepper.dataset.option;
+      const min = Number(stepper.dataset.min);
+      const max = Number(stepper.dataset.max);
+      stepper.addEventListener("click", (e) => {
+        const btn = e.target.closest(".stepper-btn");
+        if (!btn) return;
+        const delta = btn.dataset.action === "inc" ? 1 : -1;
+        state.options[key] = Math.min(max, Math.max(min, state.options[key] + delta));
+        renderSteppers();
+        saveState();
+        renderWarnings();
+      });
+    });
   }
 
   function renderWarnings() {
@@ -180,46 +225,55 @@
     el.warnings.innerHTML = "";
     if (!warnings.length) {
       el.warnings.classList.add("hidden");
-      el.randomizeAll.disabled = false;
+      el.randomizeAll.disabled = state.expansions.size === 0;
       return;
     }
     el.warnings.classList.remove("hidden");
-    el.randomizeAll.disabled = state.expansions.size === 0;
+    el.randomizeAll.disabled = true;
     warnings.forEach((w) => {
       const p = document.createElement("p");
-      p.textContent = w;
+      p.textContent = `⚠️ ${w}`;
       el.warnings.appendChild(p);
     });
   }
 
-  function cardEl(category, item, index) {
-    const card = document.createElement("div");
-    card.className = "result-card";
+  function resultRow(category, item, index) {
+    const li = document.createElement("li");
+    li.className = "result-row";
 
-    const name = document.createElement("div");
-    name.className = "result-card-name";
-    name.textContent = item.name;
+    const locked = !!(state.locks[category.key] || [])[index];
+    if (locked) li.classList.add("locked");
 
-    const meta = document.createElement("div");
-    meta.className = "result-card-meta";
-    const expName = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
-    meta.textContent = expName;
+    const icon = document.createElement("span");
+    icon.className = "row-icon";
+    icon.style.background = category.color;
+    icon.textContent = category.icon;
+
+    const text = document.createElement("div");
+    text.className = "result-row-text";
+    const mainSpan = document.createElement("span");
+    mainSpan.className = "row-text-main";
+    mainSpan.textContent = item.name;
+    const subSpan = document.createElement("span");
+    subSpan.className = "row-text-sub";
+    subSpan.textContent = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
+    text.appendChild(mainSpan);
+    text.appendChild(subSpan);
 
     const actions = document.createElement("div");
-    actions.className = "result-card-actions";
+    actions.className = "result-row-actions";
 
     const lockBtn = document.createElement("button");
     lockBtn.type = "button";
-    lockBtn.className = "icon-btn";
-    const locked = !!(state.locks[category.key] || [])[index];
+    lockBtn.className = "round-btn";
     lockBtn.textContent = locked ? "🔒" : "🔓";
-    lockBtn.title = locked ? "Locked — click to unlock" : "Unlocked — click to lock";
+    lockBtn.title = locked ? "Locked — tap to unlock" : "Unlocked — tap to lock";
     lockBtn.addEventListener("click", () => toggleLock(category.key, index));
 
     const rerollBtn = document.createElement("button");
     rerollBtn.type = "button";
-    rerollBtn.className = "icon-btn";
-    rerollBtn.textContent = "🎲";
+    rerollBtn.className = "round-btn";
+    rerollBtn.textContent = "🔁";
     rerollBtn.title = "Reroll just this one";
     rerollBtn.disabled = locked;
     rerollBtn.addEventListener("click", () => rerollOne(category.key, index));
@@ -227,11 +281,10 @@
     actions.appendChild(lockBtn);
     actions.appendChild(rerollBtn);
 
-    card.appendChild(name);
-    card.appendChild(meta);
-    card.appendChild(actions);
-    if (locked) card.classList.add("locked");
-    return card;
+    li.appendChild(icon);
+    li.appendChild(text);
+    li.appendChild(actions);
+    return li;
   }
 
   function renderResults() {
@@ -241,44 +294,41 @@
     if (!hasAnyResult) {
       const empty = document.createElement("p");
       empty.className = "empty-state";
-      empty.textContent = "Pick your expansions, then hit Randomize Setup to build a game.";
+      empty.textContent = "Pick your expansions above, then tap Randomize Setup to build a game.";
       el.results.appendChild(empty);
-      el.copyBtn.classList.add("hidden");
+      el.copyGroup.classList.add("hidden");
       return;
     }
 
-    el.copyBtn.classList.remove("hidden");
+    el.copyGroup.classList.remove("hidden");
 
     CATEGORIES.forEach((category) => {
       const items = state.result[category.key] || [];
       if (!items.length) return;
 
       const section = document.createElement("section");
-      section.className = `result-section result-section--${category.key}`;
+      section.className = "ios-group";
 
       const header = document.createElement("div");
-      header.className = "result-section-header";
-
-      const h2 = document.createElement("h2");
-      h2.textContent = category.label;
-      header.appendChild(h2);
-
+      header.className = "group-header";
+      const span = document.createElement("span");
+      span.textContent = category.label;
       const rerollSection = document.createElement("button");
       rerollSection.type = "button";
-      rerollSection.className = "text-btn";
-      rerollSection.textContent = "reroll all";
+      rerollSection.className = "header-action";
+      rerollSection.textContent = "Reroll All";
       rerollSection.addEventListener("click", () => {
         randomizeCategory(category, { keepLocked: true });
         render();
       });
+      header.appendChild(span);
       header.appendChild(rerollSection);
-
       section.appendChild(header);
 
-      const grid = document.createElement("div");
-      grid.className = "result-grid";
-      items.forEach((item, index) => grid.appendChild(cardEl(category, item, index)));
-      section.appendChild(grid);
+      const list = document.createElement("ul");
+      list.className = "ios-list";
+      items.forEach((item, index) => list.appendChild(resultRow(category, item, index)));
+      section.appendChild(list);
 
       el.results.appendChild(section);
     });
@@ -301,35 +351,17 @@
     renderResults();
   }
 
-  function bindOptionInput(inputEl, key) {
-    inputEl.addEventListener("input", () => {
-      state.options[key] = Number(inputEl.value);
-      renderOptions();
-      saveState();
-      renderWarnings();
-    });
-  }
-
   function init() {
     renderExpansions();
-    renderOptions();
+    renderSteppers();
+    bindSteppers();
     render();
-
-    bindOptionInput(el.heroCount, "heroCount");
-    bindOptionInput(el.villainCount, "villainCount");
-    bindOptionInput(el.henchmenCount, "henchmenCount");
 
     el.randomizeAll.addEventListener("click", randomizeAll);
 
-    el.selectAll.addEventListener("click", () => {
-      state.expansions = new Set(EXPANSIONS.map((e) => e.id));
-      saveState();
-      renderExpansions();
-      renderWarnings();
-    });
-
-    el.selectNone.addEventListener("click", () => {
-      state.expansions = new Set();
+    el.toggleAllExpansions.addEventListener("click", () => {
+      const allSelected = state.expansions.size === EXPANSIONS.length;
+      state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
       saveState();
       renderExpansions();
       renderWarnings();
@@ -337,13 +369,14 @@
 
     el.copyBtn.addEventListener("click", async () => {
       const text = setupText();
+      const original = el.copyBtn.textContent;
       try {
         await navigator.clipboard.writeText(text);
-        el.copyBtn.textContent = "Copied!";
+        el.copyBtn.textContent = "✅ Copied!";
       } catch (e) {
         el.copyBtn.textContent = "Copy failed";
       }
-      setTimeout(() => (el.copyBtn.textContent = "Copy Setup"), 1500);
+      setTimeout(() => (el.copyBtn.textContent = original), 1500);
     });
   }
 
