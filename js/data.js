@@ -7,27 +7,54 @@
  * skim each section against your own boxes and fix anything that's off —
  * the format below is intentionally flat and easy to hand-edit.
  *
- * Two expansions are deliberately NOT included: "Legendary: Villains" and
- * "Legendary: Civil War" use a different game mode (playing as villains,
- * or heroes vs. heroes) that doesn't fit the Mastermind/Scheme/Villain/
- * Hero shape this randomizer generates. Add your own section for them if
- * you want to model that mode.
+ * Every expansion is deliberately listed, even ones with sparse or no
+ * card data yet, so the app is honest about what it does and doesn't
+ * know — see each expansion's `confidence`:
+ *   "verified" — cross-checked against public box-content summaries.
+ *   "moderate" — compiled from general game knowledge, not cross-checked.
+ *   "light"    — a handful of headline cards only, likely incomplete.
+ *   "none"     — name only, no card data yet. Contributions welcome.
+ *
+ * "Legendary: Villains" is NOT included at all: it flips the game so
+ * players control villains against a hero Mastermind, which doesn't fit
+ * the Mastermind/Scheme/Villain/Hero shape this randomizer generates.
+ * "Legendary: Civil War" IS included, but only for its ordinary Heroes —
+ * its special "Team Iron Man vs. Team Cap" mode isn't modeled here.
  *
  * To add an expansion: add one entry to EXPANSIONS, then push entries
  * into any of HEROES / MASTERMINDS / SCHEMES / VILLAIN_GROUPS / HENCHMEN
- * tagged with its id. A category can be sparse (e.g. a small-box
- * expansion with heroes only) — the randomizer just won't draw from an
- * empty pool.
+ * tagged with its id. A category can be sparse — the randomizer just
+ * won't draw from an empty pool, and will warn if a pool is too small
+ * for the setup size requested.
  */
 
 const EXPANSIONS = [
-  { id: "core", name: "Core Set (2012)" },
-  { id: "dark_city", name: "Dark City" },
-  { id: "fantastic_four", name: "Fantastic Four" },
-  { id: "paint_town_red", name: "Paint the Town Red" },
-  { id: "guardians", name: "Guardians of the Galaxy" },
-  { id: "x_men", name: "X-Men" },
-  { id: "champions", name: "Champions" },
+  { id: "core", name: "Core Set (2012)", confidence: "verified" },
+  { id: "dark_city", name: "Dark City", confidence: "verified" },
+  { id: "fantastic_four", name: "Fantastic Four", confidence: "moderate" },
+  { id: "paint_town_red", name: "Paint the Town Red", confidence: "moderate" },
+  { id: "guardians", name: "Guardians of the Galaxy", confidence: "moderate" },
+  { id: "x_men", name: "X-Men", confidence: "moderate" },
+  { id: "champions", name: "Champions", confidence: "moderate" },
+  { id: "civil_war", name: "Civil War", confidence: "light" },
+  { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "light" },
+  { id: "annihilation", name: "Annihilation", confidence: "light" },
+  { id: "ant_man", name: "Ant-Man", confidence: "light" },
+  { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "light" },
+  { id: "deadpool", name: "Deadpool", confidence: "light" },
+  { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "light" },
+  { id: "fear_itself", name: "Fear Itself", confidence: "light" },
+  { id: "asgard", name: "Heroes of Asgard", confidence: "light" },
+  { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "light" },
+  { id: "new_mutants", name: "New Mutants", confidence: "light" },
+  { id: "noir", name: "Noir", confidence: "light" },
+  { id: "realm_of_kings", name: "Realm of Kings", confidence: "light" },
+  { id: "shield", name: "S.H.I.E.L.D.", confidence: "light" },
+  { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "light" },
+  { id: "venom", name: "Venom", confidence: "light" },
+  { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
+  { id: "dimensions", name: "Dimensions", confidence: "none" },
+  { id: "revelations", name: "Revelations", confidence: "none" },
 ];
 
 const MASTERMINDS = [
@@ -49,6 +76,16 @@ const MASTERMINDS = [
 
   { name: "Dark Phoenix", exp: "x_men" },
   { name: "Onslaught", exp: "x_men" },
+
+  { name: "MODOK", exp: "ant_man" },
+  { name: "Carnage", exp: "venom" },
+  { name: "Nightmare", exp: "dr_strange" },
+  { name: "Maestro", exp: "world_war_hulk" },
+  { name: "Vulture", exp: "spiderman_homecoming" },
+  { name: "Vulcan", exp: "realm_of_kings" },
+  { name: "Annihilus", exp: "annihilation" },
+  { name: "Sin", exp: "fear_itself" },
+  { name: "Doctor Doom (Battleworld)", exp: "secret_wars" },
 ];
 
 const SCHEMES = [
@@ -110,6 +147,11 @@ const VILLAIN_GROUPS = [
 
   { name: "Reavers", exp: "x_men" },
   { name: "Marauders", exp: "x_men" },
+
+  { name: "A.I.M.", exp: "ant_man" },
+  { name: "Klyntar Symbiotes", exp: "venom" },
+  { name: "Mindless Ones", exp: "dr_strange" },
+  { name: "The Worthy", exp: "fear_itself" },
 ];
 
 const HENCHMEN = [
@@ -189,14 +231,88 @@ const HEROES = [
   { name: "Multiple Man", exp: "x_men" },
   { name: "Domino", exp: "x_men" },
   { name: "Forge", exp: "x_men" },
+  { name: "Iceman", exp: "x_men" },
 
   { name: "Ms. Marvel (Kamala Khan)", exp: "champions" },
   { name: "Spider-Man (Miles Morales)", exp: "champions" },
   { name: "Nova (Sam Alexander)", exp: "champions" },
   { name: "Viv Vision", exp: "champions" },
   { name: "Cyclops (Young)", exp: "champions" },
+
+  { name: "Vision", exp: "civil_war" },
+  { name: "War Machine", exp: "civil_war" },
+  { name: "Black Panther", exp: "civil_war" },
+  { name: "Hawkeye", exp: "civil_war" },
+
+  { name: "Nova (Richard Rider)", exp: "annihilation" },
+  { name: "Quasar", exp: "annihilation" },
+  { name: "Gladiator", exp: "annihilation" },
+
+  { name: "Ant-Man", exp: "ant_man" },
+  { name: "Wasp", exp: "ant_man" },
+  { name: "Giant-Man", exp: "ant_man" },
+  { name: "Yellowjacket", exp: "ant_man" },
+
+  { name: "Captain America (Sam Wilson)", exp: "cap_75" },
+  { name: "Captain America (Bucky Barnes)", exp: "cap_75" },
+
+  { name: "Deadpool", exp: "deadpool" },
+  { name: "Negasonic Teenage Warhead", exp: "deadpool" },
+
+  { name: "Doctor Strange", exp: "dr_strange" },
+  { name: "Scarlet Witch", exp: "dr_strange" },
+  { name: "Wong", exp: "dr_strange" },
+  { name: "Clea", exp: "dr_strange" },
+
+  { name: "Thor", exp: "asgard" },
+  { name: "Valkyrie", exp: "asgard" },
+  { name: "Sif", exp: "asgard" },
+  { name: "Beta Ray Bill", exp: "asgard" },
+  { name: "Balder", exp: "asgard" },
+
+  { name: "Captain Marvel (Carol Danvers)", exp: "into_the_cosmos" },
+  { name: "Adam Warlock", exp: "into_the_cosmos" },
+
+  { name: "Wolfsbane", exp: "new_mutants" },
+  { name: "Magma", exp: "new_mutants" },
+  { name: "Karma", exp: "new_mutants" },
+
+  { name: "Spider-Man Noir", exp: "noir" },
+
+  { name: "Black Bolt", exp: "realm_of_kings" },
+  { name: "Medusa", exp: "realm_of_kings" },
+
+  { name: "Nick Fury", exp: "shield" },
+  { name: "Maria Hill", exp: "shield" },
+  { name: "Phil Coulson", exp: "shield" },
+  { name: "Mockingbird", exp: "shield" },
+  { name: "Quake", exp: "shield" },
+
+  { name: "Spider-Man (Homecoming)", exp: "spiderman_homecoming" },
+
+  { name: "Toxin", exp: "venom" },
+  { name: "Anti-Venom", exp: "venom" },
+
+  { name: "Amadeus Cho", exp: "world_war_hulk" },
+  { name: "Skaar", exp: "world_war_hulk" },
+  { name: "Red Hulk", exp: "world_war_hulk" },
 ];
 
+/** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
+ * Building Game), by number of players. Villain Groups / Henchmen / Heroes
+ * feed the counts in this file's option steppers; Bystanders has no named
+ * cards of its own so it's tracked as a plain number, not a card pool.
+ * At 1 player the Henchman deck is built specially (2 cards in the deck,
+ * 2 cards placed directly into the city) — see `henchmenNote`.
+ */
+const PLAYER_COUNT_TABLE = {
+  1: { villainCount: 1, henchmenCount: 1, bystanders: 1, heroCount: 3, henchmenNote: "Solo (1 player): build the Henchman deck with only 2 cards, and place 2 more Henchman cards directly into the city instead of the usual pile." },
+  2: { villainCount: 2, henchmenCount: 1, bystanders: 2, heroCount: 5 },
+  3: { villainCount: 3, henchmenCount: 1, bystanders: 8, heroCount: 5 },
+  4: { villainCount: 4, henchmenCount: 2, bystanders: 8, heroCount: 5 },
+  5: { villainCount: 5, henchmenCount: 2, bystanders: 16, heroCount: 6 },
+};
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { EXPANSIONS, MASTERMINDS, SCHEMES, VILLAIN_GROUPS, HENCHMEN, HEROES };
+  module.exports = { EXPANSIONS, MASTERMINDS, SCHEMES, VILLAIN_GROUPS, HENCHMEN, HEROES, PLAYER_COUNT_TABLE };
 }
