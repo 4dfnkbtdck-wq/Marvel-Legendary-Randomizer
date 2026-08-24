@@ -106,6 +106,7 @@ const EXPANSIONS = [
   { id: "dimensions", name: "Dimensions", confidence: "none" },
   { id: "revelations", name: "Revelations", confidence: "none" },
   { id: "villains", name: "Legendary: Villains", confidence: "verified" },
+  { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -142,6 +143,10 @@ const MASTERMINDS = [
   { name: "Nick Fury", exp: "villains", leadsCategory: "villains", leadsName: "Avengers" },
   { name: "Odin", exp: "villains", leadsCategory: "henchmen", leadsName: "Asgardian Warrior" },
   { name: "Professor X", exp: "villains", leadsCategory: "villains", leadsName: "X-Men First Class" },
+
+  { name: "Iron Monger", exp: "first_ten_years", leadsCategory: "villains", leadsName: "Iron Foes" },
+  { name: "Loki", exp: "first_ten_years", leadsCategory: "villains", leadsName: "Enemies of Asgard" },
+  { name: "Red Skull", exp: "first_ten_years", leadsCategory: "villains", leadsName: "HYDRA" },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -336,6 +341,80 @@ const SCHEMES = [
     evilWins: "When there are 11 Allies in the Overrun Pile.",
     winLabel: "Good Wins",
   },
+
+  // The eight Marvel Studios: The First Ten Years schemes below are
+  // transcribed directly from the physical cards. Several are the same
+  // mechanical template as a Core Set scheme under a different MCU-movie
+  // title (the set reuses Legendary's standard scheme shapes) — that's
+  // an intentional duplicate, not a data error; see the file-level note
+  // near the top about duplicates being fine, sorted by expansion.
+  {
+    name: "Radioactive Palladium Poisoning",
+    exp: "first_ten_years",
+    overrides: { twists: 8 },
+    setupNote: "Wound stack holds 6 Wounds per player.",
+    twist: "Each player reveals a Tech Hero or gains a Wound.",
+    evilWins: "If the Wound stack runs out.",
+  },
+  {
+    name: "Replace Earth's Leaders with Hydra",
+    exp: "first_ten_years",
+    overrides: { twists: 5, bystanders: 18 },
+    setupNote:
+      'Plus 3 additional Twists placed next to this Scheme (not in the Villain Deck).\nSpecial Rule: Bystanders in the Villain Deck count as "Infiltrator" Villains, with Attack equal to the number of Twists next to this Scheme.',
+    twist: "Put this Twist next to this Scheme.",
+    evilWins: 'If 5 "Infiltrator" escape.',
+  },
+  {
+    name: "Super Hero Civil War",
+    exp: "first_ten_years",
+    overrides: { twistsByPlayers: { 2: 8, 3: 8, 4: 5, 5: 5 }, heroCountByPlayers: { 2: 4 } },
+    setupNote: "",
+    twist: "KO all the Heroes in the HQ.",
+    evilWins: "If the Hero Deck runs out.",
+  },
+  {
+    name: "Unleash the Power of the Cosmic Cube",
+    exp: "first_ten_years",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist: "Put the Twist next to this Scheme.\nTwists 5–6: Each player gains a Wound.\nTwist 7: Each player gains 3 Wounds.\nTwist 8: Evil Wins!",
+    evilWins: "",
+  },
+  {
+    name: "Asgard Under Siege",
+    exp: "first_ten_years",
+    overrides: { twists: 8, henchmenDelta: 1 },
+    setupNote: "",
+    twist: "Play the top 2 cards of the Villain Deck.",
+    evilWins: "If 12 Villains escape.",
+  },
+  {
+    name: "Destroy the Cities of Earth!",
+    exp: "first_ten_years",
+    overrides: { twists: 8, bystanders: 12 },
+    setupNote: "Special Rule: Each Villain gets +1 Attack for each Bystander it has.",
+    twist: "Any Villain in the Bank captures 2 Bystanders. Then play the top card of the Villain Deck.",
+    evilWins: "When 8 Bystanders are carried away by escaping Villains.",
+  },
+  {
+    name: "Enslave Minds with the Chitauri Scepter",
+    exp: "first_ten_years",
+    overrides: { twists: 8, heroCount: 6, requiredVillainGroup: "Chitauri" },
+    setupNote:
+      "Shuffle 12 random Heroes from the Hero Deck into the Villain Deck.\nSpecial Rule: Heroes in the Villain Deck count as \"Enslaved\" Villains with Attack equal to the Hero's Cost + 2. If you defeat that Hero, you gain it.",
+    twist: 'The highest-cost Hero from the HQ moves into the Sewers as an "Enslaved" Villain, as above.',
+    evilWins: "If 6 Heroes get into the Escaped Villains pile.",
+  },
+  {
+    name: "Invade Asgard",
+    exp: "first_ten_years",
+    overrides: { twists: 7 },
+    setupNote: "Each Twist is a Dark Portal.",
+    twist:
+      "Twist 1: Put the Dark Portal above the Mastermind; the Mastermind gets +1 Attack.\nTwists 2–6: Put the Dark Portal in the leftmost city space that doesn't yet have one; Villains there get +1 Attack.\nTwist 7: Evil Wins!",
+    evilWins: "",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -379,6 +458,12 @@ const VILLAIN_GROUPS = [
   { name: "Uncanny Avengers", exp: "villains" },
   { name: "Uncanny X-Men", exp: "villains" },
   { name: "X-Men First Class", exp: "villains" },
+
+  { name: "Chitauri", exp: "first_ten_years" },
+  { name: "Enemies of Asgard", exp: "first_ten_years" },
+  { name: "Gamma Hunters", exp: "first_ten_years" },
+  { name: "HYDRA", exp: "first_ten_years" },
+  { name: "Iron Foes", exp: "first_ten_years" },
 ];
 
 const HENCHMEN = [
@@ -399,6 +484,11 @@ const HENCHMEN = [
   { name: "Cops", exp: "villains" },
   { name: "Multiple Man", exp: "villains" },
   { name: "S.H.I.E.L.D. Assault Squad", exp: "villains" },
+
+  { name: "Hydra Pilots", exp: "first_ten_years" },
+  { name: "Hammer Drone Army", exp: "first_ten_years" },
+  { name: "Hydra Spies", exp: "first_ten_years" },
+  { name: "Ten Rings Fanatics", exp: "first_ten_years" },
 ];
 
 const HEROES = [
@@ -541,6 +631,14 @@ const HEROES = [
   { name: "Sabretooth", exp: "villains", team: "Brotherhood" },
   { name: "Ultron", exp: "villains" },
   { name: "Venom", exp: "villains", team: "Sinister Six" },
+
+  { name: "Black Widow", exp: "first_ten_years", team: "Avengers" },
+  { name: "Captain America", exp: "first_ten_years", team: "Avengers" },
+  { name: "Hawkeye", exp: "first_ten_years", team: "Avengers" },
+  { name: "Hulk", exp: "first_ten_years", team: "Avengers" },
+  { name: "Iron Man", exp: "first_ten_years", team: "Avengers" },
+  { name: "Nick Fury", exp: "first_ten_years", team: "S.H.I.E.L.D." },
+  { name: "Thor", exp: "first_ten_years", team: "Avengers" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
