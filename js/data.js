@@ -26,6 +26,14 @@
  * tagged with its id. A category can be sparse — the randomizer just
  * won't draw from an empty pool, and will warn if a pool is too small
  * for the setup size requested.
+ *
+ * A Mastermind entry can optionally carry `leadsCategory` ("villains" or
+ * "henchmen") + `leadsName`, matching the "always leads ___" text on the
+ * physical Mastermind card. When set, the app auto-includes that card
+ * whenever the Mastermind is in play (unless you've excluded it in Card
+ * Pool, or every slot in that category is already manually locked). Note
+ * it can point at either category — e.g. Doctor Doom always leads the
+ * Doombot Legion, which is a Henchman, not a Villain Group.
  */
 
 const EXPANSIONS = [
@@ -58,10 +66,10 @@ const EXPANSIONS = [
 ];
 
 const MASTERMINDS = [
-  { name: "Doctor Doom", exp: "core" },
-  { name: "Loki", exp: "core" },
-  { name: "Magneto", exp: "core" },
-  { name: "Red Skull", exp: "core" },
+  { name: "Doctor Doom", exp: "core", leadsCategory: "henchmen", leadsName: "Doombot Legion" },
+  { name: "Loki", exp: "core", leadsCategory: "villains", leadsName: "Enemies of Asgard" },
+  { name: "Magneto", exp: "core", leadsCategory: "villains", leadsName: "Brotherhood" },
+  { name: "Red Skull", exp: "core", leadsCategory: "villains", leadsName: "Hydra" },
 
   { name: "Apocalypse", exp: "dark_city" },
   { name: "Kingpin", exp: "dark_city" },
@@ -88,6 +96,11 @@ const MASTERMINDS = [
   { name: "Doctor Doom (Battleworld)", exp: "secret_wars" },
 ];
 
+// NOTE: the eight Core Set scheme titles below are still unverified
+// best-effort guesses, unlike the rest of the Core Set data above (which
+// is transcribed from the official quick-reference at
+// legendarycardgame.com/core-set-at-a-glace). Replace these once the
+// real scheme names/text are available.
 const SCHEMES = [
   { name: "Doombots Are Attacking the City!", exp: "core" },
   { name: "Whatever It Takes", exp: "core" },
@@ -157,7 +170,7 @@ const VILLAIN_GROUPS = [
 const HENCHMEN = [
   { name: "Doombot Legion", exp: "core" },
   { name: "Hand Ninjas", exp: "core" },
-  { name: "Sentinels", exp: "core" },
+  { name: "Sentinel", exp: "core" },
   { name: "Savage Land Mutates", exp: "core" },
 
   { name: "Reavers' Cyborgs", exp: "dark_city" },
@@ -169,29 +182,26 @@ const HENCHMEN = [
 ];
 
 const HEROES = [
-  { name: "Spider-Man", exp: "core" },
-  { name: "Iron Man", exp: "core" },
-  { name: "Wolverine", exp: "core" },
-  { name: "Hulk", exp: "core" },
-  { name: "Cyclops", exp: "core" },
-  { name: "Nova", exp: "core" },
-  { name: "Emma Frost", exp: "core" },
   { name: "Black Widow", exp: "core" },
-  { name: "Ms. Marvel", exp: "core" },
-  { name: "Iron Fist", exp: "core" },
-  { name: "Nightcrawler", exp: "core" },
-  { name: "Bishop", exp: "core" },
-  { name: "Angel", exp: "core" },
-  { name: "Colossus", exp: "core" },
-  { name: "She-Hulk", exp: "core" },
+  { name: "Captain America", exp: "core" },
+  { name: "Cyclops", exp: "core" },
+  { name: "Deadpool", exp: "core" },
+  { name: "Emma Frost", exp: "core" },
+  { name: "Gambit", exp: "core" },
+  { name: "Hawkeye", exp: "core" },
+  { name: "Hulk", exp: "core" },
+  { name: "Iron Man", exp: "core" },
+  { name: "Nick Fury", exp: "core" },
+  { name: "Rogue", exp: "core" },
+  { name: "Spider-Man", exp: "core" },
+  { name: "Storm", exp: "core" },
+  { name: "Thor", exp: "core" },
+  { name: "Wolverine", exp: "core" },
 
   { name: "Cable", exp: "dark_city" },
   { name: "Daredevil", exp: "dark_city" },
   { name: "Professor X", exp: "dark_city" },
   { name: "Blade", exp: "dark_city" },
-  { name: "Storm", exp: "dark_city" },
-  { name: "Rogue", exp: "dark_city" },
-  { name: "Gambit", exp: "dark_city" },
   { name: "Psylocke", exp: "dark_city" },
   { name: "Jean Grey", exp: "dark_city" },
   { name: "Beast", exp: "dark_city" },
@@ -242,7 +252,6 @@ const HEROES = [
   { name: "Vision", exp: "civil_war" },
   { name: "War Machine", exp: "civil_war" },
   { name: "Black Panther", exp: "civil_war" },
-  { name: "Hawkeye", exp: "civil_war" },
 
   { name: "Nova (Richard Rider)", exp: "annihilation" },
   { name: "Quasar", exp: "annihilation" },
@@ -256,7 +265,6 @@ const HEROES = [
   { name: "Captain America (Sam Wilson)", exp: "cap_75" },
   { name: "Captain America (Bucky Barnes)", exp: "cap_75" },
 
-  { name: "Deadpool", exp: "deadpool" },
   { name: "Negasonic Teenage Warhead", exp: "deadpool" },
 
   { name: "Doctor Strange", exp: "dr_strange" },
@@ -264,7 +272,6 @@ const HEROES = [
   { name: "Wong", exp: "dr_strange" },
   { name: "Clea", exp: "dr_strange" },
 
-  { name: "Thor", exp: "asgard" },
   { name: "Valkyrie", exp: "asgard" },
   { name: "Sif", exp: "asgard" },
   { name: "Beta Ray Bill", exp: "asgard" },
@@ -282,7 +289,6 @@ const HEROES = [
   { name: "Black Bolt", exp: "realm_of_kings" },
   { name: "Medusa", exp: "realm_of_kings" },
 
-  { name: "Nick Fury", exp: "shield" },
   { name: "Maria Hill", exp: "shield" },
   { name: "Phil Coulson", exp: "shield" },
   { name: "Mockingbird", exp: "shield" },
