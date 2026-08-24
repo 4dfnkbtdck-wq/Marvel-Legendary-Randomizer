@@ -1,7 +1,8 @@
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "legendary-randomizer/v1";
+  const STORAGE_KEY = "legendary-randomizer/v2";
+  const HISTORY_LIMIT = 20;
 
   const EXPANSION_COLORS = ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#007AFF", "#5856D6", "#AF52DE"];
 
@@ -13,37 +14,56 @@
     { key: "heroes", label: "Heroes", icon: "⭐️", color: "#007AFF", pool: HEROES, countKey: "heroCount", fixedCount: null },
   ];
 
+  const CATEGORY_BY_KEY = {};
+  CATEGORIES.forEach((c) => (CATEGORY_BY_KEY[c.key] = c));
+
   let state = loadState();
 
-  function loadState() {
-    const defaults = {
-      expansions: ["core"],
-      options: { heroCount: 5, villainCount: 4, henchmenCount: 1 },
+  function defaultState() {
+    return {
+      expansions: new Set(["core"]),
+      options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, players: 3 },
+      exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
+      history: [],
       result: {},
       locks: {},
     };
+  }
+
+  function loadState() {
+    const defaults = defaultState();
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { ...defaults, expansions: new Set(defaults.expansions) };
+      if (!raw) return defaults;
       const parsed = JSON.parse(raw);
+      const exclusions = {};
+      CATEGORIES.forEach((c) => {
+        exclusions[c.key] = new Set((parsed.exclusions && parsed.exclusions[c.key]) || []);
+      });
       return {
         expansions: new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions),
         options: { ...defaults.options, ...(parsed.options || {}) },
+        exclusions,
+        history: Array.isArray(parsed.history) ? parsed.history : [],
         result: {},
         locks: {},
       };
     } catch (e) {
-      return { ...defaults, expansions: new Set(defaults.expansions) };
+      return defaults;
     }
   }
 
   function saveState() {
     try {
+      const exclusions = {};
+      CATEGORIES.forEach((c) => (exclusions[c.key] = Array.from(state.exclusions[c.key])));
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
           expansions: Array.from(state.expansions),
           options: state.options,
+          exclusions,
+          history: state.history,
         })
       );
     } catch (e) {
@@ -52,7 +72,8 @@
   }
 
   function poolFor(category) {
-    return category.pool.filter((card) => state.expansions.has(card.exp));
+    const excluded = state.exclusions[category.key];
+    return category.pool.filter((card) => state.expansions.has(card.exp) && !excluded.has(card.name));
   }
 
   function pickRandom(list, n, exclude) {
@@ -88,11 +109,12 @@
 
   function randomizeAll() {
     CATEGORIES.forEach((category) => randomizeCategory(category, { keepLocked: true }));
+    saveToHistory();
     render();
   }
 
   function rerollOne(categoryKey, index) {
-    const category = CATEGORIES.find((c) => c.key === categoryKey);
+    const category = CATEGORY_BY_KEY[categoryKey];
     const pool = poolFor(category);
     const existing = state.result[categoryKey] || [];
     const [picked] = pickRandom(pool, 1, existing);
@@ -110,15 +132,59 @@
     render();
   }
 
+  function chooseCard(categoryKey, index, card) {
+    const existing = state.result[categoryKey] || [];
+    existing[index] = card;
+    state.result[categoryKey] = existing;
+    const locks = state.locks[categoryKey] || [];
+    locks[index] = true;
+    state.locks[categoryKey] = locks;
+    render();
+  }
+
   function poolWarnings() {
     return CATEGORIES.map((category) => {
       const pool = poolFor(category);
       const n = countFor(category);
       if (pool.length < n) {
-        return `${category.label}: need ${n}, only ${pool.length} available with current expansions.`;
+        return `${category.label}: need ${n}, only ${pool.length} available with current expansions/exclusions.`;
       }
       return null;
     }).filter(Boolean);
+  }
+
+  // ---------- History ----------
+
+  function saveToHistory() {
+    const snapshot = {};
+    CATEGORIES.forEach((c) => (snapshot[c.key] = (state.result[c.key] || []).map((item) => ({ ...item }))));
+    const entry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: Date.now(),
+      players: state.options.players,
+      result: snapshot,
+    };
+    state.history.unshift(entry);
+    if (state.history.length > HISTORY_LIMIT) state.history.length = HISTORY_LIMIT;
+    saveState();
+  }
+
+  function restoreHistoryEntry(entry) {
+    CATEGORIES.forEach((c) => {
+      state.result[c.key] = (entry.result[c.key] || []).map((item) => ({ ...item }));
+      state.locks[c.key] = state.result[c.key].map(() => false);
+    });
+    render();
+  }
+
+  function deleteHistoryEntry(id) {
+    state.history = state.history.filter((h) => h.id !== id);
+    saveState();
+  }
+
+  function formatTimestamp(ts) {
+    const d = new Date(ts);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   }
 
   // ---------- Rendering ----------
@@ -126,12 +192,25 @@
   const el = {
     expansionList: document.getElementById("expansion-list"),
     toggleAllExpansions: document.getElementById("toggle-all-expansions"),
+    cardPoolList: document.getElementById("card-pool-list"),
+    playersSegmented: document.getElementById("players-segmented"),
+    henchmenNote: document.getElementById("henchmen-note"),
     randomizeAll: document.getElementById("randomize-all"),
     warnings: document.getElementById("warnings"),
     results: document.getElementById("results"),
     copyGroup: document.getElementById("copy-group"),
     copyBtn: document.getElementById("copy-setup"),
     steppers: Array.from(document.querySelectorAll(".stepper")),
+    openHistory: document.getElementById("open-history"),
+    historyCount: document.getElementById("history-count"),
+    sheetOverlay: document.getElementById("sheet-overlay"),
+    sheetBackdrop: document.getElementById("sheet-backdrop"),
+    sheetCancel: document.getElementById("sheet-cancel"),
+    sheetAction: document.getElementById("sheet-action"),
+    sheetTitle: document.getElementById("sheet-title"),
+    sheetSearchWrap: document.getElementById("sheet-search-wrap"),
+    sheetSearch: document.getElementById("sheet-search"),
+    sheetList: document.getElementById("sheet-list"),
   };
 
   function renderExpansions() {
@@ -148,7 +227,18 @@
 
       const text = document.createElement("span");
       text.className = "row-text";
-      text.textContent = exp.name;
+      if (exp.confidence === "light" || exp.confidence === "none") {
+        const main = document.createElement("span");
+        main.className = "row-text-main";
+        main.textContent = exp.name;
+        const sub = document.createElement("span");
+        sub.className = "row-text-sub";
+        sub.textContent = exp.confidence === "none" ? "No card data yet" : "Limited card data";
+        text.appendChild(main);
+        text.appendChild(sub);
+      } else {
+        text.textContent = exp.name;
+      }
 
       const switchWrap = document.createElement("span");
       switchWrap.className = "ios-switch";
@@ -164,6 +254,7 @@
         saveState();
         renderWarnings();
         renderToggleAllLabel();
+        renderCardPool();
       });
 
       const track = document.createElement("span");
@@ -186,6 +277,90 @@
   function renderToggleAllLabel() {
     const allSelected = state.expansions.size === EXPANSIONS.length;
     el.toggleAllExpansions.textContent = allSelected ? "Deselect All" : "Select All";
+  }
+
+  function renderCardPool() {
+    el.cardPoolList.innerHTML = "";
+    CATEGORIES.forEach((category) => {
+      const total = category.pool.filter((c) => state.expansions.has(c.exp)).length;
+      const available = poolFor(category).length;
+
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ios-row nav-row";
+      btn.disabled = total === 0;
+
+      const icon = document.createElement("span");
+      icon.className = "row-icon";
+      icon.style.background = category.color;
+      icon.textContent = category.icon;
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      text.textContent = category.label;
+
+      const trailing = document.createElement("span");
+      trailing.className = "row-trailing";
+      trailing.textContent = total === 0 ? "none in pool" : `${available} of ${total}`;
+
+      const chevron = document.createElement("span");
+      chevron.className = "chevron";
+      chevron.textContent = "›";
+
+      btn.appendChild(icon);
+      btn.appendChild(text);
+      btn.appendChild(trailing);
+      btn.appendChild(chevron);
+      btn.addEventListener("click", () => openManageSheet(category.key));
+
+      li.appendChild(btn);
+      el.cardPoolList.appendChild(li);
+    });
+  }
+
+  function renderPlayersSegmented() {
+    const buttons = Array.from(el.playersSegmented.querySelectorAll("button"));
+    buttons.forEach((btn) => {
+      btn.classList.toggle("active", Number(btn.dataset.value) === state.options.players);
+    });
+  }
+
+  function applyPlayerCount(n) {
+    const preset = PLAYER_COUNT_TABLE[n];
+    if (!preset) return;
+    state.options.players = n;
+    state.options.heroCount = preset.heroCount;
+    state.options.villainCount = preset.villainCount;
+    state.options.henchmenCount = preset.henchmenCount;
+    state.options.bystanders = preset.bystanders;
+    renderPlayersSegmented();
+    renderSteppers();
+    renderHenchmenNote();
+    saveState();
+    renderWarnings();
+  }
+
+  function detectPlayersFromOptions() {
+    const match = Object.entries(PLAYER_COUNT_TABLE).find(([, preset]) => {
+      return (
+        preset.heroCount === state.options.heroCount &&
+        preset.villainCount === state.options.villainCount &&
+        preset.henchmenCount === state.options.henchmenCount &&
+        preset.bystanders === state.options.bystanders
+      );
+    });
+    state.options.players = match ? Number(match[0]) : null;
+  }
+
+  function renderHenchmenNote() {
+    const preset = state.options.players ? PLAYER_COUNT_TABLE[state.options.players] : null;
+    if (preset && preset.henchmenNote) {
+      el.henchmenNote.textContent = preset.henchmenNote;
+      el.henchmenNote.classList.remove("hidden");
+    } else {
+      el.henchmenNote.classList.add("hidden");
+    }
   }
 
   function renderSteppers() {
@@ -213,6 +388,9 @@
         if (!btn) return;
         const delta = btn.dataset.action === "inc" ? 1 : -1;
         state.options[key] = Math.min(max, Math.max(min, state.options[key] + delta));
+        detectPlayersFromOptions();
+        renderPlayersSegmented();
+        renderHenchmenNote();
         renderSteppers();
         saveState();
         renderWarnings();
@@ -263,6 +441,13 @@
     const actions = document.createElement("div");
     actions.className = "result-row-actions";
 
+    const chooseBtn = document.createElement("button");
+    chooseBtn.type = "button";
+    chooseBtn.className = "round-btn";
+    chooseBtn.textContent = "🔍";
+    chooseBtn.title = "Choose a specific card for this slot";
+    chooseBtn.addEventListener("click", () => openChooseSheet(category.key, index));
+
     const lockBtn = document.createElement("button");
     lockBtn.type = "button";
     lockBtn.className = "round-btn";
@@ -278,6 +463,7 @@
     rerollBtn.disabled = locked;
     rerollBtn.addEventListener("click", () => rerollOne(category.key, index));
 
+    actions.appendChild(chooseBtn);
     actions.appendChild(lockBtn);
     actions.appendChild(rerollBtn);
 
@@ -334,8 +520,13 @@
     });
   }
 
+  function renderHistoryCount() {
+    el.historyCount.textContent = `${state.history.length} saved`;
+  }
+
   function setupText() {
     const lines = ["MARVEL LEGENDARY — Game Setup", ""];
+    if (state.options.players) lines.push(`Players: ${state.options.players}`, "");
     CATEGORIES.forEach((category) => {
       const items = state.result[category.key] || [];
       if (!items.length) return;
@@ -343,18 +534,283 @@
       items.forEach((item) => lines.push(`  - ${item.name} (${item.exp})`));
       lines.push("");
     });
+    lines.push(`Bystanders: ${state.options.bystanders}`);
     return lines.join("\n").trim();
   }
 
   function render() {
     renderWarnings();
     renderResults();
+    renderCardPool();
+    renderHistoryCount();
+  }
+
+  // ---------- Sheet (modal) ----------
+
+  let sheetState = null; // { mode: 'manage'|'choose'|'history', categoryKey, slotIndex, search }
+
+  function openSheet(next) {
+    sheetState = { search: "", ...next };
+    el.sheetSearch.value = "";
+    renderSheet();
+    el.sheetOverlay.classList.remove("hidden");
+  }
+
+  function closeSheet() {
+    sheetState = null;
+    el.sheetOverlay.classList.add("hidden");
+  }
+
+  function openManageSheet(categoryKey) {
+    openSheet({ mode: "manage", categoryKey });
+  }
+
+  function openChooseSheet(categoryKey, slotIndex) {
+    openSheet({ mode: "choose", categoryKey, slotIndex });
+  }
+
+  function openHistorySheet() {
+    openSheet({ mode: "history" });
+  }
+
+  function renderSheet() {
+    if (!sheetState) return;
+    el.sheetList.innerHTML = "";
+    el.sheetAction.classList.add("hidden");
+
+    if (sheetState.mode === "manage") {
+      const category = CATEGORY_BY_KEY[sheetState.categoryKey];
+      el.sheetTitle.textContent = `Manage ${category.label}`;
+      el.sheetSearchWrap.classList.remove("hidden");
+      el.sheetAction.classList.remove("hidden");
+      el.sheetAction.classList.remove("sheet-header-btn-accent");
+      const excluded = state.exclusions[category.key];
+      const allExcluded = category.pool.filter((c) => state.expansions.has(c.exp)).every((c) => excluded.has(c.name));
+      el.sheetAction.textContent = allExcluded ? "Include All" : "Exclude All";
+
+      const items = category.pool
+        .filter((c) => state.expansions.has(c.exp))
+        .filter((c) => c.name.toLowerCase().includes(sheetState.search.toLowerCase()))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      if (!items.length) {
+        el.sheetList.appendChild(emptyRow("No cards match."));
+        return;
+      }
+
+      items.forEach((item) => el.sheetList.appendChild(manageRow(category, item)));
+    } else if (sheetState.mode === "choose") {
+      const category = CATEGORY_BY_KEY[sheetState.categoryKey];
+      el.sheetTitle.textContent = `Choose ${category.label}`;
+      el.sheetSearchWrap.classList.remove("hidden");
+
+      const currentItem = (state.result[category.key] || [])[sheetState.slotIndex];
+      const items = poolFor(category)
+        .filter((c) => c.name.toLowerCase().includes(sheetState.search.toLowerCase()))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      if (!items.length) {
+        el.sheetList.appendChild(emptyRow("No cards available. Adjust expansions or exclusions."));
+        return;
+      }
+
+      items.forEach((item) => el.sheetList.appendChild(chooseRow(category, item, currentItem)));
+    } else if (sheetState.mode === "history") {
+      el.sheetTitle.textContent = "Past Setups";
+      el.sheetSearchWrap.classList.add("hidden");
+      if (state.history.length) {
+        el.sheetAction.classList.remove("hidden");
+        el.sheetAction.classList.add("sheet-header-btn-accent");
+        el.sheetAction.textContent = "Clear All";
+      }
+
+      if (!state.history.length) {
+        el.sheetList.appendChild(emptyRow("No saved setups yet. Randomize a setup and it'll show up here."));
+        return;
+      }
+      state.history.forEach((entry) => el.sheetList.appendChild(historyRow(entry)));
+    }
+  }
+
+  function emptyRow(text) {
+    const li = document.createElement("li");
+    li.className = "sheet-empty";
+    li.textContent = text;
+    return li;
+  }
+
+  function manageRow(category, item) {
+    const li = document.createElement("li");
+    li.className = "ios-row";
+
+    const icon = document.createElement("span");
+    icon.className = "row-icon";
+    icon.style.background = category.color;
+    icon.textContent = category.icon;
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    text.textContent = item.name;
+
+    const switchWrap = document.createElement("span");
+    switchWrap.className = "ios-switch";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.setAttribute("aria-label", `Include ${item.name}`);
+    input.checked = !state.exclusions[category.key].has(item.name);
+    input.addEventListener("change", () => {
+      if (input.checked) state.exclusions[category.key].delete(item.name);
+      else state.exclusions[category.key].add(item.name);
+      saveState();
+      renderWarnings();
+      renderCardPool();
+      renderSheet();
+    });
+    const track = document.createElement("span");
+    track.className = "track";
+    const thumb = document.createElement("span");
+    thumb.className = "thumb";
+    switchWrap.appendChild(input);
+    switchWrap.appendChild(track);
+    switchWrap.appendChild(thumb);
+
+    li.appendChild(icon);
+    li.appendChild(text);
+    li.appendChild(switchWrap);
+    return li;
+  }
+
+  function chooseRow(category, item, currentItem) {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ios-row sheet-row";
+
+    const icon = document.createElement("span");
+    icon.className = "row-icon";
+    icon.style.background = category.color;
+    icon.textContent = category.icon;
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    text.textContent = item.name;
+
+    btn.appendChild(icon);
+    btn.appendChild(text);
+
+    if (currentItem && currentItem.name === item.name && currentItem.exp === item.exp) {
+      const check = document.createElement("span");
+      check.textContent = "✓";
+      check.style.color = "var(--blue)";
+      check.style.fontWeight = "700";
+      btn.appendChild(check);
+    }
+
+    btn.addEventListener("click", () => {
+      chooseCard(sheetState.categoryKey, sheetState.slotIndex, item);
+      closeSheet();
+    });
+
+    li.appendChild(btn);
+    return li;
+  }
+
+  function historyRow(entry) {
+    const li = document.createElement("li");
+    li.className = "ios-row";
+
+    const mastermind = (entry.result.mastermind || [])[0];
+    const heroCount = (entry.result.heroes || []).length;
+
+    const icon = document.createElement("span");
+    icon.className = "row-icon";
+    icon.style.background = "#8E8E93";
+    icon.textContent = "🕓";
+
+    const text = document.createElement("div");
+    text.className = "result-row-text";
+    const main = document.createElement("span");
+    main.className = "row-text-main";
+    main.textContent = mastermind ? mastermind.name : "Setup";
+    const sub = document.createElement("span");
+    sub.className = "row-text-sub";
+    sub.textContent = `${formatTimestamp(entry.timestamp)} · ${heroCount} heroes${entry.players ? ` · ${entry.players}p` : ""}`;
+    text.appendChild(main);
+    text.appendChild(sub);
+
+    const actions = document.createElement("div");
+    actions.className = "result-row-actions";
+
+    const restoreBtn = document.createElement("button");
+    restoreBtn.type = "button";
+    restoreBtn.className = "round-btn";
+    restoreBtn.textContent = "↩️";
+    restoreBtn.title = "Restore this setup";
+    restoreBtn.addEventListener("click", () => {
+      restoreHistoryEntry(entry);
+      closeSheet();
+    });
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "round-btn";
+    deleteBtn.textContent = "🗑";
+    deleteBtn.title = "Delete this saved setup";
+    deleteBtn.addEventListener("click", () => {
+      deleteHistoryEntry(entry.id);
+      renderSheet();
+      renderHistoryCount();
+    });
+
+    actions.appendChild(restoreBtn);
+    actions.appendChild(deleteBtn);
+
+    li.appendChild(icon);
+    li.appendChild(text);
+    li.appendChild(actions);
+    return li;
+  }
+
+  function bindSheet() {
+    el.sheetBackdrop.addEventListener("click", closeSheet);
+    el.sheetCancel.addEventListener("click", closeSheet);
+    el.sheetSearch.addEventListener("input", () => {
+      if (!sheetState) return;
+      sheetState.search = el.sheetSearch.value;
+      renderSheet();
+    });
+    el.sheetAction.addEventListener("click", () => {
+      if (!sheetState) return;
+      if (sheetState.mode === "manage") {
+        const category = CATEGORY_BY_KEY[sheetState.categoryKey];
+        const pool = category.pool.filter((c) => state.expansions.has(c.exp));
+        const allExcluded = pool.every((c) => state.exclusions[category.key].has(c.name));
+        if (allExcluded) {
+          state.exclusions[category.key].clear();
+        } else {
+          pool.forEach((c) => state.exclusions[category.key].add(c.name));
+        }
+        saveState();
+        renderWarnings();
+        renderCardPool();
+        renderSheet();
+      } else if (sheetState.mode === "history") {
+        state.history = [];
+        saveState();
+        renderSheet();
+        renderHistoryCount();
+      }
+    });
   }
 
   function init() {
     renderExpansions();
+    renderCardPool();
+    renderPlayersSegmented();
     renderSteppers();
+    renderHenchmenNote();
     bindSteppers();
+    bindSheet();
     render();
 
     el.randomizeAll.addEventListener("click", randomizeAll);
@@ -365,7 +821,16 @@
       saveState();
       renderExpansions();
       renderWarnings();
+      renderCardPool();
     });
+
+    el.playersSegmented.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      applyPlayerCount(Number(btn.dataset.value));
+    });
+
+    el.openHistory.addEventListener("click", openHistorySheet);
 
     el.copyBtn.addEventListener("click", async () => {
       const text = setupText();

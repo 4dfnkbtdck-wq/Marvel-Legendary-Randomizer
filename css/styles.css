@@ -170,7 +170,8 @@ body {
   border-bottom: 1px solid var(--separator);
 }
 
-.ios-row:last-child {
+.ios-list > .ios-row:last-child,
+.ios-list > li:last-child > .ios-row {
   border-bottom: none;
 }
 
@@ -399,6 +400,180 @@ body {
 .round-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+/* ---------- Navigation rows (Card Pool / History) ---------- */
+
+.nav-row {
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--label);
+}
+
+.row-trailing {
+  color: var(--label-secondary);
+  font-size: 0.92rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--label-tertiary);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-left: -0.15rem;
+}
+
+/* ---------- Segmented control ---------- */
+
+.segmented {
+  display: flex;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.segmented button {
+  border: none;
+  background: none;
+  color: var(--label);
+  font-size: 0.85rem;
+  font-weight: 500;
+  width: 30px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.segmented button.active {
+  background: var(--grouped-bg);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* ---------- Sheet (modal) ---------- */
+
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet-overlay.hidden {
+  display: none;
+}
+
+.sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0;
+  cursor: pointer;
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  background: var(--bg);
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.sheet-grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--separator);
+  margin: 0.55rem auto 0.2rem;
+  flex-shrink: 0;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.9rem;
+  flex-shrink: 0;
+}
+
+.sheet-header-btn {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.sheet-header-btn-accent {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.sheet-title {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.sheet-search-wrap {
+  padding: 0 0.9rem 0.6rem;
+  flex-shrink: 0;
+}
+
+.sheet-search {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: var(--grouped-bg);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.95rem;
+  color: var(--label);
+  font-family: inherit;
+}
+
+.sheet-search::placeholder {
+  color: var(--label-tertiary);
+}
+
+.sheet-list {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0 0.9rem 0.9rem;
+  width: auto;
+  border-radius: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet-row {
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--label);
+}
+
+.sheet-empty {
+  text-align: center;
+  color: var(--label-secondary);
+  padding: 2rem 1rem;
+  font-size: 0.9rem;
 }
 
 /* ---------- Misc ---------- */

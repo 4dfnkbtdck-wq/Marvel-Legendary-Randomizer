@@ -25,17 +25,50 @@
     </div>
 
     <section class="ios-group">
+      <div class="group-header"><span>History</span></div>
+      <ul class="ios-list">
+        <li>
+          <button type="button" class="ios-row nav-row" id="open-history">
+            <span class="row-icon" style="background:#8E8E93">🕓</span>
+            <span class="row-text">Past Setups</span>
+            <span class="row-trailing" id="history-count">0 saved</span>
+            <span class="chevron">›</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section class="ios-group">
       <div class="group-header">
         <span>Expansions</span>
         <button type="button" id="toggle-all-expansions" class="header-action">Select All</button>
       </div>
       <ul class="ios-list" id="expansion-list"></ul>
-      <p class="group-footer">Only cards from the expansions you switch on here are used when randomizing.</p>
+      <p class="group-footer">Only cards from the expansions you switch on here are used when randomizing. "Legendary: Villains" isn't included — it's a different game mode. "Civil War" only contributes its ordinary Heroes.</p>
+    </section>
+
+    <section class="ios-group">
+      <div class="group-header">
+        <span>Card Pool</span>
+      </div>
+      <ul class="ios-list" id="card-pool-list"></ul>
+      <p class="group-footer">Turn off individual characters or cards you don't own or don't want in the mix.</p>
     </section>
 
     <section class="ios-group">
       <div class="group-header"><span>Setup Size</span></div>
       <ul class="ios-list">
+        <li class="ios-row">
+          <span class="row-icon" style="background:#5856D6">👥</span>
+          <span class="row-text">Players</span>
+          <span class="segmented" id="players-segmented">
+            <button type="button" data-value="1">1</button>
+            <button type="button" data-value="2">2</button>
+            <button type="button" data-value="3">3</button>
+            <button type="button" data-value="4">4</button>
+            <button type="button" data-value="5">5</button>
+          </span>
+        </li>
         <li class="ios-row">
           <span class="row-icon" style="background:#007AFF">⭐️</span>
           <span class="row-text">Heroes</span>
@@ -63,7 +96,18 @@
             <button type="button" class="stepper-btn" data-action="inc" aria-label="Increase henchmen">+</button>
           </span>
         </li>
+        <li class="ios-row">
+          <span class="row-icon" style="background:#8E8E93">🧍</span>
+          <span class="row-text">Bystanders</span>
+          <span class="stepper" data-option="bystanders" data-min="1" data-max="20">
+            <button type="button" class="stepper-btn" data-action="dec" aria-label="Decrease bystanders">−</button>
+            <span class="stepper-value">8</span>
+            <button type="button" class="stepper-btn" data-action="inc" aria-label="Increase bystanders">+</button>
+          </span>
+        </li>
       </ul>
+      <p class="group-footer">Bystanders don't have named cards of their own — this is just how many go in the villain deck.</p>
+      <p class="group-footer hidden" id="henchmen-note"></p>
     </section>
 
     <div id="warnings" class="ios-banner hidden"></div>
@@ -91,6 +135,22 @@
       Card data is a best-effort starting set — see <code>js/data.js</code> to correct or extend it.
     </p>
   </main>
+
+  <div class="sheet-overlay hidden" id="sheet-overlay">
+    <button type="button" class="sheet-backdrop" id="sheet-backdrop" aria-label="Close"></button>
+    <div class="sheet" id="sheet">
+      <div class="sheet-grabber"></div>
+      <div class="sheet-header">
+        <button type="button" class="sheet-header-btn" id="sheet-cancel">Cancel</button>
+        <span class="sheet-title" id="sheet-title">Manage</span>
+        <button type="button" class="sheet-header-btn sheet-header-btn-accent hidden" id="sheet-action">Clear</button>
+      </div>
+      <div class="sheet-search-wrap hidden" id="sheet-search-wrap">
+        <input type="search" id="sheet-search" class="sheet-search" placeholder="Search" autocomplete="off" />
+      </div>
+      <ul class="ios-list sheet-list" id="sheet-list"></ul>
+    </div>
+  </div>
 
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
