@@ -165,7 +165,7 @@ const SCHEMES = [
     exp: "core",
     overrides: { twists: 8 },
     setupNote: "The Wound stack holds 6 Wounds per player.",
-    twist: "Each player reveals an X-Men Hero or gains a Wound.",
+    twist: "Each player reveals a Tech Hero or gains a Wound.",
     evilWins: "If the Wound stack runs out.",
   },
   {

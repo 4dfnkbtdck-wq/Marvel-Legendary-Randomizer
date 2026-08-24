@@ -166,7 +166,10 @@
     }
     if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
-      if (categoryKey === "scheme") syncSchemeNumbers();
+      if (categoryKey === "scheme") {
+        syncSchemeNumbers();
+        reconcileCountedCategories();
+      }
       syncRequiredCards();
     }
     render();
@@ -188,7 +191,10 @@
     locks[index] = true;
     state.locks[categoryKey] = locks;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
-      if (categoryKey === "scheme") syncSchemeNumbers();
+      if (categoryKey === "scheme") {
+        syncSchemeNumbers();
+        reconcileCountedCategories();
+      }
       syncRequiredCards();
     }
     render();
@@ -340,6 +346,42 @@
     renderSteppers();
     renderHenchmenNote();
     saveState();
+  }
+
+  /** Grows or shrinks the *displayed* results for one counted category
+   * (Villain Groups / Henchmen / Heroes) to match its current stepper
+   * value, without discarding cards that are still wanted. Needed because
+   * syncSchemeNumbers only updates the stepper number — on its own that
+   * leaves a stale results list on screen (e.g. the stepper says
+   * "Henchmen: 2" but only 1 card is actually shown) until the next full
+   * Randomize Setup. Growing adds fresh random picks; shrinking drops
+   * unlocked cards first, only touching locked ones if there's no choice. */
+  function resizeCategoryTo(categoryKey) {
+    const category = CATEGORY_BY_KEY[categoryKey];
+    const n = countFor(category);
+    const items = state.result[categoryKey] || [];
+    const locks = state.locks[categoryKey] || [];
+    if (!items.length || items.length === n) return;
+
+    if (items.length < n) {
+      const fresh = pickRandom(poolFor(category), n - items.length, items);
+      state.result[categoryKey] = items.concat(fresh);
+      state.locks[categoryKey] = locks.concat(fresh.map(() => false));
+      return;
+    }
+
+    const excess = items.length - n;
+    const dropIndices = items
+      .map((_, i) => i)
+      .sort((a, b) => (locks[a] ? 1 : 0) - (locks[b] ? 1 : 0)) // unlocked first
+      .slice(0, excess);
+    const drop = new Set(dropIndices);
+    state.result[categoryKey] = items.filter((_, i) => !drop.has(i));
+    state.locks[categoryKey] = locks.filter((_, i) => !drop.has(i));
+  }
+
+  function reconcileCountedCategories() {
+    ["villains", "henchmen", "heroes"].forEach(resizeCategoryTo);
   }
 
   function requiredReason(categoryKey, item) {
@@ -598,8 +640,11 @@
     state.options.players = n;
     state.options.villainCount = preset.villainCount;
     syncSchemeNumbers(); // sets heroCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
+    reconcileCountedCategories();
+    syncRequiredCards();
     renderPlayersSegmented();
     renderWarnings();
+    renderResults();
   }
 
   function detectPlayersFromOptions() {
@@ -767,7 +812,10 @@
       rerollSection.textContent = "Reroll All";
       rerollSection.addEventListener("click", () => {
         randomizeCategory(category, { keepLocked: true });
-        if (category.key === "scheme") syncSchemeNumbers();
+        if (category.key === "scheme") {
+          syncSchemeNumbers();
+          reconcileCountedCategories();
+        }
         syncRequiredCards();
         render();
       });
