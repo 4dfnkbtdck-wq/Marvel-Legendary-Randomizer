@@ -2,7 +2,8 @@
 
 A small, dependency-free web app that randomizes a full setup for
 **Legendary: A Marvel Deck Building Game** — Mastermind, Scheme, Villain
-Groups, Henchmen, and Heroes — filtered to whichever expansions you own.
+Groups, Henchmen, and Heroes — filtered to whichever expansions you own,
+with a bunch of ways to fine-tune it.
 
 ## Running it
 
@@ -19,39 +20,71 @@ It also works as-is on GitHub Pages (Settings → Pages → deploy from the
 
 ## Using it
 
-1. Check the boxes for the expansions you own (only Core Set is checked
-   by default).
-2. Adjust how many Heroes / Villain Groups / Henchmen you want drawn.
-3. Hit **Randomize Setup**.
-4. Click 🔒 on any card to lock it before rerolling, or 🎲 to reroll just
-   that one card. "reroll all" on a section header rerolls everything in
-   that section (respecting locks).
-5. **Copy Setup** puts a plain-text summary on your clipboard.
+1. **Expansions** — switch on the ones you own (only Core Set is on by
+   default).
+2. **Card Pool** — dig into any category (Mastermind, Scheme, Villain
+   Groups, Henchmen, Heroes) to turn off individual cards you don't want
+   in the mix, with search.
+3. **Setup Size** — pick a **Players** count (1–5) to fill in Heroes /
+   Villain Groups / Henchmen / Bystanders from the game's real
+   deck-construction table; nudge any of those with the +/− steppers
+   afterward if you want something different.
+4. Tap **Randomize Setup**.
+5. On any result card: 🔍 **choose** a specific card for that slot, 🔒
+   **lock** it so it survives the next reroll, or 🔁 **reroll** just that
+   one. "Reroll All" on a section header rerolls everything in that
+   section (respecting locks).
+6. **Past Setups** (top of the page) keeps your last 20 randomized setups
+   so you can look one back up or restore it.
+7. **Copy Setup** puts a plain-text summary on your clipboard.
 
-Your expansion selection and size settings are remembered in the browser
-(`localStorage`) between visits.
+Some Masterminds always lead a specific Villain Group or Henchman group
+(per the "always leads ___" text on their card) — when one of those is in
+play, its card is automatically included and locked in, tagged "always
+led by ___" so you know why. It still respects your locks and Card Pool
+exclusions: it won't evict a card you locked yourself, and won't force in
+something you've excluded.
+
+Your expansion selection, exclusions, and size settings are remembered in
+the browser (`localStorage`) between visits.
 
 ## Card data
 
 `js/data.js` holds the whole card database as plain JS arrays — one entry
 per Mastermind / Scheme / Villain Group / Henchmen / Hero, each tagged
-with the expansion it belongs to. It's a best-effort starter set compiled
-from publicly available box-content info, **not** a verified transcription
-of every card, so skim it against your own boxes before your first game
-and fix anything that's off.
+with the expansion it belongs to and, for Masterminds, an optional
+`leadsCategory`/`leadsName` pair for the "always leads" mechanic above.
 
-Two expansions are intentionally not included: **Legendary: Villains** and
-**Legendary: Civil War** use a different game mode (playing as villains,
-or heroes vs. heroes) that doesn't fit the Mastermind/Scheme/Villain/Hero
-shape this randomizer generates.
+Every expansion is listed even when its data is sparse or empty — each
+one in `EXPANSIONS` carries a `confidence`:
+
+- **`verified`** — transcribed from an official source (right now: Core
+  Set, from the [official quick-reference](https://www.legendarycardgame.com/core-set-at-a-glace)).
+- **`moderate`** — compiled from general game knowledge, not
+  cross-checked against a primary source.
+- **`light`** — a handful of headline cards only, likely incomplete.
+- **`none`** — name only, no card data yet.
+
+Anything short of `verified` shows a note in the Expansions list, so
+guesses are never presented as fact. Skim it against your own boxes
+before your first game and fix anything that's off — or send along the
+real text (a photo of the card, the rulebook, whatever) and it'll get
+transcribed in properly.
+
+One expansion is intentionally not included at all: **Legendary:
+Villains** flips the game so players control villains against a hero
+Mastermind, which doesn't fit the Mastermind/Scheme/Villain/Hero shape
+this randomizer generates. **Legendary: Civil War** *is* included, but
+only for its ordinary Heroes — its special "Team Iron Man vs. Team Cap"
+mode isn't modeled here.
 
 To add an expansion or correct an entry:
 
-1. Add a row to `EXPANSIONS` with a short `id` and display `name`.
+1. Add a row to `EXPANSIONS` with a short `id`, display `name`, and
+   `confidence`.
 2. Add entries to `MASTERMINDS` / `SCHEMES` / `VILLAIN_GROUPS` /
    `HENCHMEN` / `HEROES`, each as `{ name: "...", exp: "your-id" }`.
-3. Reload the page — the new expansion shows up in the checkbox list
-   automatically.
+3. Reload the page — the new expansion shows up automatically.
 
 A category can be sparse (e.g. a small-box expansion that only adds
 Heroes) — the randomizer simply won't draw from an empty pool, and will

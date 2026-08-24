@@ -104,11 +104,15 @@
     const combined = lockedItems.concat(fresh);
 
     state.result[category.key] = combined;
-    if (!keepLocked) state.locks[category.key] = combined.map(() => false);
+    if (!keepLocked) {
+      state.locks[category.key] = combined.map(() => false);
+      if (signatureFlags[category.key]) signatureFlags[category.key] = [];
+    }
   }
 
   function randomizeAll() {
     CATEGORIES.forEach((category) => randomizeCategory(category, { keepLocked: true }));
+    syncMastermindSignature();
     saveToHistory();
     render();
   }
@@ -122,6 +126,8 @@
       existing[index] = picked;
       state.result[categoryKey] = existing;
     }
+    if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
+    if (categoryKey === "mastermind") syncMastermindSignature();
     render();
   }
 
@@ -136,10 +142,95 @@
     const existing = state.result[categoryKey] || [];
     existing[index] = card;
     state.result[categoryKey] = existing;
+    if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
     const locks = state.locks[categoryKey] || [];
     locks[index] = true;
     state.locks[categoryKey] = locks;
+    if (categoryKey === "mastermind") syncMastermindSignature();
     render();
+  }
+
+  // ---------- Mastermind "always leads" ----------
+
+  // Runtime-only bookkeeping (not persisted): which result slots were filled
+  // by forceIncludeSignature rather than chosen by the player, per category.
+  const signatureFlags = { villains: [], henchmen: [] };
+
+  function currentMastermindData() {
+    const mm = (state.result.mastermind || [])[0];
+    if (!mm) return null;
+    return MASTERMINDS.find((m) => m.name === mm.name && m.exp === mm.exp) || null;
+  }
+
+  /** Release any slot a *previous* Mastermind's signature card claimed, if it
+   * no longer matches the current Mastermind (or was excluded/expansion'd
+   * out from under it) — replacing it with a fresh random pick so a stale
+   * forced card doesn't permanently squat a slot and starve room for the
+   * next Mastermind's own signature. */
+  function clearStaleSignatures(exceptCategoryKey, exceptName) {
+    ["villains", "henchmen"].forEach((categoryKey) => {
+      const flags = signatureFlags[categoryKey];
+      const items = state.result[categoryKey] || [];
+      const locks = state.locks[categoryKey] || [];
+      const stillCurrent = categoryKey === exceptCategoryKey && exceptName && poolFor(CATEGORY_BY_KEY[categoryKey]).some((c) => c.name === exceptName);
+
+      for (let i = 0; i < items.length; i++) {
+        if (!flags[i]) continue;
+        if (stillCurrent && items[i].name === exceptName) continue;
+        flags[i] = false;
+        locks[i] = false;
+        const [fresh] = pickRandom(poolFor(CATEGORY_BY_KEY[categoryKey]), 1, items);
+        if (fresh) items[i] = fresh;
+      }
+      state.result[categoryKey] = items;
+      state.locks[categoryKey] = locks;
+    });
+  }
+
+  /** If the current Mastermind "always leads" a specific card, make sure it's
+   * in play: reuse it if already present, otherwise fill the first unlocked
+   * slot (or an empty one). Never evicts a slot the player locked themselves,
+   * and does nothing if that card is excluded or its expansion isn't on. */
+  function forceIncludeSignature(categoryKey, name) {
+    const category = CATEGORY_BY_KEY[categoryKey];
+    const pool = poolFor(category);
+    const card = pool.find((c) => c.name === name);
+    if (!card) return;
+
+    const items = state.result[categoryKey] || [];
+    const locks = state.locks[categoryKey] || [];
+    const flags = signatureFlags[categoryKey];
+    const existingIndex = items.findIndex((item) => item.name === card.name);
+    if (existingIndex !== -1) {
+      locks[existingIndex] = true;
+      flags[existingIndex] = true;
+      state.locks[categoryKey] = locks;
+      return;
+    }
+
+    const n = countFor(category);
+    let targetIndex = items.findIndex((_, i) => !locks[i]);
+    if (targetIndex === -1 && items.length < n) targetIndex = items.length;
+    if (targetIndex === -1) return;
+
+    items[targetIndex] = card;
+    locks[targetIndex] = true;
+    flags[targetIndex] = true;
+    state.result[categoryKey] = items;
+    state.locks[categoryKey] = locks;
+  }
+
+  function syncMastermindSignature() {
+    const mmData = currentMastermindData();
+    const categoryKey = mmData && mmData.leadsCategory;
+    const name = mmData && mmData.leadsName;
+    clearStaleSignatures(categoryKey, name);
+    if (categoryKey && name) forceIncludeSignature(categoryKey, name);
+  }
+
+  function isMastermindSignature(categoryKey, item) {
+    const mmData = currentMastermindData();
+    return !!(mmData && mmData.leadsCategory === categoryKey && mmData.leadsName === item.name);
   }
 
   function poolWarnings() {
@@ -251,10 +342,12 @@
       input.addEventListener("change", () => {
         if (input.checked) state.expansions.add(exp.id);
         else state.expansions.delete(exp.id);
+        syncMastermindSignature();
         saveState();
         renderWarnings();
         renderToggleAllLabel();
         renderCardPool();
+        renderResults();
       });
 
       const track = document.createElement("span");
@@ -434,7 +527,8 @@
     mainSpan.textContent = item.name;
     const subSpan = document.createElement("span");
     subSpan.className = "row-text-sub";
-    subSpan.textContent = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
+    const expName = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
+    subSpan.textContent = isMastermindSignature(category.key, item) ? `${expName} · always led by ${currentMastermindData().name}` : expName;
     text.appendChild(mainSpan);
     text.appendChild(subSpan);
 
@@ -505,6 +599,7 @@
       rerollSection.textContent = "Reroll All";
       rerollSection.addEventListener("click", () => {
         randomizeCategory(category, { keepLocked: true });
+        syncMastermindSignature();
         render();
       });
       header.appendChild(span);
@@ -661,9 +756,11 @@
     input.addEventListener("change", () => {
       if (input.checked) state.exclusions[category.key].delete(item.name);
       else state.exclusions[category.key].add(item.name);
+      syncMastermindSignature();
       saveState();
       renderWarnings();
       renderCardPool();
+      renderResults();
       renderSheet();
     });
     const track = document.createElement("span");
@@ -790,9 +887,11 @@
         } else {
           pool.forEach((c) => state.exclusions[category.key].add(c.name));
         }
+        syncMastermindSignature();
         saveState();
         renderWarnings();
         renderCardPool();
+        renderResults();
         renderSheet();
       } else if (sheetState.mode === "history") {
         state.history = [];
@@ -818,10 +917,12 @@
     el.toggleAllExpansions.addEventListener("click", () => {
       const allSelected = state.expansions.size === EXPANSIONS.length;
       state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
+      syncMastermindSignature();
       saveState();
       renderExpansions();
       renderWarnings();
       renderCardPool();
+      renderResults();
     });
 
     el.playersSegmented.addEventListener("click", (e) => {
