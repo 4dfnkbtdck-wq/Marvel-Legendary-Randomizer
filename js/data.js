@@ -41,11 +41,13 @@
  * instance, isn't on a team — a hero without one just won't match any
  * team filter.
  *
- * A Scheme entry can optionally carry `note` — condensed Setup/Special
- * Rules/Twist/Evil Wins text from the physical card, shown as a callout
- * under the Scheme in results. It's informational only (the app doesn't
- * mechanically enforce it, e.g. an extra Henchman group or a required
- * Villain Group) — read it before building the physical deck.
+ * A Scheme entry can optionally carry `overrides`, `setupNote`, `twist`,
+ * and `evilWins` — see the comment directly above the SCHEMES array
+ * below for the full shape. `overrides` fields are mechanically applied
+ * by the app (see syncSchemeNumbers/syncRequiredCards in app.js);
+ * `setupNote`/`twist`/`evilWins` are shown as reference text only. A
+ * Scheme with none of these behaves exactly like one with no data at
+ * all — nothing here is required.
  */
 
 const EXPANSIONS = [
@@ -109,52 +111,86 @@ const MASTERMINDS = [
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
-// the physical cards, `note` included — unlike the rest of this file,
-// treat these as verified. `note` condenses each card's Setup / Special
-// Rules / Twist / Evil Wins text; it's shown as a callout under the
-// Scheme in results, since several of these change deck construction
-// (extra Bystanders, an extra Henchman group, a required Villain Group)
-// rather than just flavor.
+// the physical cards — unlike the rest of this file, treat these as
+// verified. Each carries:
+//   overrides    — mechanical deck-construction changes the app actually
+//                  applies (see syncSchemeNumbers/syncRequiredCards in
+//                  app.js): `twists` (or `twistsByPlayers`), `bystanders`,
+//                  `henchmenDelta`, `heroCount` (or `heroCountByPlayers`),
+//                  `requiredVillainGroup` (forced in like a Mastermind's
+//                  "always leads", by name).
+//   setupNote    — remaining Setup text not covered by a mechanical
+//                  override (e.g. "Skrull Villain Group required" is
+//                  covered by `requiredVillainGroup`, but "shuffle 12
+//                  random Heroes into the Villain Deck" isn't modeled and
+//                  stays as a reminder here), plus any Special Rule text.
+//   twist        — the Twist effect text, shown in the Scheme Twists
+//                  section since it's referenced throughout the game.
+//   evilWins     — the loss condition text.
 const SCHEMES = [
   {
     name: "Replace Earth's Leaders with Killbots",
     exp: "core",
-    note: "Setup: 5 Twists, plus 3 additional Twists placed next to this Scheme. 18 total Bystanders in the Villain Deck.\nSpecial Rule: Bystanders in the Villain Deck count as Killbot Villains, with Fight equal to the number of Twists next to this Scheme.\nTwist: Put the Twist next to this Scheme.\nEvil Wins: If 5 Killbots escape.",
+    overrides: { twists: 5, bystanders: 18 },
+    setupNote: "Plus 3 additional Twists placed next to this Scheme (not in the Villain Deck).\nSpecial Rule: Bystanders in the Villain Deck count as Killbot Villains, with Fight equal to the number of Twists next to this Scheme.",
+    twist: "Put the Twist next to this Scheme.",
+    evilWins: "If 5 Killbots escape.",
   },
   {
     name: "Secret Invasion of the Skrull Shapeshifters",
     exp: "core",
-    note: "Setup: 8 Twists, 6 Heroes. Skrull Villain Group required. Shuffle 12 random Heroes from the Hero Deck into the Villain Deck.\nSpecial Rule: Heroes in the Villain Deck count as Skrull Villains with Fight equal to the Hero's cost + 2. If you defeat that Hero, you gain it.\nTwist: The highest-cost Hero from the HQ moves into the Sewers as a Skrull Villain, as above.\nEvil Wins: If 6 Heroes get into the Escaped Villains pile.",
+    overrides: { twists: 8, heroCount: 6, requiredVillainGroup: "Skrulls" },
+    setupNote: "Shuffle 12 random Heroes from the Hero Deck into the Villain Deck.\nSpecial Rule: Heroes in the Villain Deck count as Skrull Villains with Fight equal to the Hero's cost + 2. If you defeat that Hero, you gain it.",
+    twist: "The highest-cost Hero from the HQ moves into the Sewers as a Skrull Villain, as above.",
+    evilWins: "If 6 Heroes get into the Escaped Villains pile.",
   },
   {
     name: "Super Hero Civil War",
     exp: "core",
-    note: "Setup: For 2–3 players, use 8 Twists. For 4–5 players, use 5 Twists. With only 2 players, use just 4 Heroes in the Hero Deck.\nTwist: KO all the Heroes in the HQ.\nEvil Wins: If the Hero Deck runs out.",
+    overrides: { twistsByPlayers: { 2: 8, 3: 8, 4: 5, 5: 5 }, heroCountByPlayers: { 2: 4 } },
+    setupNote: "",
+    twist: "KO all the Heroes in the HQ.",
+    evilWins: "If the Hero Deck runs out.",
   },
   {
     name: "Unleash the Power of the Cosmic Cube",
     exp: "core",
-    note: "Setup: 8 Twists.\nTwist: Put the Twist next to this Scheme.\nTwists 5–6: Each player gains a Wound.\nTwist 7: Each player gains 3 Wounds.\nTwist 8: Evil Wins!",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist: "Put the Twist next to this Scheme.\nTwists 5–6: Each player gains a Wound.\nTwist 7: Each player gains 3 Wounds.\nTwist 8: Evil Wins!",
+    evilWins: "",
   },
   {
     name: "The Legacy Virus",
     exp: "core",
-    note: "Setup: 8 Twists. The Wound stack holds 6 Wounds per player.\nTwist: Each player reveals an X-Men Hero or gains a Wound.\nEvil Wins: If the Wound stack runs out.",
+    overrides: { twists: 8 },
+    setupNote: "The Wound stack holds 6 Wounds per player.",
+    twist: "Each player reveals an X-Men Hero or gains a Wound.",
+    evilWins: "If the Wound stack runs out.",
   },
   {
     name: "Midtown Bank Robbery",
     exp: "core",
-    note: "Setup: 8 Twists. 12 total Bystanders in the Villain Deck.\nSpecial Rule: Each Villain gets +1 Fight for each Bystander it holds.\nTwist: Any Villain in the Bank captures 2 Bystanders, then play the top card of the Villain Deck.\nEvil Wins: When 8 Bystanders are carried away by escaping Villains.",
+    overrides: { twists: 8, bystanders: 12 },
+    setupNote: "Special Rule: Each Villain gets +1 Fight for each Bystander it holds.",
+    twist: "Any Villain in the Bank captures 2 Bystanders, then play the top card of the Villain Deck.",
+    evilWins: "When 8 Bystanders are carried away by escaping Villains.",
   },
   {
     name: "Negative Zone Prison Breakout",
     exp: "core",
-    note: "Setup: 8 Twists. Add an extra Henchman group to the Villain Deck.\nTwist: Play the top 2 cards of the Villain Deck.\nEvil Wins: If 12 Villains escape.",
+    overrides: { twists: 8, henchmenDelta: 1 },
+    setupNote: "",
+    twist: "Play the top 2 cards of the Villain Deck.",
+    evilWins: "If 12 Villains escape.",
   },
   {
     name: "Portals to the Dark Dimension",
     exp: "core",
-    note: "Setup: 7 Twists — each Twist is a Dark Portal.\nTwist 1: Put the Dark Portal above the Mastermind; the Mastermind gets +1 Fight.\nTwists 2–6: Put the Dark Portal in the leftmost city space without one yet; Villains there get +1 Fight.\nTwist 7: Evil Wins!",
+    overrides: { twists: 7 },
+    setupNote: "Each Twist is a Dark Portal.",
+    twist: "Twist 1: Put the Dark Portal above the Mastermind; the Mastermind gets +1 Fight.\nTwists 2–6: Put the Dark Portal in the leftmost city space without one yet; Villains there get +1 Fight.\nTwist 7: Evil Wins!",
+    evilWins: "",
   },
 
   { name: "Rise of Apocalypse", exp: "dark_city" },
