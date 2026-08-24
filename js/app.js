@@ -204,14 +204,15 @@
 
   /** Every card name that MUST be in play for this category right now,
    * from the current Mastermind's "always leads" and/or the current
-   * Scheme's required Villain Group. */
+   * Scheme's required Villain Group / Henchmen group. */
   function requiredCardNames(categoryKey) {
     const names = [];
     const mmData = currentMastermindData();
     if (mmData && mmData.leadsCategory === categoryKey && mmData.leadsName) names.push(mmData.leadsName);
     const scheme = currentSchemeData();
-    const requiredGroup = scheme && scheme.overrides && scheme.overrides.requiredVillainGroup;
-    if (categoryKey === "villains" && requiredGroup) names.push(requiredGroup);
+    const overrides = (scheme && scheme.overrides) || {};
+    if (categoryKey === "villains" && overrides.requiredVillainGroup) names.push(overrides.requiredVillainGroup);
+    if (categoryKey === "henchmen" && overrides.requiredHenchmen) names.push(overrides.requiredHenchmen);
     return names;
   }
 
@@ -242,9 +243,14 @@
   }
 
   /** Make sure one required card is in play: reuse it if already present,
-   * otherwise fill the first unlocked slot (or an empty one). Never evicts
-   * a slot the player locked themselves, and does nothing if that card is
-   * excluded or its expansion isn't on. */
+   * otherwise fill the first unlocked slot (or an empty one), growing the
+   * category's count by one first if every slot is already claimed by
+   * another required card (e.g. a Mastermind's "always leads" and a
+   * Scheme's requirement both landing on Henchmen with only 1 slot —
+   * both are mandatory, so the slot count grows to fit rather than one
+   * silently losing to whichever ran first). Never evicts a slot the
+   * player locked themselves, and does nothing if that card is excluded
+   * or its expansion isn't on. */
   function forceIncludeSignature(categoryKey, name) {
     const category = CATEGORY_BY_KEY[categoryKey];
     const pool = poolFor(category);
@@ -265,7 +271,10 @@
     const n = countFor(category);
     let targetIndex = items.findIndex((_, i) => !locks[i]);
     if (targetIndex === -1 && items.length < n) targetIndex = items.length;
-    if (targetIndex === -1) return;
+    if (targetIndex === -1) {
+      if (category.countKey) state.options[category.countKey] = clampOption(state.options[category.countKey] + 1, category.min, category.max);
+      targetIndex = items.length;
+    }
 
     items[targetIndex] = card;
     locks[targetIndex] = true;
@@ -371,8 +380,11 @@
       return `always led by ${mmData.name}`;
     }
     const scheme = currentSchemeData();
-    const requiredGroup = scheme && scheme.overrides && scheme.overrides.requiredVillainGroup;
-    if (categoryKey === "villains" && requiredGroup === item.name) {
+    const overrides = (scheme && scheme.overrides) || {};
+    if (categoryKey === "villains" && overrides.requiredVillainGroup === item.name) {
+      return `required by ${scheme.name}`;
+    }
+    if (categoryKey === "henchmen" && overrides.requiredHenchmen === item.name) {
       return `required by ${scheme.name}`;
     }
     return null;
