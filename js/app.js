@@ -4,30 +4,13 @@
   const STORAGE_KEY = "legendary-randomizer/v2";
   const HISTORY_LIMIT = 20;
 
-  const EXPANSION_COLORS = ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#007AFF", "#5856D6", "#AF52DE"];
-
   const CATEGORIES = [
-    { key: "mastermind", label: "Mastermind", icon: "👑", color: "#AF52DE", pool: MASTERMINDS, countKey: null, fixedCount: 1 },
-    { key: "scheme", label: "Scheme", icon: "📜", color: "#FFCC00", pool: SCHEMES, countKey: null, fixedCount: 1 },
-    { key: "villains", label: "Villain Groups", icon: "🎭", color: "#FF3B30", pool: VILLAIN_GROUPS, countKey: "villainCount", fixedCount: null },
-    { key: "henchmen", label: "Henchmen", icon: "👊", color: "#FF9500", pool: HENCHMEN, countKey: "henchmenCount", fixedCount: null },
-    { key: "heroes", label: "Heroes", icon: "⭐️", color: "#007AFF", pool: HEROES, countKey: "heroCount", fixedCount: null },
+    { key: "mastermind", label: "Mastermind", pool: MASTERMINDS, countKey: null, fixedCount: 1 },
+    { key: "scheme", label: "Scheme", pool: SCHEMES, countKey: null, fixedCount: 1 },
+    { key: "villains", label: "Villain Groups", pool: VILLAIN_GROUPS, countKey: "villainCount", fixedCount: null, min: 1, max: 6 },
+    { key: "henchmen", label: "Henchmen", pool: HENCHMEN, countKey: "henchmenCount", fixedCount: null, min: 1, max: 3 },
+    { key: "heroes", label: "Heroes", pool: HEROES, countKey: "heroCount", fixedCount: null, min: 3, max: 8 },
   ];
-
-  // Original glyphs themed to each team (not the trademarked team logos) —
-  // same colored-square treatment as every other icon in the app. Falls
-  // back to the generic Heroes star for an unrecognized or missing team.
-  const TEAM_ICONS = {
-    "X-Men": { icon: "X", color: "#1c1c1e" },
-    Avengers: { icon: "A", color: "#ed1d24" },
-    "Spider-Friends": { icon: "🕷️", color: "#1b2a6b" },
-    "S.H.I.E.L.D.": { icon: "🛡️", color: "#2c2c2e" },
-  };
-
-  function heroIconMeta(category, item) {
-    if (category.key === "heroes" && item.team && TEAM_ICONS[item.team]) return TEAM_ICONS[item.team];
-    return { icon: category.icon, color: category.color };
-  }
 
   const CATEGORY_BY_KEY = {};
   CATEGORIES.forEach((c) => (CATEGORY_BY_KEY[c.key] = c));
@@ -343,8 +326,6 @@
     state.options.bystanders = clampOption(bystanders, 1, 20);
     state.options.henchmenCount = clampOption(henchmenCount, 1, 3);
 
-    renderSteppers();
-    renderHenchmenNote();
     saveState();
   }
 
@@ -464,13 +445,11 @@
     teamChips: document.getElementById("team-chips"),
     clearTeamFilter: document.getElementById("clear-team-filter"),
     playersSegmented: document.getElementById("players-segmented"),
-    henchmenNote: document.getElementById("henchmen-note"),
     randomizeAll: document.getElementById("randomize-all"),
     warnings: document.getElementById("warnings"),
     results: document.getElementById("results"),
     copyGroup: document.getElementById("copy-group"),
     copyBtn: document.getElementById("copy-setup"),
-    steppers: Array.from(document.querySelectorAll(".stepper")),
     openHistory: document.getElementById("open-history"),
     historyCount: document.getElementById("history-count"),
     sheetOverlay: document.getElementById("sheet-overlay"),
@@ -485,15 +464,10 @@
 
   function renderExpansions() {
     el.expansionList.innerHTML = "";
-    EXPANSIONS.forEach((exp, i) => {
+    EXPANSIONS.forEach((exp) => {
       const id = `exp-${exp.id}`;
       const li = document.createElement("li");
       li.className = "ios-row";
-
-      const icon = document.createElement("span");
-      icon.className = "row-icon";
-      icon.style.background = EXPANSION_COLORS[i % EXPANSION_COLORS.length];
-      icon.textContent = "🃏";
 
       const text = document.createElement("span");
       text.className = "row-text";
@@ -540,7 +514,6 @@
       switchWrap.appendChild(track);
       switchWrap.appendChild(thumb);
 
-      li.appendChild(icon);
       li.appendChild(text);
       li.appendChild(switchWrap);
       el.expansionList.appendChild(li);
@@ -599,11 +572,6 @@
       btn.className = "ios-row nav-row";
       btn.disabled = total === 0;
 
-      const icon = document.createElement("span");
-      icon.className = "row-icon";
-      icon.style.background = category.color;
-      icon.textContent = category.icon;
-
       const text = document.createElement("span");
       text.className = "row-text";
       text.textContent = category.label;
@@ -616,7 +584,6 @@
       chevron.className = "chevron";
       chevron.textContent = "›";
 
-      btn.appendChild(icon);
       btn.appendChild(text);
       btn.appendChild(trailing);
       btn.appendChild(chevron);
@@ -659,49 +626,62 @@
     state.options.players = match ? Number(match[0]) : null;
   }
 
-  function renderHenchmenNote() {
+  function henchmenNoteText() {
     const preset = state.options.players ? PLAYER_COUNT_TABLE[state.options.players] : null;
-    if (preset && preset.henchmenNote) {
-      el.henchmenNote.textContent = preset.henchmenNote;
-      el.henchmenNote.classList.remove("hidden");
-    } else {
-      el.henchmenNote.classList.add("hidden");
-    }
+    return (preset && preset.henchmenNote) || null;
   }
 
-  function renderSteppers() {
-    el.steppers.forEach((stepper) => {
-      const key = stepper.dataset.option;
-      const min = Number(stepper.dataset.min);
-      const max = Number(stepper.dataset.max);
-      const valueEl = stepper.querySelector(".stepper-value");
-      const decBtn = stepper.querySelector('[data-action="dec"]');
-      const incBtn = stepper.querySelector('[data-action="inc"]');
-      const value = state.options[key];
-      valueEl.textContent = value;
-      decBtn.disabled = value <= min;
-      incBtn.disabled = value >= max;
-    });
-  }
+  /** Builds one self-contained count-adjustment row (label + stepper) for a
+   * post-randomize results section, e.g. "Villain Groups" or "Bystanders" —
+   * the same pattern originally proven for the Scheme Twists stepper.
+   * `onChange` runs before the shared re-render/re-save so a counted
+   * category (Villain Groups/Henchmen/Heroes) can resize its result list. */
+  function countStepperRow(labelText, key, min, max, onChange) {
+    const row = document.createElement("li");
+    row.className = "ios-row";
 
-  function bindSteppers() {
-    el.steppers.forEach((stepper) => {
-      const key = stepper.dataset.option;
-      const min = Number(stepper.dataset.min);
-      const max = Number(stepper.dataset.max);
-      stepper.addEventListener("click", (e) => {
-        const btn = e.target.closest(".stepper-btn");
-        if (!btn) return;
-        const delta = btn.dataset.action === "inc" ? 1 : -1;
-        state.options[key] = Math.min(max, Math.max(min, state.options[key] + delta));
-        detectPlayersFromOptions();
-        renderPlayersSegmented();
-        renderHenchmenNote();
-        renderSteppers();
-        saveState();
-        renderWarnings();
-      });
+    const text = document.createElement("span");
+    text.className = "row-text";
+    text.textContent = labelText;
+
+    const stepper = document.createElement("span");
+    stepper.className = "stepper";
+    const decBtn = document.createElement("button");
+    decBtn.type = "button";
+    decBtn.className = "stepper-btn";
+    decBtn.textContent = "−";
+    decBtn.setAttribute("aria-label", `Decrease ${labelText.toLowerCase()}`);
+    const valueSpan = document.createElement("span");
+    valueSpan.className = "stepper-value";
+    const incBtn = document.createElement("button");
+    incBtn.type = "button";
+    incBtn.className = "stepper-btn";
+    incBtn.textContent = "+";
+    incBtn.setAttribute("aria-label", `Increase ${labelText.toLowerCase()}`);
+
+    const value = state.options[key];
+    valueSpan.textContent = value;
+    decBtn.disabled = value <= min;
+    incBtn.disabled = value >= max;
+
+    stepper.appendChild(decBtn);
+    stepper.appendChild(valueSpan);
+    stepper.appendChild(incBtn);
+    stepper.addEventListener("click", (e) => {
+      const btn = e.target.closest(".stepper-btn");
+      if (!btn) return;
+      const delta = btn === incBtn ? 1 : -1;
+      state.options[key] = clampOption(state.options[key] + delta, min, max);
+      if (onChange) onChange();
+      detectPlayersFromOptions();
+      saveState();
+      renderPlayersSegmented();
+      renderResults();
     });
+
+    row.appendChild(text);
+    row.appendChild(stepper);
+    return row;
   }
 
   function renderWarnings() {
@@ -727,12 +707,6 @@
 
     const locked = !!(state.locks[category.key] || [])[index];
     if (locked) li.classList.add("locked");
-
-    const iconMeta = heroIconMeta(category, item);
-    const icon = document.createElement("span");
-    icon.className = "row-icon";
-    icon.style.background = iconMeta.color;
-    icon.textContent = iconMeta.icon;
 
     const text = document.createElement("div");
     text.className = "result-row-text";
@@ -774,7 +748,6 @@
     actions.appendChild(lockBtn);
     actions.appendChild(rerollBtn);
 
-    li.appendChild(icon);
     li.appendChild(text);
     li.appendChild(actions);
     return li;
@@ -825,6 +798,11 @@
 
       const list = document.createElement("ul");
       list.className = "ios-list";
+      if (category.countKey) {
+        list.appendChild(
+          countStepperRow("Count", category.countKey, category.min, category.max, () => resizeCategoryTo(category.key))
+        );
+      }
       items.forEach((item, index) => list.appendChild(resultRow(category, item, index)));
       section.appendChild(list);
 
@@ -835,19 +813,29 @@
         section.appendChild(note);
       }
 
+      if (category.key === "henchmen") {
+        const noteText = henchmenNoteText();
+        if (noteText) {
+          const note = document.createElement("p");
+          note.className = "group-footer";
+          note.textContent = noteText;
+          section.appendChild(note);
+        }
+      }
+
       el.results.appendChild(section);
 
-      if (category.key === "scheme") el.results.appendChild(schemeTwistsSection(items[0]));
+      if (category.key === "scheme") el.results.appendChild(villainDeckSection(items[0]));
     });
   }
 
-  /** A reference section for the Scheme Twist mechanic, shown once you've
-   * randomized: how many Twist cards go in the Villain Deck (its own
-   * self-contained stepper — Twists has no home in Setup Size since it's
-   * meaningless before you know the Scheme) plus the current Scheme's
-   * Twist effect and Evil Wins text, since both get referenced throughout
-   * the game, not just at setup. */
-  function schemeTwistsSection(schemeItem) {
+  /** A reference section shown once you've randomized, covering everything
+   * that only lives as a count in the Villain Deck rather than as a named
+   * card (Bystanders, Master Strikes, Twists — none of these have a home in
+   * Setup Size since Master Strikes/Twists are meaningless before you know
+   * the Scheme), plus the current Scheme's Twist effect and Evil Wins text,
+   * since both get referenced throughout the game, not just at setup. */
+  function villainDeckSection(schemeItem) {
     const scheme = SCHEMES.find((s) => s.name === schemeItem.name && s.exp === schemeItem.exp);
 
     const section = document.createElement("section");
@@ -856,58 +844,15 @@
     const header = document.createElement("div");
     header.className = "group-header";
     const span = document.createElement("span");
-    span.textContent = "Scheme Twists";
+    span.textContent = "Villain Deck";
     header.appendChild(span);
     section.appendChild(header);
 
     const list = document.createElement("ul");
     list.className = "ios-list";
-
-    const countRow = document.createElement("li");
-    countRow.className = "ios-row";
-    const countIcon = document.createElement("span");
-    countIcon.className = "row-icon";
-    countIcon.style.background = "#5AC8FA";
-    countIcon.textContent = "🌀";
-    const countText = document.createElement("span");
-    countText.className = "row-text";
-    countText.textContent = "Twists in Villain Deck";
-
-    const min = 0;
-    const max = 12;
-    const stepper = document.createElement("span");
-    stepper.className = "stepper";
-    const decBtn = document.createElement("button");
-    decBtn.type = "button";
-    decBtn.className = "stepper-btn";
-    decBtn.textContent = "−";
-    decBtn.setAttribute("aria-label", "Decrease twists");
-    decBtn.disabled = state.options.twists <= min;
-    const valueSpan = document.createElement("span");
-    valueSpan.className = "stepper-value";
-    valueSpan.textContent = state.options.twists;
-    const incBtn = document.createElement("button");
-    incBtn.type = "button";
-    incBtn.className = "stepper-btn";
-    incBtn.textContent = "+";
-    incBtn.setAttribute("aria-label", "Increase twists");
-    incBtn.disabled = state.options.twists >= max;
-    stepper.appendChild(decBtn);
-    stepper.appendChild(valueSpan);
-    stepper.appendChild(incBtn);
-    stepper.addEventListener("click", (e) => {
-      const btn = e.target.closest(".stepper-btn");
-      if (!btn) return;
-      const delta = btn === incBtn ? 1 : -1;
-      state.options.twists = clampOption(state.options.twists + delta, min, max);
-      saveState();
-      renderResults();
-    });
-
-    countRow.appendChild(countIcon);
-    countRow.appendChild(countText);
-    countRow.appendChild(stepper);
-    list.appendChild(countRow);
+    list.appendChild(countStepperRow("Bystanders", "bystanders", 1, 20));
+    list.appendChild(countStepperRow("Master Strikes", "masterStrikes", 0, 10));
+    list.appendChild(countStepperRow("Twists", "twists", 0, 12));
     section.appendChild(list);
 
     if (scheme && scheme.twist) {
@@ -1058,12 +1003,6 @@
     const li = document.createElement("li");
     li.className = "ios-row";
 
-    const iconMeta = heroIconMeta(category, item);
-    const icon = document.createElement("span");
-    icon.className = "row-icon";
-    icon.style.background = iconMeta.color;
-    icon.textContent = iconMeta.icon;
-
     const text = document.createElement("span");
     text.className = "row-text";
     if (category.key === "heroes" && item.team) {
@@ -1103,7 +1042,6 @@
     switchWrap.appendChild(track);
     switchWrap.appendChild(thumb);
 
-    li.appendChild(icon);
     li.appendChild(text);
     li.appendChild(switchWrap);
     return li;
@@ -1114,12 +1052,6 @@
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ios-row sheet-row";
-
-    const iconMeta = heroIconMeta(category, item);
-    const icon = document.createElement("span");
-    icon.className = "row-icon";
-    icon.style.background = iconMeta.color;
-    icon.textContent = iconMeta.icon;
 
     const text = document.createElement("span");
     text.className = "row-text";
@@ -1136,7 +1068,6 @@
       text.textContent = item.name;
     }
 
-    btn.appendChild(icon);
     btn.appendChild(text);
 
     if (currentItem && currentItem.name === item.name && currentItem.exp === item.exp) {
@@ -1162,11 +1093,6 @@
 
     const mastermind = (entry.result.mastermind || [])[0];
     const heroCount = (entry.result.heroes || []).length;
-
-    const icon = document.createElement("span");
-    icon.className = "row-icon";
-    icon.style.background = "#8E8E93";
-    icon.textContent = "🕓";
 
     const text = document.createElement("div");
     text.className = "result-row-text";
@@ -1206,7 +1132,6 @@
     actions.appendChild(restoreBtn);
     actions.appendChild(deleteBtn);
 
-    li.appendChild(icon);
     li.appendChild(text);
     li.appendChild(actions);
     return li;
@@ -1251,9 +1176,6 @@
     renderCardPool();
     renderTeamChips();
     renderPlayersSegmented();
-    renderSteppers();
-    renderHenchmenNote();
-    bindSteppers();
     bindSheet();
     render();
 
