@@ -48,6 +48,19 @@
  * `setupNote`/`twist`/`evilWins` are shown as reference text only. A
  * Scheme with none of these behaves exactly like one with no data at
  * all — nothing here is required.
+ *
+ * Official icon/term legend (confirmed from a card-back reference image),
+ * for transcribing future card text accurately:
+ *   Stats  — Attack (claw-mark icon, was mistakenly called "Fight" in an
+ *            earlier pass — if you see "Fight" anywhere it's a bug),
+ *            Recruit (star), Cost (small circle), Victory Points (burst).
+ *   Hero types — Strength, Instinct, Covert, Tech, Ranged. Printed on
+ *            every Hero card and referenced by name in some Scheme Twist
+ *            text (e.g. Core Set's "The Legacy Virus": "reveals a Tech
+ *            Hero"). No Hero entry below has its type recorded yet — it'd
+ *            be a natural `type` field alongside `team` if that data
+ *            comes in, but don't guess it the way `team` risked being
+ *            guessed; wait for a source.
  */
 
 const EXPANSIONS = [
@@ -132,7 +145,7 @@ const SCHEMES = [
     name: "Replace Earth's Leaders with Killbots",
     exp: "core",
     overrides: { twists: 5, bystanders: 18 },
-    setupNote: "Plus 3 additional Twists placed next to this Scheme (not in the Villain Deck).\nSpecial Rule: Bystanders in the Villain Deck count as Killbot Villains, with Fight equal to the number of Twists next to this Scheme.",
+    setupNote: "Plus 3 additional Twists placed next to this Scheme (not in the Villain Deck).\nSpecial Rule: Bystanders in the Villain Deck count as Killbot Villains, with Attack equal to the number of Twists next to this Scheme.",
     twist: "Put the Twist next to this Scheme.",
     evilWins: "If 5 Killbots escape.",
   },
@@ -140,7 +153,7 @@ const SCHEMES = [
     name: "Secret Invasion of the Skrull Shapeshifters",
     exp: "core",
     overrides: { twists: 8, heroCount: 6, requiredVillainGroup: "Skrulls" },
-    setupNote: "Shuffle 12 random Heroes from the Hero Deck into the Villain Deck.\nSpecial Rule: Heroes in the Villain Deck count as Skrull Villains with Fight equal to the Hero's cost + 2. If you defeat that Hero, you gain it.",
+    setupNote: "Shuffle 12 random Heroes from the Hero Deck into the Villain Deck.\nSpecial Rule: Heroes in the Villain Deck count as Skrull Villains with Attack equal to the Hero's cost + 2. If you defeat that Hero, you gain it.",
     twist: "The highest-cost Hero from the HQ moves into the Sewers as a Skrull Villain, as above.",
     evilWins: "If 6 Heroes get into the Escaped Villains pile.",
   },
@@ -172,7 +185,7 @@ const SCHEMES = [
     name: "Midtown Bank Robbery",
     exp: "core",
     overrides: { twists: 8, bystanders: 12 },
-    setupNote: "Special Rule: Each Villain gets +1 Fight for each Bystander it holds.",
+    setupNote: "Special Rule: Each Villain gets +1 Attack for each Bystander it holds.",
     twist: "Any Villain in the Bank captures 2 Bystanders, then play the top card of the Villain Deck.",
     evilWins: "When 8 Bystanders are carried away by escaping Villains.",
   },
@@ -189,7 +202,7 @@ const SCHEMES = [
     exp: "core",
     overrides: { twists: 7 },
     setupNote: "Each Twist is a Dark Portal.",
-    twist: "Twist 1: Put the Dark Portal above the Mastermind; the Mastermind gets +1 Fight.\nTwists 2–6: Put the Dark Portal in the leftmost city space without one yet; Villains there get +1 Fight.\nTwist 7: Evil Wins!",
+    twist: "Twist 1: Put the Dark Portal above the Mastermind; the Mastermind gets +1 Attack.\nTwists 2–6: Put the Dark Portal in the leftmost city space without one yet; Villains there get +1 Attack.\nTwist 7: Evil Wins!",
     evilWins: "",
   },
 
