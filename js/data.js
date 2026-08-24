@@ -34,6 +34,12 @@
  * Pool, or every slot in that category is already manually locked). Note
  * it can point at either category — e.g. Doctor Doom always leads the
  * Doombot Legion, which is a Henchman, not a Villain Group.
+ *
+ * A Hero entry can optionally carry `team` (e.g. "Avengers", "X-Men"),
+ * shown as a tag and usable as a Team Theme filter to build an
+ * all-one-team lineup. It's fine to leave it off — Deadpool, for
+ * instance, isn't on a team — a hero without one just won't match any
+ * team filter.
  */
 
 const EXPANSIONS = [
@@ -182,21 +188,21 @@ const HENCHMEN = [
 ];
 
 const HEROES = [
-  { name: "Black Widow", exp: "core" },
-  { name: "Captain America", exp: "core" },
-  { name: "Cyclops", exp: "core" },
+  { name: "Black Widow", exp: "core", team: "Avengers" },
+  { name: "Captain America", exp: "core", team: "Avengers" },
+  { name: "Cyclops", exp: "core", team: "X-Men" },
   { name: "Deadpool", exp: "core" },
-  { name: "Emma Frost", exp: "core" },
-  { name: "Gambit", exp: "core" },
-  { name: "Hawkeye", exp: "core" },
-  { name: "Hulk", exp: "core" },
-  { name: "Iron Man", exp: "core" },
-  { name: "Nick Fury", exp: "core" },
-  { name: "Rogue", exp: "core" },
-  { name: "Spider-Man", exp: "core" },
-  { name: "Storm", exp: "core" },
-  { name: "Thor", exp: "core" },
-  { name: "Wolverine", exp: "core" },
+  { name: "Emma Frost", exp: "core", team: "X-Men" },
+  { name: "Gambit", exp: "core", team: "X-Men" },
+  { name: "Hawkeye", exp: "core", team: "Avengers" },
+  { name: "Hulk", exp: "core", team: "Avengers" },
+  { name: "Iron Man", exp: "core", team: "Avengers" },
+  { name: "Nick Fury", exp: "core", team: "S.H.I.E.L.D." },
+  { name: "Rogue", exp: "core", team: "X-Men" },
+  { name: "Spider-Man", exp: "core", team: "Spider-Friends" },
+  { name: "Storm", exp: "core", team: "X-Men" },
+  { name: "Thor", exp: "core", team: "Avengers" },
+  { name: "Wolverine", exp: "core", team: "X-Men" },
 
   { name: "Cable", exp: "dark_city" },
   { name: "Daredevil", exp: "dark_city" },
