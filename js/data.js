@@ -22,13 +22,12 @@
  * Mastermind/Scheme/Villain Groups/Henchmen/Heroes shape by relabeling
  * roles into those slots (its Villain characters go in HEROES, its Hero
  * Groups go in VILLAIN_GROUPS, etc.) rather than modeling a second game
- * mode — which means its card pool must never be mixed with a normal
- * expansion's (a "Heroes" list combining Iron Man with Doctor Octopus
- * would be nonsense). It carries `exclusiveMode: true` in EXPANSIONS so
- * the app enforces that at the expansion-selection level: turning it on
- * clears every other expansion, and turning on any normal expansion
- * clears it. Its Scheme ("Plot") cards use "Good Wins" instead of "Evil
- * Wins" — see `winLabel` below.
+ * mode. It's deliberately left combinable with any other expansion —
+ * mixing pools (e.g. a "Heroes" list with both Iron Man and Doctor
+ * Octopus) is a real, if unusual, way to play, and it's the player's
+ * call, not this app's, whether to select it alongside anything else.
+ * Its Scheme ("Plot") cards use "Good Wins" instead of "Evil Wins" — see
+ * `winLabel` below.
  * "Legendary: Civil War" IS included normally, but only for its ordinary
  * Heroes — its special "Team Iron Man vs. Team Cap" mode isn't modeled
  * here.
@@ -106,7 +105,7 @@ const EXPANSIONS = [
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
   { id: "dimensions", name: "Dimensions", confidence: "none" },
   { id: "revelations", name: "Revelations", confidence: "none" },
-  { id: "villains", name: "Legendary: Villains", confidence: "verified", exclusiveMode: true },
+  { id: "villains", name: "Legendary: Villains", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
