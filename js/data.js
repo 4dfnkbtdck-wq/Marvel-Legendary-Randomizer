@@ -61,12 +61,18 @@
  * Executives' "add an extra hero to the Hero deck"), independent of and
  * stacking with any `heroCountDelta` a Scheme separately sets (see the
  * SCHEMES comment below) — this one just comes from the Mastermind card
- * instead. Similarly, `villainCountDelta` adds to the Villain Group count
- * as part of the Mastermind's own setup (e.g. Kang, Quantum Conqueror's
- * "set aside the villains from an extra Villain Group as Timeline
- * Variants") — the extra group is picked randomly from the pool exactly
- * like a Scheme's own `villainCountDelta` does, since neither names a
- * specific required group.
+ * instead.
+ *
+ * A Mastermind entry can also carry `extraVillainGroup` (a boolean,
+ * optionally paired with `extraVillainGroupNote`) for a Mastermind that
+ * calls for a Villain Group beyond the normal Villain Groups lineup, set
+ * aside on its own rather than mixed into the main pool — e.g. Kang,
+ * Quantum Conqueror's "set aside the villains from an extra Villain
+ * Group as Timeline Variants." Same idea as a Scheme's `extraHero`, just
+ * for a Villain Group and driven by the Mastermind card instead of the
+ * Scheme — see syncExtraVillainGroup in app.js. The extra group is
+ * picked randomly and never counted in (or duplicated with) the normal
+ * Villain Groups result.
  *
  * A Hero entry can optionally carry `team` (e.g. "Avengers", "X-Men"),
  * shown as a tag and usable as a Team Theme filter to build an
@@ -257,7 +263,13 @@ const MASTERMINDS = [
 
   { name: "Darren Cross", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Cross Technologies" }] },
   { name: "Ghost, Master Thief", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Ghost Chasers" }] },
-  { name: "Kang, Quantum Conqueror", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Armada of Kang" }], villainCountDelta: 1 },
+  {
+    name: "Kang, Quantum Conqueror",
+    exp: "ant_man_wasp",
+    leads: [{ category: "villains", name: "Armada of Kang" }],
+    extraVillainGroup: true,
+    extraVillainGroupNote: "set aside as \"Timeline Variants\" — not shuffled into the Villain Deck",
+  },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
