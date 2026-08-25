@@ -136,6 +136,7 @@ const EXPANSIONS = [
   { id: "black_panther", name: "Black Panther", confidence: "verified" },
   { id: "black_widow", name: "Black Widow", confidence: "verified" },
   { id: "messiah_complex", name: "Messiah Complex", confidence: "verified" },
+  { id: "ant_man_wasp", name: "Marvel Studios Ant-Man and the Wasp", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -244,6 +245,15 @@ const MASTERMINDS = [
   { name: "Macho Gomez", exp: "deadpool", leads: [{ category: "villains", name: "Deadpool's \"Friends\"" }] },
 
   { name: "J. Jonah Jameson", exp: "dimensions", leads: [{ category: "henchmen", name: "Spider-Slayer" }] },
+
+  { name: "Darren Cross", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Cross Technologies" }] },
+  { name: "Ghost, Master Thief", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Ghost Chasers" }] },
+  // Kang, Quantum Conqueror's card also reads "...and set aside the
+  // villains from an extra Villain Group as 'Timeline Variants'" — a
+  // Mastermind-level setup instruction with no matching field in this
+  // schema (see the Mastermind doc comment above); left as flavor/setup
+  // text only, not mechanically modeled.
+  { name: "Kang, Quantum Conqueror", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Armada of Kang" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1467,6 +1477,53 @@ const SCHEMES = [
     twist:
       'Twists 1-3: If there is a Villain in the Bank, stack this Twist next to the Mastermind as a "Mutant Genome." Otherwise, move a Villain from another city space to the Bank.\nTwist 4: This Scheme Transforms into a random Unveiled Scheme. Do its Twist effect.',
   },
+
+  // The four "Marvel Studios Ant-Man and the Wasp" Schemes below blend two
+  // movie sub-brands' cards under one expansion (see "Marvel Studios: The
+  // First Ten Years" for the same precedent) — two are from Ant-Man and
+  // the Wasp, two are from Ant-Man and the Wasp: Quantumania.
+  {
+    name: "Auction Shrink Tech to Highest Bidder",
+    exp: "ant_man_wasp",
+    overrides: {
+      twists: 11,
+      extraHero: true,
+      extraHeroNote: "all 14 cards form a \"Shrink Tech\" stack next to the Scheme — not the Villain Deck. See Twist.",
+    },
+    setupNote: 'Set aside all 14 cards of a random extra Hero that has any Size-Changing cards as "Shrink Tech."',
+    twist:
+      'Stack this Twist next to the Scheme as a "Hostile Bid." Reveal a random Hero from the Shrink Tech. This turn you may recruit that Hero, but it costs 1 Recruit more for each Hostile Bid. If you recruit it, either KO that Hero or choose any player to gain it. If you don\'t recruit it by the end of this turn, stack it next to the Scheme as "Controlled by Arms Dealers."',
+    evilWins: "When 8 Shrink Tech cards are Controlled by Arms Dealers.",
+  },
+  {
+    name: "Escape an Imprisoning Dimension",
+    exp: "ant_man_wasp",
+    overrides: { twists: 5 },
+    setupNote:
+      'Special Rules: During your turn, any number of times, you may spend 1 Attack to "Seal" an unsealed city space or unsealed Mastermind space by putting a card above it from the Wound Stack.',
+    twist:
+      'If any city space with a Villain in it or the Mastermind space is not "sealed," stack this Twist next to the Mastermind as a "Discovered Escape Route." Otherwise, return 3 Seals from above spaces to the Wound Deck, shuffle this Twist into the Villain Deck, and play another card from the Villain Deck.',
+    evilWins: "When 3 Escape Routes have been discovered.",
+  },
+  {
+    name: "Safeguard Dark Secrets",
+    exp: "ant_man_wasp",
+    overrides: { twists: 5 },
+    setupNote:
+      'Special Rules: You have the ability "Heist: You get +1 Recruit." Shuffle a Secret from next to the Mastermind into the Villain Deck.',
+    twist: 'Stack this Twist next to the Mastermind as a "Secret," then play another card from the Villain Deck.',
+    evilWins: "When the Mastermind has 5 Secrets.",
+  },
+  {
+    name: "Siphon Energy from the Quantum Realm",
+    exp: "ant_man_wasp",
+    overrides: { twists: 9, requiredVillainGroup: "Quantum Realm", villainCountDelta: 1 },
+    setupNote:
+      'Set aside the "Quantum Realm" Villain Group as an extra group. Shuffle its Ambush Scheme into the Villain Deck.\nSpecial Rules: You may fight Villains on the Quantum Siphons. They get +1 Attack for each two Siphons.',
+    twist:
+      'Stack this Twist next to the Mastermind as a "Quantum Siphon." Put a random set aside Quantum Realm Villain on the Siphons. Do its Ambush effect. If there was already a Quantum Realm Villain on the Siphons, KO it.',
+    evilWins: "When 4 Quantum Realm Villains have been KO'd or there are 9 Quantum Siphons.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -1622,6 +1679,11 @@ const VILLAIN_GROUPS = [
 
   { name: "Deadpool's \"Friends\"", exp: "deadpool" },
   { name: "Evil Deadpool Corpse", exp: "deadpool" },
+
+  { name: "Armada of Kang", exp: "ant_man_wasp" },
+  { name: "Cross Technologies", exp: "ant_man_wasp" },
+  { name: "Ghost Chasers", exp: "ant_man_wasp" },
+  { name: "Quantum Realm", exp: "ant_man_wasp" },
 ];
 
 const HENCHMEN = [
@@ -1666,6 +1728,10 @@ const HENCHMEN = [
 
   { name: "Mr. Sinister Clones", exp: "messiah_complex" },
   { name: "Sentinel Squad O*N*E*", exp: "messiah_complex" },
+
+  { name: "Quantumnauts", exp: "ant_man_wasp" },
+  { name: "Quantum Hound", exp: "ant_man_wasp" },
+  { name: "Tardigrade", exp: "ant_man_wasp" },
 ];
 
 const HEROES = [
@@ -1919,6 +1985,15 @@ const HEROES = [
   { name: "Red Guardian", exp: "black_widow" },
   { name: "White Tiger", exp: "black_widow", team: "Marvel Knights" },
   { name: "Yelena Belova", exp: "black_widow", team: "S.H.I.E.L.D." },
+
+  { name: "Ant Army", exp: "ant_man_wasp" },
+  { name: "Ant-Man", exp: "ant_man_wasp", team: "Avengers" },
+  { name: "Cassie Lang", exp: "ant_man_wasp", team: "Avengers" },
+  { name: "Freedom Fighters", exp: "ant_man_wasp" },
+  { name: "Janet Van Dyne", exp: "ant_man_wasp" },
+  { name: "Jentorra", exp: "ant_man_wasp" },
+  { name: "Scott Lang, Cat Burglar", exp: "ant_man_wasp", team: "Crime Syndicate" },
+  { name: "Wasp", exp: "ant_man_wasp", team: "Avengers" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
