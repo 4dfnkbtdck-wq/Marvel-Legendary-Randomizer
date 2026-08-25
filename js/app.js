@@ -199,6 +199,12 @@
   // a same-Scheme resync triggered by a Player-count change alone.
   let lastSchemeSignature = null;
 
+  // Same idea, for a Mastermind's own "leads any ___ with [word] in the
+  // name" pick (see resolveNameMatchRequirement) — reset only when the
+  // Mastermind itself changes, tracked separately from lastSchemeSignature
+  // above since either can change independently of the other.
+  let lastMastermindSignature = null;
+
   function currentMastermindData() {
     const mm = (state.result.mastermind || [])[0];
     if (!mm) return null;
@@ -211,21 +217,23 @@
     return SCHEMES.find((s) => s.name === sc.name && s.exp === sc.exp) || null;
   }
 
-  /** Resolves a Scheme's "include exactly one [category] card with
-   * [keyword]" requirement to a concrete card name — picking randomly
-   * among whichever currently-available cards carry that keyword (there
-   * may be more than one once enough expansions are on; right now only
-   * one card in the whole database has any given keyword, but that's not
-   * guaranteed to stay true), and caching the pick in
-   * state.keywordChoices so repeated calls while the same Scheme is in
-   * play don't thrash between different qualifying cards. Re-picks
-   * automatically if the cached choice becomes unavailable (excluded,
-   * expansion turned off) or hasn't been made yet. */
-  function resolveKeywordRequirement(categoryKey, keyword) {
-    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
-    const candidates = pool.filter((c) => (c.keywords || []).includes(keyword));
+  /** Drops every cached pick (see resolveFromCandidates) whose key starts
+   * with `prefix` — "scheme:" when the Scheme changes, "mastermind:"
+   * when the Mastermind changes — without disturbing the other's cache. */
+  function clearKeywordChoicesWithPrefix(prefix) {
+    Object.keys(state.keywordChoices).forEach((k) => {
+      if (k.startsWith(prefix)) delete state.keywordChoices[k];
+    });
+  }
+
+  /** Shared cache-and-pick logic for a "pick one qualifying card, then
+   * stick with it" requirement (a Scheme's keyword requirement, or a
+   * Mastermind's name-substring requirement below): reuse the cached
+   * pick under `cacheKey` if it's still among today's candidates,
+   * otherwise pick randomly and cache the result. Returns null if
+   * nothing currently qualifies. */
+  function resolveFromCandidates(cacheKey, candidates) {
     if (!candidates.length) return null;
-    const cacheKey = `${categoryKey}:${keyword}`;
     const cached = state.keywordChoices[cacheKey];
     if (cached && candidates.some((c) => c.name === cached)) return cached;
     const [picked] = pickRandom(candidates, 1, []);
@@ -233,17 +241,55 @@
     return picked ? picked.name : null;
   }
 
+  /** Resolves a Scheme's "include exactly one [category] card with
+   * [keyword]" requirement to a concrete card name — picking randomly
+   * among whichever currently-available cards carry that keyword (there
+   * may be more than one once enough expansions are on; right now only
+   * one card in the whole database has any given keyword, but that's not
+   * guaranteed to stay true). Re-picks automatically if the cached choice
+   * becomes unavailable (excluded, expansion turned off) or hasn't been
+   * made yet. */
+  function resolveKeywordRequirement(categoryKey, keyword) {
+    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const candidates = pool.filter((c) => (c.keywords || []).includes(keyword));
+    return resolveFromCandidates(`scheme:${categoryKey}:${keyword}`, candidates);
+  }
+
+  /** Resolves a Mastermind's "leads any [category] card whose name
+   * contains one of these words" requirement (case-insensitive
+   * substring match, e.g. Magneto leading any Villain Group with
+   * "Brotherhood" or "X-Men" in its name) the same random-pick-with-
+   * cache way as resolveKeywordRequirement — just matched by name
+   * substring instead of a curated `keywords` tag, since there's nothing
+   * to tag ahead of time; it just reads off whatever's actually named
+   * that way, which is also why it can pick up a same-named group from a
+   * completely different expansion if both happen to be selected. */
+  function resolveNameMatchRequirement(categoryKey, nameContains) {
+    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const needles = nameContains.map((s) => s.toLowerCase());
+    const candidates = pool.filter((c) => needles.some((n) => c.name.toLowerCase().includes(n)));
+    const cacheKey = `mastermind:${categoryKey}:${needles.join("|")}`;
+    return resolveFromCandidates(cacheKey, candidates);
+  }
+
   /** Every card name that MUST be in play for this category right now,
    * from the current Mastermind's "always leads" (its `leads` array — one
    * Mastermind can require more than one card, e.g. a Henchmen group AND
-   * a specific Hero) and/or the current Scheme's required Villain
-   * Group / Henchmen group / Hero (by exact name, or — for a Villain
-   * Group — by keyword). */
+   * a specific Hero; each entry is either an exact `name` or, for "leads
+   * any ___ with [word] in the name," a `nameContains` list) and/or the
+   * current Scheme's required Villain Group / Henchmen group / Hero (by
+   * exact name, or — for a Villain Group — by keyword). */
   function requiredCardNames(categoryKey) {
     const names = [];
     const mmData = currentMastermindData();
     (mmData && mmData.leads ? mmData.leads : []).forEach((req) => {
-      if (req.category === categoryKey && req.name) names.push(req.name);
+      if (req.category !== categoryKey) return;
+      if (req.name) {
+        names.push(req.name);
+      } else if (req.nameContains) {
+        const name = resolveNameMatchRequirement(categoryKey, req.nameContains);
+        if (name) names.push(name);
+      }
     });
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
@@ -325,8 +371,20 @@
   }
 
   /** Reconciles Villain Groups / Henchmen against whatever the current
-   * Mastermind and Scheme require. Safe to call any time either changes. */
+   * Mastermind and Scheme require. Safe to call any time either changes.
+   * Also resets a Mastermind's name-substring pick (see
+   * resolveNameMatchRequirement) whenever the Mastermind itself has
+   * actually changed, the same way syncSchemeNumbers resets the Scheme's
+   * keyword pick — so it re-rolls per Mastermind rather than reshuffling
+   * on every resync. */
   function syncRequiredCards() {
+    const mmData = currentMastermindData();
+    const mmSignature = mmData ? `${mmData.name}|${mmData.exp}` : null;
+    if (mmSignature !== lastMastermindSignature) {
+      clearKeywordChoicesWithPrefix("mastermind:");
+      lastMastermindSignature = mmSignature;
+    }
+
     clearStaleRequiredCards();
     ["villains", "henchmen", "heroes"].forEach((categoryKey) => {
       requiredCardNames(categoryKey).forEach((name) => forceIncludeSignature(categoryKey, name));
@@ -390,7 +448,7 @@
     const overrides = (scheme && scheme.overrides) || {};
     const schemeSignature = scheme ? `${scheme.name}|${scheme.exp}` : null;
     if (schemeSignature !== lastSchemeSignature) {
-      state.keywordChoices = {};
+      clearKeywordChoicesWithPrefix("scheme:");
       state.extraCard = null;
       lastSchemeSignature = schemeSignature;
     }
@@ -416,6 +474,7 @@
     } else if (overrides.villainCount != null) {
       villainCount = overrides.villainCount;
     }
+    villainCount += overrides.villainCountDelta || 0;
     villainCount = clampOption(villainCount, 1, 6);
 
     let twists;
@@ -430,6 +489,7 @@
     }
 
     let bystanders = overrides.bystanders != null ? overrides.bystanders : baseBystanders;
+    bystanders += overrides.bystandersDelta || 0;
     if (overrides.bystandersDeltaByPlayers && players && overrides.bystandersDeltaByPlayers[players] != null) {
       bystanders += overrides.bystandersDeltaByPlayers[players];
     }
@@ -482,7 +542,15 @@
 
   function requiredReason(categoryKey, item) {
     const mmData = currentMastermindData();
-    if (mmData && (mmData.leads || []).some((req) => req.category === categoryKey && req.name === item.name)) {
+    if (
+      mmData &&
+      (mmData.leads || []).some((req) => {
+        if (req.category !== categoryKey) return false;
+        if (req.name) return req.name === item.name;
+        if (req.nameContains) return resolveNameMatchRequirement(categoryKey, req.nameContains) === item.name;
+        return false;
+      })
+    ) {
       return `always led by ${mmData.name}`;
     }
     const scheme = currentSchemeData();
