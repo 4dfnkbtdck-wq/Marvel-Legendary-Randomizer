@@ -303,6 +303,18 @@
     return resolveFromCandidates(cacheKey, candidates);
   }
 
+  /** Resolves a Scheme's "include at least one Hero from [Team]"
+   * requirement (e.g. Deadpool's "Everybody Hates Deadpool": "use at
+   * least 1 Mercs For Money Hero," printed as the team's icon rather
+   * than a named card) to a concrete Hero name, the same random-pick-
+   * with-cache way as resolveKeywordRequirement — just matched by the
+   * `team` field instead of a `keywords` tag. */
+  function resolveTeamRequirement(team) {
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const candidates = pool.filter((c) => c.team === team);
+    return resolveFromCandidates(`scheme:heroes:team:${team}`, candidates);
+  }
+
   /** Every card name that MUST be in play for this category right now,
    * from the current Mastermind's "always leads" (its `leads` array — one
    * Mastermind can require more than one card, e.g. a Henchmen group AND
@@ -331,6 +343,10 @@
     }
     if (categoryKey === "henchmen" && overrides.requiredHenchmen) names.push(overrides.requiredHenchmen);
     if (categoryKey === "heroes" && overrides.requiredHero) names.push(overrides.requiredHero);
+    if (categoryKey === "heroes" && overrides.requiredHeroTeam) {
+      const name = resolveTeamRequirement(overrides.requiredHeroTeam);
+      if (name) names.push(name);
+    }
     return names;
   }
 
@@ -719,6 +735,9 @@
       return `required by ${scheme.name}`;
     }
     if (categoryKey === "heroes" && overrides.requiredHero === item.name) {
+      return `required by ${scheme.name}`;
+    }
+    if (categoryKey === "heroes" && overrides.requiredHeroTeam && resolveTeamRequirement(overrides.requiredHeroTeam) === item.name) {
       return `required by ${scheme.name}`;
     }
     return null;
