@@ -61,7 +61,13 @@
  * Executives' "add an extra hero to the Hero deck"), independent of and
  * stacking with any `heroCountDelta` a Scheme separately sets (see the
  * SCHEMES comment below) — this one just comes from the Mastermind card
- * instead.
+ * instead. Similarly, `villainCountDelta` adds to the Villain Group
+ * count and mixes the extra group into the normal Villain Groups
+ * lineup — e.g. Ego, The Living Planet's "adds an additional Villain
+ * Group to the total." This is a different mechanic from
+ * `extraVillainGroup` below: use `villainCountDelta` when the extra
+ * group joins the normal random draw, `extraVillainGroup` when it's set
+ * aside on its own instead.
  *
  * A Mastermind entry can also carry `extraVillainGroup` (a boolean,
  * optionally paired with `extraVillainGroupNote`) for a Mastermind that
@@ -152,6 +158,7 @@ const EXPANSIONS = [
   { id: "black_widow", name: "Black Widow", confidence: "verified" },
   { id: "messiah_complex", name: "Messiah Complex", confidence: "verified" },
   { id: "ant_man_wasp", name: "Marvel Studios Ant-Man and the Wasp", confidence: "verified" },
+  { id: "guardians_movie", name: "Marvel Studios Guardians of the Galaxy", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -270,6 +277,12 @@ const MASTERMINDS = [
     extraVillainGroup: true,
     extraVillainGroupNote: "set aside as \"Timeline Variants\" — not shuffled into the Villain Deck",
   },
+
+  // Ego, The Living Planet "leads any villain group" — not a specific
+  // named card, so there's nothing to force-include; `leads` stays
+  // empty (see Hank Pym, Yellowjacket above for the same case).
+  { name: "Ego, The Living Planet", exp: "guardians_movie", villainCountDelta: 1 },
+  { name: "Ronan the Accuser", exp: "guardians_movie", leads: [{ category: "villains", name: "Followers of Ronan" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1563,6 +1576,49 @@ const SCHEMES = [
       'Stack this Twist next to the Mastermind as a "Quantum Siphon." Put a random set aside Quantum Realm Villain on the Siphons. Do its Ambush effect. If there was already a Quantum Realm Villain on the Siphons, KO it.',
     evilWins: "When 4 Quantum Realm Villains have been KO'd or there are 9 Quantum Siphons.",
   },
+
+  // The four "Marvel Studios Guardians of the Galaxy" Schemes below blend
+  // two movies under one expansion (same precedent as "Marvel Studios:
+  // The First Ten Years" and the Ant-Man and the Wasp expansion above) —
+  // one is from the first Guardians of the Galaxy film, three are from
+  // Vol. 2.
+  {
+    name: 'Inescapable "Kyln" Space Prison',
+    exp: "guardians_movie",
+    overrides: { twists: 8, villainCountDelta: 1 },
+    setupNote:
+      'Special Rules: Heroes that start in or enter the HQ are "Imprisoned" face down, can\'t be recruited, and cost 0. You can spend 1 Recruit each to flip them face up.',
+    twist:
+      'Spend this amount this turn "for the escape plan" or else after you draw your new hand, gain a Wound then Imprison and mix up all Heroes in the HQ.\nTwist 1-3: 3 Attack (Quarnyx Battery)\nTwist 4-5: 5 Attack (Prison Control Device)\nTwist 6: 6 Recruit (That Guy\'s Leg)\nTwist 7: 7 Attack (Cassette Player)\nTwist 8: Evil wins!',
+    evilWins: "On Twist 8 (see Twist text above).",
+  },
+  {
+    name: "Provoke the Sovereign War Fleet",
+    exp: "guardians_movie",
+    overrides: { twists: 11, villainCountDelta: 1 },
+    setupNote: "",
+    twist:
+      'This Twist enters the city as a 2 Attack "Sovereign Omnicraft" Villain worth 1VP with "Fight: You get +1 Recruit." Each player shuffles all Twists from their Victory Piles back into the Villain Deck. Play another card from the Villain Deck.',
+    evilWins: "When 3 Omnicraft escape.",
+  },
+  {
+    name: "Star-Lord's Awesome Mix Tape",
+    exp: "guardians_movie",
+    overrides: { twists: 7, heroCount: 7, requiredHeroTeam: "Guardians of the Galaxy" },
+    setupNote:
+      "Use 7 Heroes including at least one Guardians of the Galaxy Hero. Use double the normal number of Villain and Henchman Groups, but use only half the cards from each of those groups, randomly & secretly. (1 player: 2 Henchmen per group)",
+    twist: "KO all Heroes from the HQ. Villains in the Sewers and Bridge swap spaces. Likewise Villains in the Bank and Streets.",
+    evilWins: "When there are 32 non-grey Heroes in the KO pile.",
+  },
+  {
+    name: "Unleash the Abilisk Space Monster",
+    exp: "guardians_movie",
+    overrides: { twists: 9 },
+    setupNote: "",
+    twist:
+      'Twists 1-8: Put this Twist next to the Scheme as an "Abilisk Tentacle" Villain worth 4VP. It captures a non-grey Hero from your discard pile. Its Attack is 3 + the cost of that Hero. It has "Fight: KO one of your grey Heroes. A player of your choice gains the captured Hero." 2+ players: The player on your right plays a Tentacle from their Victory Pile, capturing from them.\nTwist 9: Replay all defeated Tentacles.',
+    evilWins: "When there are 5 Tentacles.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -1723,6 +1779,9 @@ const VILLAIN_GROUPS = [
   { name: "Cross Technologies", exp: "ant_man_wasp" },
   { name: "Ghost Chasers", exp: "ant_man_wasp" },
   { name: "Quantum Realm", exp: "ant_man_wasp" },
+
+  { name: "Followers of Ronan", exp: "guardians_movie" },
+  { name: "Ravagers", exp: "guardians_movie" },
 ];
 
 const HENCHMEN = [
@@ -2033,6 +2092,12 @@ const HEROES = [
   { name: "Jentorra", exp: "ant_man_wasp" },
   { name: "Scott Lang, Cat Burglar", exp: "ant_man_wasp", team: "Crime Syndicate" },
   { name: "Wasp", exp: "ant_man_wasp", team: "Avengers", keywords: ["Size-Changing"] },
+
+  { name: "Drax", exp: "guardians_movie", team: "Guardians of the Galaxy" },
+  { name: "Gamora", exp: "guardians_movie", team: "Guardians of the Galaxy" },
+  { name: "Mantis", exp: "guardians_movie", team: "Guardians of the Galaxy" },
+  { name: "Rocket & Groot", exp: "guardians_movie", team: "Guardians of the Galaxy" },
+  { name: "Star-Lord", exp: "guardians_movie", team: "Guardians of the Galaxy" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck

@@ -123,6 +123,29 @@
     return extraName ? base.concat([{ name: extraName }]) : base;
   }
 
+  /** A Scheme's `extraVillainGroupName` (see data.js) names one specific
+   * Villain Group set aside on its own rather than mixed into the main
+   * Villain Groups lineup (e.g. "Siphon Energy from the Quantum Realm"
+   * setting aside the Quantum Realm group) — null when the current
+   * Scheme has no such requirement. Same idea as currentExtraHeroName
+   * above, just for a Villain Group. */
+  function currentExtraVillainGroupName() {
+    const scheme = currentSchemeData();
+    return (scheme && scheme.overrides && scheme.overrides.extraVillainGroupName) || null;
+  }
+
+  /** Adds the current `extraVillainGroupName` Villain Group (if any — see
+   * currentExtraVillainGroupName above) to an exclude list for a Villain
+   * Groups draw, so it never gets pulled into the normal Villain Groups
+   * lineup on top of already being set aside on its own — mirrors
+   * heroDrawExclusions above. Pass the category's own key; a no-op for
+   * every other category. */
+  function villainDrawExclusions(categoryKey, base) {
+    if (categoryKey !== "villains") return base;
+    const extraName = currentExtraVillainGroupName();
+    return extraName ? base.concat([{ name: extraName }]) : base;
+  }
+
   function pickRandom(list, n, exclude) {
     const excludeNames = new Set((exclude || []).map((c) => c.name));
     const candidates = list.filter((c) => !excludeNames.has(c.name));
@@ -147,7 +170,7 @@
 
     const lockedItems = keepLocked ? existing.filter((_, i) => locks[i]) : [];
     const needed = n - lockedItems.length;
-    const fresh = needed > 0 ? pickRandom(pool, needed, heroDrawExclusions(category.key, lockedItems)) : [];
+    const fresh = needed > 0 ? pickRandom(pool, needed, villainDrawExclusions(category.key, heroDrawExclusions(category.key, lockedItems))) : [];
     const combined = lockedItems.concat(fresh);
 
     state.result[category.key] = combined;
@@ -170,6 +193,7 @@
     randomizeCategory(CATEGORY_BY_KEY.heroes, { keepLocked: true });
     reconcileHeroTeamSplit();
     reconcileExtraHeroName();
+    reconcileExtraVillainGroupName();
     syncRequiredCards();
     saveToHistory();
     render();
@@ -182,7 +206,7 @@
     if (categoryKey === "heroes" && state.heroTeamSplit && existing[index]) {
       pool = pool.filter((c) => c.team === existing[index].team);
     }
-    const [picked] = pickRandom(pool, 1, heroDrawExclusions(categoryKey, existing));
+    const [picked] = pickRandom(pool, 1, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, existing)));
     if (picked) {
       existing[index] = picked;
       state.result[categoryKey] = existing;
@@ -194,6 +218,7 @@
       reconcileCountedCategories();
       reconcileHeroTeamSplit();
       reconcileExtraHeroName();
+      reconcileExtraVillainGroupName();
       syncRequiredCards();
     }
     render();
@@ -220,6 +245,7 @@
       reconcileCountedCategories();
       reconcileHeroTeamSplit();
       reconcileExtraHeroName();
+      reconcileExtraVillainGroupName();
       syncRequiredCards();
     }
     render();
@@ -376,7 +402,7 @@
         if (required.has(items[i].name)) continue;
         flags[i] = false;
         locks[i] = false;
-        const [fresh] = pickRandom(pool, 1, items);
+        const [fresh] = pickRandom(pool, 1, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items)));
         if (fresh) items[i] = fresh;
       }
       state.result[categoryKey] = items;
@@ -705,6 +731,29 @@
     }
   }
 
+  /** Evicts the current `extraVillainGroupName` Villain Group (if any —
+   * see currentExtraVillainGroupName above) from the main Villain Groups
+   * result, if it's there and unlocked, replacing it with a fresh pick.
+   * Same idea as reconcileExtraHeroName above, just for a Villain Group:
+   * villainDrawExclusions only keeps it out of *new* picks, not a copy
+   * already sitting in the result from before this Scheme was selected.
+   * Call this alongside reconcileExtraHeroName any time the Villain
+   * Groups result or the current Scheme may have just changed. */
+  function reconcileExtraVillainGroupName() {
+    const extraName = currentExtraVillainGroupName();
+    if (!extraName) return;
+    const items = state.result.villains || [];
+    const locks = state.locks.villains || [];
+    const idx = items.findIndex((v) => v.name === extraName);
+    if (idx === -1 || locks[idx]) return;
+    const pool = poolFor(CATEGORY_BY_KEY.villains);
+    const [fresh] = pickRandom(pool, 1, villainDrawExclusions("villains", items));
+    if (fresh) {
+      items[idx] = fresh;
+      state.result.villains = items;
+    }
+  }
+
   function clampOption(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
@@ -765,6 +814,7 @@
       villainCount = overrides.villainCount;
     }
     villainCount += overrides.villainCountDelta || 0;
+    villainCount += (mmData && mmData.villainCountDelta) || 0;
     villainCount = clampOption(villainCount, 1, 6);
 
     let twists;
@@ -810,7 +860,7 @@
     if (!items.length || items.length === n) return;
 
     if (items.length < n) {
-      const fresh = pickRandom(poolFor(category), n - items.length, heroDrawExclusions(categoryKey, items));
+      const fresh = pickRandom(poolFor(category), n - items.length, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items)));
       state.result[categoryKey] = items.concat(fresh);
       state.locks[categoryKey] = locks.concat(fresh.map(() => false));
       return;
@@ -1124,6 +1174,7 @@
     reconcileCountedCategories();
     reconcileHeroTeamSplit();
     reconcileExtraHeroName();
+    reconcileExtraVillainGroupName();
     syncRequiredCards();
     renderPlayersSegmented();
     renderWarnings();
@@ -1308,6 +1359,7 @@
         }
         reconcileHeroTeamSplit();
         reconcileExtraHeroName();
+        reconcileExtraVillainGroupName();
         syncRequiredCards();
         render();
       });
