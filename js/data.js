@@ -160,6 +160,7 @@ const EXPANSIONS = [
   { id: "ant_man_wasp", name: "Marvel Studios Ant-Man and the Wasp", confidence: "verified" },
   { id: "guardians_movie", name: "Marvel Studios Guardians of the Galaxy", confidence: "verified" },
   { id: "infinity_saga", name: "Marvel Studios Infinity Saga", confidence: "verified" },
+  { id: "midnight_sons", name: "Midnight Sons", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -287,6 +288,9 @@ const MASTERMINDS = [
 
   { name: "Ebony Maw", exp: "infinity_saga", leads: [{ category: "villains", name: "Children of Thanos" }] },
   { name: "Thanos", exp: "infinity_saga", leads: [{ category: "villains", name: "Infinity Stones" }] },
+
+  { name: "Lilith, Mother of Demons", exp: "midnight_sons", leads: [{ category: "villains", name: "Lilin" }] },
+  { name: "Zarathos", exp: "midnight_sons", leads: [{ category: "villains", name: "Fallen" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1694,6 +1698,63 @@ const SCHEMES = [
       "Twist 1-4: Another TV show (city space) appears on the left side of the city, representing the 80s, 90s, 2000s, & 2010s. Another HQ space appears beneath it.\nTwist 5-11: Destroy the rightmost TV show and the HQ space beneath it. KO any Hero in that HQ space. Push forward any Villain there. Move the Villain Deck & Hero Deck to mark the city's right edge.",
     evilWins: "When all TV is destroyed.",
   },
+
+  // The four Midnight Sons Schemes below are transcribed directly from
+  // the physical cards. "Ritual Sacrifice to Summon Chthon"'s "Add
+  // Lilith as an extra Villain Group" and its "If using Lilith: Use 1
+  // Twist total" clause are left as reference-only text (not modeled by
+  // `overrides`) — the printed text is ambiguous about whether "Lilith"
+  // refers to a Villain Group (this expansion's own Villain Groups are
+  // only "Fallen" and "Lilin," the group Lilith's own Mastermind entry
+  // leads) or the Mastermind herself, and the "if using Lilith" branch
+  // reads as a multi-Mastermind game variant this app has no concept of
+  // regardless. Its "Special Rules" Mastermind-transform text (into
+  // "Great Old One Chthon," a separate double-sided Mastermind card) is
+  // likewise reference-only — this app has no mechanism for a Scheme to
+  // swap out the active Mastermind mid-game, unlike its Scheme-to-Scheme
+  // "unveils" transform (see UNVEILED_SCHEMES above).
+  {
+    name: "Wager at Blackjack for Heroes' Souls",
+    exp: "midnight_sons",
+    overrides: { twists: 11, heroCountDelta: 2 },
+    setupNote: "",
+    twist:
+      'Reveal cards from the Hero Deck, adding up their total cost until you choose to stop or your Total exceeds 21. If your Total exceeds 21 you "bust" and the Mastermind wins the wager. If you didn\'t bust, then do the same thing for the Mastermind, stopping as soon as their Total is at least 17. If their Total exceeds 21, then they "bust" and you win the wager. If no one busts, then you win the wager if your Total is higher. If the Mastermind\'s Total is equal or higher, they win.\nIf you win, you may gain one of the revealed Heroes that costs 6 or less. If the Mastermind wins, stack one of the revealed Heroes next to the Scheme as a "Wagered Soul." Either way, put the rest of the revealed Heroes on the bottom of the Hero Deck in random order.',
+    evilWins: "When there are 4 Wagered Souls.",
+  },
+  {
+    name: "Midnight Massacre",
+    exp: "midnight_sons",
+    overrides: {
+      twists: 11,
+      extraHeroName: "Blade, Daywalker",
+      extraHeroNote: "all 14 cards go in the Villain Deck",
+    },
+    setupNote:
+      'Special Rules: Blade Hero cards in the Villain Deck and city are demonically-possessed "Switchblade" Villains with Attack equal to their printed cost. Their only abilities are "Sunlight: To fight this, you must also spend 3 Recruit. Moonlight: Blood Frenzy. Fight: Either KO this card or choose a player to gain it as a Hero."',
+    twist:
+      "For each Switchblade Villain in the city and/or Escape Pile, KO the top three cards of the Hero Deck. No matter how many there were, play another card from the Villain Deck.",
+    evilWins: "When the Hero Deck or Villain Deck runs out.",
+  },
+  {
+    name: "Ritual Sacrifice to Summon Chthon",
+    exp: "midnight_sons",
+    overrides: { twistsByPlayers: { 1: 7, 2: 8, 3: 9, 4: 10, 5: 11 } },
+    setupNote:
+      'Twists equal to 6 plus 1 per player. Add Lilith as an extra Villain Group. If using Lilith: Use 1 Twist total (and still use an extra Villain Group).\nSpecial Rules: When 5 Bystanders are in the KO pile, shuffle all Twists from the KO pile back into the Villain Deck. Then this Scheme Transforms into "Great Old One Chthon." (Flip it over.) Then KO all other Masterminds and their remaining Tactics.\n"Great Old One Chthon" (Mastermind, Transformed): Master Strike or Twist: Destroy the current player. Shuffle this Strike or Twist back into the Villain Deck. Chthon Wins: When all players are destroyed. (This card can only start the game as the Scheme on the other side.)',
+    twist: "Twist 1-4: A Villain or Mastermind Hunts for Victims.\nTwist 5-11: The Mastermind Hunts for Victims.",
+    evilWins: '"Great Old One Chthon" wins when all players are destroyed (see Special Rules above).',
+  },
+  {
+    name: "Sire Vampires at the Blood Bank",
+    exp: "midnight_sons",
+    overrides: { twists: 10, henchmenDelta: 1 },
+    setupNote:
+      'Add an extra Henchman Group of 10 cards as "Vampire Neonates." Put this Scheme above the Bank to mark it as the "Blood Bank."\nSpecial Rules: All "Vampire Neonates" also have Blood Frenzy. While in the Blood Bank, they instead have double Blood Frenzy.',
+    twist:
+      'If there is a Villain in the Blood Bank, stack a card from the Bystander Deck next to the Scheme as a "Vampire Thrall." Otherwise, move a Villain from another city space to the Blood Bank. Either way, play another card from the Villain Deck.',
+    evilWins: "When there are 5 Vampire Thralls or the Villain Deck runs out.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -1860,6 +1921,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Children of Thanos", exp: "infinity_saga" },
   { name: "Infinity Stones", exp: "infinity_saga" },
+
+  { name: "Fallen", exp: "midnight_sons" },
+  { name: "Lilin", exp: "midnight_sons" },
 ];
 
 const HENCHMEN = [
@@ -2182,6 +2246,12 @@ const HEROES = [
   { name: "Captain Marvel", exp: "infinity_saga", team: "Avengers" },
   { name: "Doctor Strange", exp: "infinity_saga", team: "Avengers" },
   { name: "Wanda & Vision", exp: "infinity_saga", team: "Avengers" },
+
+  { name: "Blade, Daywalker", exp: "midnight_sons", team: "Marvel Knights" },
+  { name: "Elsa Bloodstone", exp: "midnight_sons", team: "Marvel Knights" },
+  { name: "Morbius", exp: "midnight_sons", team: "Marvel Knights" },
+  { name: "Werewolf By Night", exp: "midnight_sons", team: "Marvel Knights" },
+  { name: "Wong, Master of the Mystic Arts", exp: "midnight_sons", team: "Marvel Knights" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
