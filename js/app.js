@@ -7,8 +7,8 @@
   const CATEGORIES = [
     { key: "mastermind", label: "Mastermind", pool: MASTERMINDS, countKey: null, fixedCount: 1 },
     { key: "scheme", label: "Scheme", pool: SCHEMES, countKey: null, fixedCount: 1 },
-    { key: "villains", label: "Villain Groups", pool: VILLAIN_GROUPS, countKey: "villainCount", fixedCount: null, min: 1, max: 6 },
-    { key: "henchmen", label: "Henchmen", pool: HENCHMEN, countKey: "henchmenCount", fixedCount: null, min: 1, max: 3 },
+    { key: "villains", label: "Villain Groups", pool: VILLAIN_GROUPS, countKey: "villainCount", fixedCount: null, min: 1, max: 10 },
+    { key: "henchmen", label: "Henchmen", pool: HENCHMEN, countKey: "henchmenCount", fixedCount: null, min: 1, max: 4 },
     { key: "heroes", label: "Heroes", pool: HEROES, countKey: "heroCount", fixedCount: null, min: 3, max: 8 },
   ];
 
@@ -815,7 +815,7 @@
     }
     villainCount += overrides.villainCountDelta || 0;
     villainCount += (mmData && mmData.villainCountDelta) || 0;
-    villainCount = clampOption(villainCount, 1, 6);
+    villainCount = clampOption(villainCount, 1, 10);
 
     let twists;
     if (overrides.twistsPerVillainGroup != null) {
@@ -833,13 +833,17 @@
     if (overrides.bystandersDeltaByPlayers && players && overrides.bystandersDeltaByPlayers[players] != null) {
       bystanders += overrides.bystandersDeltaByPlayers[players];
     }
-    const henchmenCount = baseHenchmenCount + (overrides.henchmenDelta || 0);
+    let henchmenCount = baseHenchmenCount;
+    if (overrides.henchmenCountByPlayers && players && overrides.henchmenCountByPlayers[players] != null) {
+      henchmenCount = overrides.henchmenCountByPlayers[players];
+    }
+    henchmenCount += overrides.henchmenDelta || 0;
 
     state.options.heroCount = clampOption(heroCount, 3, 8);
     state.options.villainCount = villainCount;
     state.options.twists = clampOption(twists, 0, 16);
     state.options.bystanders = clampOption(bystanders, 0, 30);
-    state.options.henchmenCount = clampOption(henchmenCount, 1, 3);
+    state.options.henchmenCount = clampOption(henchmenCount, 1, 4);
 
     saveState();
   }
