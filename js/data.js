@@ -341,6 +341,19 @@ const MASTERMINDS = [
 //                  card rather than a random one). If the
 //                  extra Hero instead joins the normal Hero Deck, that's
 //                  `heroCountDelta` above instead, not this), or
+//                  `extraVillainGroupName` (same idea as `extraHeroName`,
+//                  but for a Scheme that sets aside one specific named
+//                  Villain Group on its own rather than mixing it into
+//                  the main Villain Groups lineup, e.g. "Siphon Energy
+//                  from the Quantum Realm"'s "Set aside the Quantum
+//                  Realm Villain Group as an extra group" — pair with
+//                  `extraVillainGroupNote` too. If the extra Villain
+//                  Group instead joins the main Villain Groups lineup,
+//                  that's `requiredVillainGroup` + `villainCountDelta`
+//                  above instead, not this. A Mastermind can carry the
+//                  same idea but randomized rather than named — see
+//                  `extraVillainGroup` in the Mastermind doc comment
+//                  above), or
 //                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
 //                  must be `perTeam` Heroes from each of `count` distinct
 //                  Teams, e.g. Civil War's "Avengers vs. X-Men": 3 Heroes
@@ -1539,7 +1552,11 @@ const SCHEMES = [
   {
     name: "Siphon Energy from the Quantum Realm",
     exp: "ant_man_wasp",
-    overrides: { twists: 9, requiredVillainGroup: "Quantum Realm", villainCountDelta: 1 },
+    overrides: {
+      twists: 9,
+      extraVillainGroupName: "Quantum Realm",
+      extraVillainGroupNote: "set aside as an extra group, not part of the main Villain Groups — see Twist",
+    },
     setupNote:
       'Set aside the "Quantum Realm" Villain Group as an extra group. Shuffle its Ambush Scheme into the Villain Deck.\nSpecial Rules: You may fight Villains on the Quantum Siphons. They get +1 Attack for each two Siphons.',
     twist:
