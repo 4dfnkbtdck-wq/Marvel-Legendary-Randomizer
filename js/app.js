@@ -28,6 +28,7 @@
       locks: {},
       keywordChoices: {},
       extraCard: null,
+      heroTeamSplit: null,
     };
   }
 
@@ -51,6 +52,7 @@
         locks: {},
         keywordChoices: {},
         extraCard: null,
+        heroTeamSplit: null,
       };
     } catch (e) {
       return defaults;
@@ -134,9 +136,11 @@
     randomizeCategory(CATEGORY_BY_KEY.mastermind, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.scheme, { keepLocked: true });
     syncSchemeNumbers();
+    syncHeroTeamSplit();
     randomizeCategory(CATEGORY_BY_KEY.villains, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.henchmen, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.heroes, { keepLocked: true });
+    reconcileHeroTeamSplit();
     syncRequiredCards();
     saveToHistory();
     render();
@@ -144,8 +148,11 @@
 
   function rerollOne(categoryKey, index) {
     const category = CATEGORY_BY_KEY[categoryKey];
-    const pool = poolFor(category);
+    let pool = poolFor(category);
     const existing = state.result[categoryKey] || [];
+    if (categoryKey === "heroes" && state.heroTeamSplit && existing[index]) {
+      pool = pool.filter((c) => c.team === existing[index].team);
+    }
     const [picked] = pickRandom(pool, 1, existing);
     if (picked) {
       existing[index] = picked;
@@ -154,7 +161,9 @@
     if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
       syncSchemeNumbers();
+      syncHeroTeamSplit();
       reconcileCountedCategories();
+      reconcileHeroTeamSplit();
       syncRequiredCards();
     }
     render();
@@ -177,7 +186,9 @@
     state.locks[categoryKey] = locks;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
       syncSchemeNumbers();
+      syncHeroTeamSplit();
       reconcileCountedCategories();
+      reconcileHeroTeamSplit();
       syncRequiredCards();
     }
     render();
@@ -421,6 +432,97 @@
     renderResults();
   }
 
+  /** Picks (and sticks with) the Teams a `heroTeamSplit` Scheme (see
+   * data.js) needs, e.g. Civil War's "Avengers vs. X-Men" — `count`
+   * distinct Teams with at least `perTeam` eligible Heroes apiece.
+   * Reuses the current pick as long as every chosen Team still qualifies
+   * (same idea as resolveFromCandidates, just for a set of Teams instead
+   * of a single card); otherwise re-picks. Sets state.heroTeamSplit to
+   * null — meaning "no split enforced, Heroes randomize normally" — both
+   * when the Scheme has no such requirement and when too few Teams
+   * currently qualify to satisfy it (e.g. too many Heroes excluded). */
+  function syncHeroTeamSplit() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    const split = overrides.heroTeamSplit;
+    if (!split) {
+      state.heroTeamSplit = null;
+      return;
+    }
+
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const countByTeam = {};
+    pool.forEach((h) => {
+      if (h.team) countByTeam[h.team] = (countByTeam[h.team] || 0) + 1;
+    });
+    const eligible = Object.keys(countByTeam).filter((t) => countByTeam[t] >= split.perTeam);
+
+    const current = state.heroTeamSplit;
+    if (current && current.perTeam === split.perTeam && current.teams.every((t) => eligible.includes(t))) return;
+
+    if (eligible.length < split.count) {
+      state.heroTeamSplit = null;
+      return;
+    }
+    const shuffled = eligible.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    state.heroTeamSplit = { teams: shuffled.slice(0, split.count), perTeam: split.perTeam };
+  }
+
+  /** Forces the current Heroes result back into a `heroTeamSplit`
+   * Scheme's required shape (see syncHeroTeamSplit above) — exactly
+   * `perTeam` Heroes from each of its chosen Teams. No-op if no split is
+   * active. Never evicts a locked slot (those count toward their Team's
+   * quota as-is); every unlocked Hero that isn't one of the chosen Teams,
+   * or is beyond that Team's quota, gets discarded and replaced with a
+   * fresh pick from whichever Team is still short. Call this any time the
+   * Heroes result or the split itself may have just changed — a fresh
+   * randomize, a Scheme switch with the old (mismatched) Heroes still on
+   * screen, or a Player-count/exclusion change. */
+  function reconcileHeroTeamSplit() {
+    const split = state.heroTeamSplit;
+    if (!split) return;
+
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const items = state.result.heroes || [];
+    const locks = state.locks.heroes || [];
+
+    const keepCountByTeam = {};
+    split.teams.forEach((t) => (keepCountByTeam[t] = 0));
+    items.forEach((item, i) => {
+      if (locks[i] && keepCountByTeam[item.team] != null) keepCountByTeam[item.team]++;
+    });
+
+    const keptIndexes = new Set();
+    items.forEach((item, i) => {
+      if (locks[i]) {
+        keptIndexes.add(i);
+        return;
+      }
+      if (keepCountByTeam[item.team] != null && keepCountByTeam[item.team] < split.perTeam) {
+        keepCountByTeam[item.team]++;
+        keptIndexes.add(i);
+      }
+    });
+
+    const kept = items.filter((_, i) => keptIndexes.has(i));
+    const keptLocks = locks.filter((_, i) => keptIndexes.has(i));
+
+    const fresh = [];
+    split.teams.forEach((t) => {
+      const remaining = split.perTeam - keepCountByTeam[t];
+      if (remaining <= 0) return;
+      const candidates = pool.filter((c) => c.team === t);
+      fresh.push(...pickRandom(candidates, remaining, kept.concat(fresh)));
+    });
+
+    state.result.heroes = kept.concat(fresh);
+    state.locks.heroes = keptLocks.concat(fresh.map(() => false));
+  }
+
   function clampOption(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
@@ -450,6 +552,7 @@
     if (schemeSignature !== lastSchemeSignature) {
       clearKeywordChoicesWithPrefix("scheme:");
       state.extraCard = null;
+      state.heroTeamSplit = null;
       lastSchemeSignature = schemeSignature;
     }
 
@@ -602,7 +705,7 @@
   }
 
   function poolWarnings() {
-    return CATEGORIES.map((category) => {
+    const warnings = CATEGORIES.map((category) => {
       const pool = poolFor(category);
       const n = countFor(category);
       if (pool.length < n) {
@@ -611,6 +714,15 @@
       }
       return null;
     }).filter(Boolean);
+
+    const scheme = currentSchemeData();
+    const split = scheme && scheme.overrides && scheme.overrides.heroTeamSplit;
+    if (split && !state.heroTeamSplit) {
+      warnings.push(
+        `Heroes: "${scheme.name}" needs ${split.count} Teams with ${split.perTeam}+ Heroes each — not enough currently qualify, so Heroes were picked at random instead.`
+      );
+    }
+    return warnings;
   }
 
   // ---------- History ----------
@@ -818,7 +930,9 @@
     if (!preset) return;
     state.options.players = n;
     syncSchemeNumbers(); // sets heroCount/villainCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
+    syncHeroTeamSplit();
     reconcileCountedCategories();
+    reconcileHeroTeamSplit();
     syncRequiredCards();
     renderPlayersSegmented();
     renderWarnings();
@@ -998,8 +1112,10 @@
         randomizeCategory(category, { keepLocked: true });
         if (category.key === "mastermind" || category.key === "scheme") {
           syncSchemeNumbers();
+          syncHeroTeamSplit();
           reconcileCountedCategories();
         }
+        reconcileHeroTeamSplit();
         syncRequiredCards();
         render();
       });

@@ -257,7 +257,18 @@ const MASTERMINDS = [
 //                  a Scheme that adds a different amount, e.g. "all 14
 //                  cards" — see Trap Heroes in the Microverse. If the
 //                  extra Hero instead joins the normal Hero Deck, that's
-//                  `heroCountDelta` above instead, not this).
+//                  `heroCountDelta` above instead, not this), or
+//                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
+//                  must be `perTeam` Heroes from each of `count` distinct
+//                  Teams, e.g. Civil War's "Avengers vs. X-Men": 3 Heroes
+//                  each from 2 random Teams. The app picks `count` Teams
+//                  at random from whichever currently have at least
+//                  `perTeam` eligible Heroes, sticking with that pick
+//                  until the Scheme changes or a Team stops qualifying;
+//                  rerolling one Hero slot stays within that slot's Team
+//                  so the split holds. Falls back to a plain random Hero
+//                  Deck if fewer than `count` Teams currently qualify.
+//                  Pair with `heroCount: count * perTeam`).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -982,7 +993,7 @@ const SCHEMES = [
   {
     name: "Avengers vs. X-Men",
     exp: "civil_war",
-    overrides: { twists: 9 },
+    overrides: { twists: 9, heroCount: 6, heroTeamSplit: { count: 2, perTeam: 3 } },
     setupNote: "Hero Deck has 3 Heroes of one Team and 3 Heroes of another Team (Avengers, X-Men, Guardians, Marvel Knights, etc.).",
     twist:
       "Twists 1–7: Each player reveals their hand. Each player that has cards of both those Teams gains a Wound.\nTwist 8: Evil wins!",
