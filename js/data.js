@@ -296,7 +296,13 @@ const MASTERMINDS = [
 //                  override) / `bystandersDelta` (added to the base
 //                  count unconditionally) / `bystandersDeltaByPlayers`
 //                  (added to the base count, only at the listed player
-//                  counts), `henchmenDelta`, `heroCount` /
+//                  counts), `henchmenDelta` (added to the base
+//                  unconditionally) / `henchmenCountByPlayers` (a flat
+//                  override, only at the listed player counts — e.g.
+//                  "double the normal number of Henchman Groups," where
+//                  the doubled value differs by player count so a flat
+//                  delta can't express it; see Star-Lord's Awesome Mix
+//                  Tape), `heroCount` /
 //                  `heroCountByPlayers` (flat overrides) /
 //                  `heroCountDelta` (added to the base, e.g. "add an
 //                  extra Hero to the Hero Deck" — note this is a
@@ -1604,7 +1610,17 @@ const SCHEMES = [
   {
     name: "Star-Lord's Awesome Mix Tape",
     exp: "guardians_movie",
-    overrides: { twists: 7, heroCount: 7, requiredHeroTeam: "Guardians of the Galaxy" },
+    overrides: {
+      twists: 7,
+      heroCount: 7,
+      requiredHeroTeam: "Guardians of the Galaxy",
+      // Doubles the normal Villain Group / Henchman Group count at every
+      // player count (e.g. 4 players: 4 Villain Groups -> 8, 2 Henchmen
+      // Groups -> 4) — see PLAYER_COUNT_TABLE below for the un-doubled
+      // base values this doubles.
+      villainCountByPlayers: { 1: 2, 2: 4, 3: 6, 4: 8, 5: 10 },
+      henchmenCountByPlayers: { 1: 2, 2: 2, 3: 2, 4: 4, 5: 4 },
+    },
     setupNote:
       "Use 7 Heroes including at least one Guardians of the Galaxy Hero. Use double the normal number of Villain and Henchman Groups, but use only half the cards from each of those groups, randomly & secretly. (1 player: 2 Henchmen per group)",
     twist: "KO all Heroes from the HQ. Villains in the Sewers and Bridge swap spaces. Likewise Villains in the Bank and Streets.",
