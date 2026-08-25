@@ -118,7 +118,7 @@ const EXPANSIONS = [
   { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "verified" },
   { id: "fear_itself", name: "Fear Itself", confidence: "verified" },
   { id: "asgard", name: "Heroes of Asgard", confidence: "verified" },
-  { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "light" },
+  { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "verified" },
   { id: "new_mutants", name: "New Mutants", confidence: "light" },
   { id: "noir", name: "Noir", confidence: "light" },
   { id: "realm_of_kings", name: "Realm of Kings", confidence: "light" },
@@ -157,6 +157,10 @@ const MASTERMINDS = [
 
   { name: "Hela, Goddess of Death", exp: "asgard", leads: [{ category: "villains", name: "Omens of Ragnarok" }] },
   { name: "Malekith the Accursed", exp: "asgard", leads: [{ category: "villains", name: "Dark Council" }] },
+
+  { name: "The Beyonder", exp: "into_the_cosmos", leads: [{ category: "villains", name: "From Beyond" }] },
+  { name: "The Grandmaster", exp: "into_the_cosmos", leads: [{ category: "villains", name: "Elders of the Universe" }] },
+  { name: "Magus", exp: "into_the_cosmos", leads: [{ category: "henchmen", name: "Universal Church of Truth" }] },
 
   { name: "Dark Phoenix", exp: "x_men" },
   { name: "Onslaught", exp: "x_men" },
@@ -1354,6 +1358,50 @@ const SCHEMES = [
       'Twists 1-7: This Twist enters the city as a "Frost Giant Invader" Villain worth 6VP with 6 Attack and the ability "If you are not Worthy, this gets +4 Attack."\nTwists 8-9: Same effect, then a Frost Giant Invader from each player\'s Victory Pile enters the city.',
     evilWins: "When there are 5 Frost Giant Invaders in the city and/or Escape Pile.",
   },
+
+  // The four Into the Cosmos schemes below are transcribed directly from
+  // the physical cards.
+  {
+    name: "Annihilation: Conquest",
+    exp: "into_the_cosmos",
+    overrides: { twists: 11, heroCountDelta: 1 },
+    setupNote: "",
+    twist:
+      'Put this Twist next to the Scheme as a "Phalanx Conquest." The highest-cost Hero from the HQ enters the city as a "Phalanx-Infected" Villain.\nSpecial Rules: Each "Phalanx-Infected" Villain has Attack equal to its cost, +1 Attack for each two Phalanx Conquests. If you fight one, choose a player to gain it as a Hero.',
+    evilWins: "When there are 6 Phalanx-Infected in the city and/or Escape Pile, or the Villain Deck runs out.",
+  },
+  {
+    name: "The Contest of Champions",
+    exp: "into_the_cosmos",
+    overrides: { twists: 11, heroCountDelta: 1 },
+    setupNote: 'Put 11 random cards from the Hero Deck face up in a "Contest Row."',
+    twist:
+      'Twist 1-4: KO the leftmost card from the Contest Row, then Contest of Champions for that card\'s color(s). Each player that loses discards a card. If the Mastermind wins, put a Wound next to this Scheme as an "Evil Triumph."\nTwist 5-8: Same effect, but in the Contest, Evil selects from 4 cards from the Hero Deck.\nTwist 9-11: Same effect, but in the Contest, Evil selects from 6 cards from the Hero Deck.',
+    evilWins: "When there are 6 Evil Triumphs.",
+  },
+  {
+    name: "Destroy the Nova Corps",
+    exp: "into_the_cosmos",
+    overrides: { twists: 9, requiredHero: "Nova", heroCountByPlayers: { 1: 5 } },
+    setupNote:
+      "Each player's starting deck adds 2 Wounds, 1 S.H.I.E.L.D. Officer, and a Nova card that costs 2.\nSpecial Rules: All S.H.I.E.L.D. Officers and Nova Heroes count as \"Nova Centurions.\"",
+    twist:
+      "Twist 1-5: Each player must reveal their hand and discard a Nova Centurion. Each player that discarded this way gains a Shard. Each player that didn't discard this way must KO a card from the S.H.I.E.L.D. Officer Stack.\nTwist 6-9: Each player must KO a Nova Centurion from the S.H.I.E.L.D. Officer Stack or from their hand or discard pile.",
+    evilWins: "When there are 5 KO'd Nova Centurions per player.",
+  },
+  {
+    name: "Turn the Soul of Adam Warlock",
+    exp: "into_the_cosmos",
+    overrides: {
+      twists: 14,
+      extraHeroName: "Adam Warlock",
+      extraHeroNote: "14 cards form a face-up stack next to the Scheme (lowest-cost on top) — not the Villain Deck. See Twist.",
+    },
+    setupNote: "14 Twists (using 3 Wounds to represent extra Scheme Twists).",
+    twist:
+      'Set aside the top card of the Adam Warlock stack. This turn you may "Purify" it by spending Attack equal to double its cost. If you do, choose a player to gain that card, then you rescue a Bystander, and you may KO one of your Heroes. If you don\'t do this by the end of your turn, put that Adam Warlock card into a "Soul\'s Corruption" stack next to the Scheme.',
+    evilWins: "When there are 8 Soul's Corruptions.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1382,6 +1430,11 @@ const VILLAIN_GROUPS = [
 
   { name: "Dark Council", exp: "asgard" },
   { name: "Omens of Ragnarok", exp: "asgard" },
+
+  { name: "Black Order of Thanos", exp: "into_the_cosmos" },
+  { name: "Celestials", exp: "into_the_cosmos" },
+  { name: "Elders of the Universe", exp: "into_the_cosmos" },
+  { name: "From Beyond", exp: "into_the_cosmos" },
 
   { name: "Reavers", exp: "x_men" },
   { name: "Marauders", exp: "x_men" },
@@ -1495,6 +1548,9 @@ const HENCHMEN = [
 
   { name: "Circus of Crime", exp: "dimensions" },
   { name: "Spider-Slayer", exp: "dimensions" },
+
+  { name: "Sidera Maris, Bridge Builders", exp: "into_the_cosmos" },
+  { name: "Universal Church of Truth", exp: "into_the_cosmos" },
 ];
 
 const HEROES = [
@@ -1637,8 +1693,15 @@ const HEROES = [
   { name: "Valkyrie", exp: "asgard", team: "Heroes of Asgard" },
   { name: "The Warriors Three", exp: "asgard", team: "Heroes of Asgard" },
 
-  { name: "Captain Marvel (Carol Danvers)", exp: "into_the_cosmos" },
-  { name: "Adam Warlock", exp: "into_the_cosmos" },
+  { name: "Adam Warlock", exp: "into_the_cosmos", team: "Avengers" },
+  { name: "Captain Mar-Vell", exp: "into_the_cosmos", team: "Avengers" },
+  { name: "Moondragon", exp: "into_the_cosmos", team: "Avengers" },
+  { name: "Nebula", exp: "into_the_cosmos", team: "Guardians of the Galaxy" },
+  { name: "Nova", exp: "into_the_cosmos", team: "Avengers" },
+  { name: "Phyla-Vell", exp: "into_the_cosmos", team: "Guardians of the Galaxy" },
+  { name: "Quasar", exp: "into_the_cosmos", team: "Avengers" },
+  { name: "Ronan the Accuser", exp: "into_the_cosmos" },
+  { name: "Yondu", exp: "into_the_cosmos", team: "Guardians of the Galaxy" },
 
   { name: "Wolfsbane", exp: "new_mutants" },
   { name: "Magma", exp: "new_mutants" },
