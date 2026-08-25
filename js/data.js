@@ -116,7 +116,7 @@ const EXPANSIONS = [
   { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "light" },
   { id: "annihilation", name: "Annihilation", confidence: "verified" },
   { id: "ant_man", name: "Ant-Man", confidence: "verified" },
-  { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "light" },
+  { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "verified" },
   { id: "deadpool", name: "Deadpool", confidence: "light" },
   { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "light" },
   { id: "fear_itself", name: "Fear Itself", confidence: "light" },
@@ -209,6 +209,9 @@ const MASTERMINDS = [
 
   { name: "Indestructible Man", exp: "black_widow", leads: [{ category: "villains", name: "Elite Assassins" }] },
   { name: "Taskmaster", exp: "black_widow", leads: [{ category: "villains", name: "Taskmaster's Thunderbolts" }] },
+
+  { name: "Arnim Zola", exp: "cap_75", leads: [{ category: "villains", name: "Zola's Creations" }] },
+  { name: "Baron Heinrich Zemo", exp: "cap_75", leads: [{ category: "villains", name: "Masters of Evil (WWII)" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -859,6 +862,44 @@ const SCHEMES = [
     twist: "A Black Widow Initiate enters the city from the Officer Stack. Play another card from the Villain Deck.",
     evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
   },
+
+  // The four Captain America 75th Anniversary schemes below are
+  // transcribed directly from the physical cards.
+  {
+    name: "Brainwash the Military",
+    exp: "cap_75",
+    overrides: { twists: 7 },
+    setupNote:
+      "Add 12 S.H.I.E.L.D. Officers to the Villain Deck.\nSpecial Rules: S.H.I.E.L.D. Officers in the Villain Deck are Villains. Their Attack is 3 plus the number of Twists stacked next to this Scheme. When you defeat a S.H.I.E.L.D. Officer, gain it as a Hero.",
+    twist: 'Twists 1–6: Stack this Twist next to the Scheme as a "Traitor Battalion." Play another card from the Villain Deck.\nTwist 7: All S.H.I.E.L.D. Officers in the city escape.',
+    evilWins: "When 5 S.H.I.E.L.D. Officers escape.",
+  },
+  {
+    name: "Change the Outcome of WWII",
+    exp: "cap_75",
+    overrides: { twists: 7, villainCountDelta: 1 },
+    setupNote: "",
+    twist:
+      'The Axis invades a new country. Put all Villains and Bystanders from the city on the bottom of the Villain Deck. The number of city spaces changes. Play 2 cards from the Villain Deck. If any Villains escape this country, stack a Twist next to the Scheme as a "conquered capital."\nTwist 1: Poland — 4 spaces.\nTwist 2: France — 3 spaces.\nTwist 3: USSR — 6 spaces.\nTwist 4: England — 3 spaces.\nTwist 5: USA — 5 spaces.\nTwist 6: Australia — 2 spaces.\nTwist 7: Switzerland — 1 space.',
+    evilWins: "When 3 capitals are conquered.",
+  },
+  {
+    name: "Go Back in Time to Slay Heroes' Ancestors",
+    exp: "cap_75",
+    overrides: { twists: 9, heroCount: 8 },
+    setupNote: "Special Rules: Whenever a Hero is in the HQ whose Hero Name has been Purged from the Timestream, KO that Hero.",
+    twist: 'Put a Hero from the HQ next to the Scheme, "Purged from the Timestream."',
+    evilWins: "When the Hero Deck runs out.",
+  },
+  {
+    name: "The Unbreakable Enigma Code",
+    exp: "cap_75",
+    overrides: { twists: 6 },
+    setupNote:
+      "Special Rules: Whenever you fight a Villain, you may pay 1 Recruit to look at one of the face-down Enigma cards. When you fight the Mastermind, first guess the color of each Enigma card, and then reveal them. If you guessed them right, fight the Mastermind as normal. If not, your turn ends, and mix up the Enigma cards face-down.",
+    twist: 'Twists 1–5: Put a card from the Hero Deck face down next to the Scheme as part of the "Enigma Code." Mix up those cards face-down.\nTwist 6: Evil Wins!',
+    evilWins: "",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -940,6 +981,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Elite Assassins", exp: "black_widow" },
   { name: "Taskmaster's Thunderbolts", exp: "black_widow" },
+
+  { name: "Masters of Evil (WWII)", exp: "cap_75" },
+  { name: "Zola's Creations", exp: "cap_75" },
 ];
 
 const HENCHMEN = [
@@ -1060,8 +1104,11 @@ const HEROES = [
   { name: "Wasp", exp: "ant_man", team: "Avengers" },
   { name: "Wonder Man", exp: "ant_man", team: "Avengers" },
 
-  { name: "Captain America (Sam Wilson)", exp: "cap_75" },
-  { name: "Captain America (Bucky Barnes)", exp: "cap_75" },
+  { name: "Agent X-13", exp: "cap_75", team: "S.H.I.E.L.D." },
+  { name: "Captain America (Falcon)", exp: "cap_75", team: "Avengers" },
+  { name: "Captain America 1941", exp: "cap_75", team: "Avengers" },
+  { name: "Steve Rogers, Director of S.H.I.E.L.D.", exp: "cap_75", team: "S.H.I.E.L.D." },
+  { name: "Winter Soldier", exp: "cap_75" },
 
   { name: "Negasonic Teenage Warhead", exp: "deadpool" },
 
