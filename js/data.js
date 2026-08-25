@@ -300,7 +300,13 @@ const MASTERMINDS = [
 //                  applies (see syncSchemeNumbers/syncRequiredCards in
 //                  app.js): `twists` (or `twistsByPlayers`, or
 //                  `twistsPerVillainGroup` — a multiplier times the
-//                  resolved Villain Group count), `bystanders` (a flat
+//                  resolved Villain Group count, or `twistsByMastermind`
+//                  — an object keyed by exact Mastermind name, checked
+//                  first/highest priority of all four, for a Scheme
+//                  whose Twist count depends on which Mastermind is
+//                  active, e.g. Ritual Sacrifice to Summon Chthon's
+//                  "If using Lilith as Mastermind: Use 1 Twist total"),
+//                  `bystanders` (a flat
 //                  override) / `bystandersDelta` (added to the base
 //                  count unconditionally) / `bystandersDeltaByPlayers`
 //                  (added to the base count, only at the listed player
@@ -310,7 +316,18 @@ const MASTERMINDS = [
 //                  "double the normal number of Henchman Groups," where
 //                  the doubled value differs by player count so a flat
 //                  delta can't express it; see Star-Lord's Awesome Mix
-//                  Tape), `heroCount` /
+//                  Tape) / `extraHenchmenCount` (a number, optionally
+//                  paired with `extraHenchmenGroupLabel`) for a Scheme
+//                  whose extra Henchman Group(s) should stay visually
+//                  distinct from the normal Henchmen result rather than
+//                  merging in anonymously (which is what `henchmenDelta`
+//                  does), e.g. Sire Vampires at the Blood Bank's "Add an
+//                  extra Henchman Group... as 'Vampire Neonates'" —
+//                  `extraHenchmenGroupLabel` names the shown section
+//                  (falls back to "Extra Henchmen"); same "extra group"
+//                  idea as `extraHeroCount`/`extraHeroGroupLabel` below,
+//                  just for Henchmen — see EXTRA_GROUP_CONFIG in app.js),
+//                  `heroCount` /
 //                  `heroCountByPlayers` (flat overrides) /
 //                  `heroCountDelta` (added to the base, e.g. "add an
 //                  extra Hero to the Hero Deck" — note this is a
@@ -355,7 +372,14 @@ const MASTERMINDS = [
 //                  Heroes carrying a given `keywords` tag rather than any
 //                  Hero, e.g. "Auction Shrink Tech to Highest Bidder"
 //                  requiring "a random extra Hero that has any
-//                  Size-Changing cards"), or
+//                  Size-Changing cards"; or `extraHeroNameContains` (an
+//                  array of name substrings, case-insensitive, OR'd
+//                  together — same idea as a Mastermind's `nameContains`,
+//                  for "any [word] Hero" text with no pre-existing
+//                  `keywords` tag to filter by, e.g. Midnight Massacre's
+//                  "any Blade Hero" matching every Hero named "Blade"
+//                  across expansions, named or not, e.g. both "Blade"
+//                  and "Blade, Daywalker"), or
 //                  `extraHeroName` (same idea, but for a Scheme that
 //                  names one specific Hero rather than picking randomly,
 //                  e.g. Dark City's "Transform Citizens into Demons"
@@ -390,7 +414,7 @@ const MASTERMINDS = [
 //                  "Use 4 Heroes in the Hero Deck, plus 4 other
 //                  Heroes..."). `extraHeroGroupLabel` names the shown
 //                  section (falls back to "Extra Heroes"); see
-//                  syncExtraHeroGroup in app.js. Same "extra card" idea
+//                  syncExtraGroup in app.js. Same "extra card" idea
 //                  as `extraHero` above, just for several cards at once
 //                  rather than one), or
 //                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
@@ -1701,17 +1725,17 @@ const SCHEMES = [
 
   // The four Midnight Sons Schemes below are transcribed directly from
   // the physical cards. "Ritual Sacrifice to Summon Chthon"'s "Add
-  // Lilith as an extra Villain Group" and its "If using Lilith: Use 1
-  // Twist total" clause are left as reference-only text (not modeled by
-  // `overrides`) — the printed text is ambiguous about whether "Lilith"
-  // refers to a Villain Group (this expansion's own Villain Groups are
-  // only "Fallen" and "Lilin," the group Lilith's own Mastermind entry
-  // leads) or the Mastermind herself, and the "if using Lilith" branch
-  // reads as a multi-Mastermind game variant this app has no concept of
-  // regardless. Its "Special Rules" Mastermind-transform text (into
-  // "Great Old One Chthon," a separate double-sided Mastermind card) is
-  // likewise reference-only — this app has no mechanism for a Scheme to
-  // swap out the active Mastermind mid-game, unlike its Scheme-to-Scheme
+  // Lilith as an extra Villain Group" text actually means "Lilin" (the
+  // Villain Group Lilith's own Mastermind entry leads) — modeled via
+  // `requiredVillainGroup`/`villainCountDelta` below so Lilin is always
+  // present as a genuine extra group; when Lilith herself is the active
+  // Mastermind her own `leads` already supplies Lilin, so the Scheme's
+  // `villainCountDelta` slot is instead filled by a different random
+  // group, and `twistsByMastermind` drops Twists to 1 total. Its
+  // "Special Rules" Mastermind-transform text (into "Great Old One
+  // Chthon," a separate double-sided Mastermind card) is left as
+  // reference-only — this app has no mechanism for a Scheme to swap out
+  // the active Mastermind mid-game, unlike its Scheme-to-Scheme
   // "unveils" transform (see UNVEILED_SCHEMES above).
   {
     name: "Wager at Blackjack for Heroes' Souls",
@@ -1727,7 +1751,8 @@ const SCHEMES = [
     exp: "midnight_sons",
     overrides: {
       twists: 11,
-      extraHeroName: "Blade, Daywalker",
+      extraHero: true,
+      extraHeroNameContains: ["Blade"],
       extraHeroNote: "all 14 cards go in the Villain Deck",
     },
     setupNote:
@@ -1739,16 +1764,21 @@ const SCHEMES = [
   {
     name: "Ritual Sacrifice to Summon Chthon",
     exp: "midnight_sons",
-    overrides: { twistsByPlayers: { 1: 7, 2: 8, 3: 9, 4: 10, 5: 11 } },
+    overrides: {
+      twistsByPlayers: { 1: 7, 2: 8, 3: 9, 4: 10, 5: 11 },
+      twistsByMastermind: { "Lilith, Mother of Demons": 1 },
+      requiredVillainGroup: "Lilin",
+      villainCountDelta: 1,
+    },
     setupNote:
-      'Twists equal to 6 plus 1 per player. Add Lilith as an extra Villain Group. If using Lilith: Use 1 Twist total (and still use an extra Villain Group).\nSpecial Rules: When 5 Bystanders are in the KO pile, shuffle all Twists from the KO pile back into the Villain Deck. Then this Scheme Transforms into "Great Old One Chthon." (Flip it over.) Then KO all other Masterminds and their remaining Tactics.\n"Great Old One Chthon" (Mastermind, Transformed): Master Strike or Twist: Destroy the current player. Shuffle this Strike or Twist back into the Villain Deck. Chthon Wins: When all players are destroyed. (This card can only start the game as the Scheme on the other side.)',
+      'Twists equal to 6 plus 1 per player. Add Lilin as an extra Villain Group. If using Lilith as Mastermind: Use 1 Twist total (and still add an extra Villain Group, since Lilin is already provided by Lilith\'s own Mastermind card).\nSpecial Rules: When 5 Bystanders are in the KO pile, shuffle all Twists from the KO pile back into the Villain Deck. Then this Scheme Transforms into "Great Old One Chthon." (Flip it over.) Then KO all other Masterminds and their remaining Tactics.\n"Great Old One Chthon" (Mastermind, Transformed): Master Strike or Twist: Destroy the current player. Shuffle this Strike or Twist back into the Villain Deck. Chthon Wins: When all players are destroyed. (This card can only start the game as the Scheme on the other side.)',
     twist: "Twist 1-4: A Villain or Mastermind Hunts for Victims.\nTwist 5-11: The Mastermind Hunts for Victims.",
     evilWins: '"Great Old One Chthon" wins when all players are destroyed (see Special Rules above).',
   },
   {
     name: "Sire Vampires at the Blood Bank",
     exp: "midnight_sons",
-    overrides: { twists: 10, henchmenDelta: 1 },
+    overrides: { twists: 10, extraHenchmenCount: 1, extraHenchmenGroupLabel: "Vampire Neonates" },
     setupNote:
       'Add an extra Henchman Group of 10 cards as "Vampire Neonates." Put this Scheme above the Bank to mark it as the "Blood Bank."\nSpecial Rules: All "Vampire Neonates" also have Blood Frenzy. While in the Blood Bank, they instead have double Blood Frenzy.',
     twist:
