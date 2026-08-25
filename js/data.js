@@ -116,7 +116,7 @@ const EXPANSIONS = [
   { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "verified" },
   { id: "deadpool", name: "Deadpool", confidence: "verified" },
   { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "verified" },
-  { id: "fear_itself", name: "Fear Itself", confidence: "light" },
+  { id: "fear_itself", name: "Fear Itself", confidence: "verified" },
   { id: "asgard", name: "Heroes of Asgard", confidence: "light" },
   { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "light" },
   { id: "new_mutants", name: "New Mutants", confidence: "light" },
@@ -168,7 +168,7 @@ const MASTERMINDS = [
   { name: "Vulcan", exp: "realm_of_kings" },
   { name: "Annihilus", exp: "annihilation", leads: [{ category: "villains", name: "Annihilation Wave" }] },
   { name: "Kang the Conqueror", exp: "annihilation", leads: [{ category: "villains", name: "Timelines of Kang" }] },
-  { name: "Sin", exp: "fear_itself" },
+  { name: "Uru-Enchanted Iron Man", exp: "fear_itself", leads: [{ category: "villains", name: "The Mighty" }] },
   { name: "Doctor Doom (Battleworld)", exp: "secret_wars" },
 
   { name: "Doctor Strange", exp: "villains", leads: [{ category: "villains", name: "Defenders" }] },
@@ -1232,6 +1232,40 @@ const SCHEMES = [
     twist: "Twist 2, 4, and 6: Until the next Twist, Enemies cost Recruit to fight and Heroes cost Attack to recruit.\nTwist 7: Evil wins!",
     evilWins: "See Twist 7.",
   },
+
+  // The three Legendary: Villains — Fear Itself Plots below are
+  // transcribed directly from the physical cards. Like the base
+  // "villains" expansion, these use "Good Wins" instead of "Evil Wins" —
+  // see `winLabel` above.
+  {
+    name: "Last Stand at Avengers Tower",
+    exp: "fear_itself",
+    overrides: { twists: 6 },
+    setupNote: "",
+    twist:
+      'Stack this Twist above the Rooftops as "StarkTech Defenses." If there is an Adversary on the Rooftops, choose 3 Allies from the Lair & KO them.\nSpecial Rules: While an Adversary is on the Rooftops, it gets +1 Attack for each StarkTech Defenses.',
+    evilWins: "When there are 13 non-grey Allies in the KO pile.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "Fear Itself",
+    exp: "fear_itself",
+    overrides: { twists: 10, heroCount: 8 },
+    setupNote: 'Earth\'s "Fear Level" starts at 8. The number of Allies in the Lair is always equal to the Fear Level.',
+    twist: "KO an Ally from the Lair. The Fear Level goes down by 1.",
+    evilWins: "When the Fear Level is 0.",
+    winLabel: "Good Wins",
+  },
+  {
+    name: "The Traitor",
+    exp: "fear_itself",
+    overrides: { twists: 8 },
+    setupNote:
+      "2+ players only. Shuffle a 'Betrayal Deck' of 3 Bindings per player and a 9th Twist.\nSpecial Rules: During your turn, you may reveal a Twist from your Betrayal Cards to become 'the Traitor.' If you do, each other player gains all the Bindings from their Betrayal Cards. During your turns, you may spend 4 Attack any number of times to play an additional card from the Adversary Deck.\nWhen the players win: the Traitor reveals themself and loses (despite their team winning).",
+    twist: "Twists 1-3: If there is no revealed Traitor, each player puts a 'Betrayal Card' from the Betrayal Deck face down in front of them and looks at it.",
+    evilWins: "Twist 8: Good wins! The Traitor reveals themself and also wins.",
+    winLabel: "Good Wins",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1266,7 +1300,7 @@ const VILLAIN_GROUPS = [
   { name: "Klyntar Symbiotes", exp: "venom" },
   { name: "Fear Lords", exp: "dr_strange" },
   { name: "Lords of the Netherworld", exp: "dr_strange" },
-  { name: "The Worthy", exp: "fear_itself" },
+  { name: "The Mighty", exp: "fear_itself" },
 
   // Legendary: Villains — these are Hero Groups (the opposition), not
   // Villain Groups in-fiction; see the exclusiveMode note at the top of
@@ -1414,6 +1448,16 @@ const HEROES = [
   { name: "Mr. Fantastic", exp: "fantastic_four", team: "Fantastic Four" },
   { name: "Silver Surfer", exp: "fantastic_four" },
   { name: "Thing", exp: "fantastic_four", team: "Fantastic Four" },
+
+  // Legendary: Villains — Fear Itself: like the base "villains" expansion,
+  // these are the player-controlled Villain characters (going in HEROES —
+  // see the exclusiveMode note at the top of this file).
+  { name: "Greithoth, Breaker of Wills", exp: "fear_itself", team: "Foes of Asgard" },
+  { name: "Kuurth, Breaker of Stone", exp: "fear_itself", team: "Foes of Asgard" },
+  { name: "Nerkkod, Breaker of Oceans", exp: "fear_itself", team: "Foes of Asgard" },
+  { name: "Nul, Breaker of Worlds", exp: "fear_itself", team: "Foes of Asgard" },
+  { name: "Skadi", exp: "fear_itself", team: "HYDRA" },
+  { name: "Skirn, Breaker of Men", exp: "fear_itself", team: "Foes of Asgard" },
 
   { name: "Spider-Woman", exp: "paint_town_red" },
   { name: "Silk", exp: "paint_town_red" },
