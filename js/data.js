@@ -136,6 +136,7 @@ const EXPANSIONS = [
   { id: "what_if", name: "Marvel Studios: What If...?", confidence: "verified" },
   { id: "core_2nd", name: "Core Set (2nd Edition)", confidence: "verified" },
   { id: "2099", name: "2099", confidence: "verified" },
+  { id: "black_panther", name: "Black Panther", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -201,6 +202,9 @@ const MASTERMINDS = [
 
   { name: "Alchemax Executives", exp: "2099", leads: [{ category: "villains", name: "Alchemax Enforcers" }], heroCountDelta: 1 },
   { name: "Sinister Six 2099", exp: "2099", leads: [{ category: "villains", nameContains: ["Alchemax", "Sinister"] }] },
+
+  { name: "Killmonger", exp: "black_panther", leads: [{ category: "villains", name: "Killmonger's League" }] },
+  { name: "Klaw", exp: "black_panther", leads: [{ category: "villains", name: "Enemies of Wakanda" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -772,6 +776,47 @@ const SCHEMES = [
     twist: "Play two cards from the Villain Deck.",
     evilWins: "When 3 Villains per player have escaped or the Villain Deck runs out.",
   },
+
+  // The four Black Panther schemes below are transcribed directly from
+  // the physical cards.
+  {
+    name: "Poison Lakes with Nanite Microbots",
+    exp: "black_panther",
+    overrides: { twistsByPlayers: { 1: 6, 2: 7, 3: 8, 4: 9, 5: 10 } },
+    setupNote:
+      "30 Wounds in the Wound Stack.\nSpecial Rules: Whenever you recruit a Hero (or it leaves the HQ), pay 1 Recruit less for each Wound on it and choose players to gain those Wounds, dividing them as evenly as possible. Whenever a Wound is KO'd from anywhere, return it to the bottom of the Wound Stack.",
+    twist:
+      'Stack this Twist next to the Scheme as an "Infected Nanite." Wound the Mastermind. Then for each Infected Nanite, Wound a Hero in the HQ, dividing these new Wounds as evenly as possible.',
+    evilWins: "When the Wound Stack or Villain Deck runs out.",
+  },
+  {
+    name: "Plunder Wakanda's Vibranium",
+    exp: "black_panther",
+    overrides: { twists: 10 },
+    setupNote:
+      "Special Rules: A Villain holding Vibranium is Empowered by the colors of the Vibranium Attunement. When you defeat them, put the Vibranium in your Victory Pile, worth 3VP.",
+    twist:
+      'Put any Vibranium from the city into the Escape Pile. A Bystander enters the city as a 3 Attack "Smuggler" Villain with "Fight: Rescue this as a Bystander." Then the highest-Attack Villain captures this Twist. Put the top card of the Hero Deck next to the Scheme as a "Vibranium Attunement," putting any previous Attunement on the bottom of the Hero Deck.',
+    evilWins: "When 4 Vibranium are in the Escape Pile or the Villain Deck runs out.",
+  },
+  {
+    name: "Provoke a Clash of Nations",
+    exp: "black_panther",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      'Twists 1–8: Without talking, all players simultaneously vote with a Fist, Palm, or 2 Fingers. Break ties at random. Then only you discard your hand and draw six cards. You must do the voted task below by the end of this turn or stack this Twist next to the Mastermind as an "International Crisis".\n• Fist: "War" — defeat a non-Henchman Villain or Mastermind Tactic.\n• Palm: "Diplomacy" — play three Heroes that share a Hero Class.\n• Two Fingers: "Commerce" — recruit two Heroes from the HQ.\nTwists 9–11: Do all three tasks this turn or add an International Crisis.',
+    evilWins: "At 6 International Crises.",
+  },
+  {
+    name: "Seize the Wakandan Throne",
+    exp: "black_panther",
+    overrides: { twists: 6 },
+    setupNote: "Special Rules: Whenever you fight the Mastermind, you gain the Throne's Favor.",
+    twist:
+      'If the Mastermind has the Throne\'s Favor, they spend it to stack this Twist next to the Scheme as a "Tribe of Wakanda Defeated." Otherwise: The Mastermind gains the Throne\'s Favor, shuffle this Twist back into the Villain Deck, and then play a card from the Villain Deck.',
+    evilWins: "When the 5 Tribes of Wakanda have been defeated.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -847,6 +892,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Annihilation Wave", exp: "annihilation" },
   { name: "Timelines of Kang", exp: "annihilation" },
+
+  { name: "Enemies of Wakanda", exp: "black_panther" },
+  { name: "Killmonger's League", exp: "black_panther" },
 ];
 
 const HENCHMEN = [
@@ -1065,6 +1113,12 @@ const HEROES = [
   { name: "Hulk 2099", exp: "2099", team: "Marvel Knights" },
   { name: "Ravage 2099", exp: "2099", team: "Marvel Knights" },
   { name: "Spider-Man 2099", exp: "2099", team: "Spider-Friends" },
+
+  { name: "General Okoye", exp: "black_panther", team: "Heroes of Wakanda" },
+  { name: "King Black Panther", exp: "black_panther", team: "Heroes of Wakanda" },
+  { name: "Princess Shuri", exp: "black_panther", team: "Heroes of Wakanda" },
+  { name: "Queen Storm of Wakanda", exp: "black_panther", team: "Heroes of Wakanda" },
+  { name: "White Wolf", exp: "black_panther", team: "Heroes of Wakanda" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
