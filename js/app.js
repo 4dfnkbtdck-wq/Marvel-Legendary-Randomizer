@@ -28,6 +28,7 @@
       locks: {},
       keywordChoices: {},
       extraCard: null,
+      extraVillainGroup: null,
       heroTeamSplit: null,
       unveiledScheme: null,
     };
@@ -53,6 +54,7 @@
         locks: {},
         keywordChoices: {},
         extraCard: null,
+        extraVillainGroup: null,
         heroTeamSplit: null,
         unveiledScheme: null,
       };
@@ -435,6 +437,7 @@
     const mmSignature = mmData ? `${mmData.name}|${mmData.exp}` : null;
     if (mmSignature !== lastMastermindSignature) {
       clearKeywordChoicesWithPrefix("mastermind:");
+      state.extraVillainGroup = null;
       lastMastermindSignature = mmSignature;
     }
 
@@ -443,6 +446,7 @@
       requiredCardNames(categoryKey).forEach((name) => forceIncludeSignature(categoryKey, name));
     });
     syncExtraCard();
+    syncExtraVillainGroup();
     syncUnveiledScheme();
   }
 
@@ -493,6 +497,53 @@
     const candidates = pool.filter((c) => !mainNames.has(c.name));
     const [picked] = pickRandom(candidates, 1, state.extraCard ? [state.extraCard] : []);
     if (picked) state.extraCard = picked;
+    saveState();
+    renderResults();
+  }
+
+  /** A Villain Group beyond the normal Villain Groups lineup, set aside
+   * on its own rather than mixed into the main pool or its count — same
+   * idea as a Scheme's `extraHero`/`extraHeroName` above, just for a
+   * Villain Group. Two sources, checked in this order: a Scheme's
+   * `overrides.extraVillainGroupName` names one specific Villain Group
+   * (e.g. "Siphon Energy from the Quantum Realm" setting aside the
+   * Quantum Realm group itself), or a Mastermind's `extraVillainGroup`
+   * (boolean) picks one at random (e.g. Kang, Quantum Conqueror's "set
+   * aside the villains from an extra Villain Group as Timeline
+   * Variants" — see data.js for both). Kept in state.extraVillainGroup
+   * (not one of the counted result categories, so it doesn't affect the
+   * Villain Groups stepper or count toward it) and left alone once
+   * picked, only clearing/re-picking when the Scheme or Mastermind
+   * itself changes (see the schemeSignature check in syncSchemeNumbers
+   * and the mmSignature check in syncRequiredCards) or the current pick
+   * is no longer valid. */
+  function syncExtraVillainGroup() {
+    const scheme = currentSchemeData();
+    const schemeOverrides = (scheme && scheme.overrides) || {};
+    if (schemeOverrides.extraVillainGroupName) {
+      const pool = poolFor(CATEGORY_BY_KEY.villains);
+      state.extraVillainGroup = pool.find((c) => c.name === schemeOverrides.extraVillainGroupName) || null;
+      return;
+    }
+    const mmData = currentMastermindData();
+    if (!(mmData && mmData.extraVillainGroup)) {
+      state.extraVillainGroup = null;
+      return;
+    }
+    const pool = poolFor(CATEGORY_BY_KEY.villains);
+    const mainNames = new Set((state.result.villains || []).map((v) => v.name));
+    const candidates = pool.filter((c) => !mainNames.has(c.name));
+    if (state.extraVillainGroup && candidates.some((c) => c.name === state.extraVillainGroup.name)) return;
+    const [picked] = pickRandom(candidates, 1, []);
+    state.extraVillainGroup = picked || null;
+  }
+
+  function rerollExtraVillainGroup() {
+    const pool = poolFor(CATEGORY_BY_KEY.villains);
+    const mainNames = new Set((state.result.villains || []).map((v) => v.name));
+    const candidates = pool.filter((c) => !mainNames.has(c.name));
+    const [picked] = pickRandom(candidates, 1, state.extraVillainGroup ? [state.extraVillainGroup] : []);
+    if (picked) state.extraVillainGroup = picked;
     saveState();
     renderResults();
   }
@@ -683,6 +734,7 @@
     if (schemeSignature !== lastSchemeSignature) {
       clearKeywordChoicesWithPrefix("scheme:");
       state.extraCard = null;
+      state.extraVillainGroup = null;
       state.heroTeamSplit = null;
       state.unveiledScheme = null;
       lastSchemeSignature = schemeSignature;
@@ -713,7 +765,6 @@
       villainCount = overrides.villainCount;
     }
     villainCount += overrides.villainCountDelta || 0;
-    villainCount += (mmData && mmData.villainCountDelta) || 0;
     villainCount = clampOption(villainCount, 1, 6);
 
     let twists;
@@ -1334,7 +1385,8 @@
       main.textContent = state.extraCard.name;
       const sub = document.createElement("span");
       sub.className = "row-text-sub";
-      sub.textContent = "Extra Hero — " + (scheme.overrides.extraHeroNote || "8 random cards go in the Villain Deck");
+      const heroSetInfo = poolRowSubText(CATEGORY_BY_KEY.heroes, state.extraCard);
+      sub.textContent = heroSetInfo + " · Extra Hero — " + (scheme.overrides.extraHeroNote || "8 random cards go in the Villain Deck");
       text.appendChild(main);
       text.appendChild(sub);
 
@@ -1353,6 +1405,45 @@
       extraRow.appendChild(text);
       extraRow.appendChild(rerollBtn);
       list.appendChild(extraRow);
+    }
+
+    const mmData = currentMastermindData();
+    const schemeExtraVGName = scheme && scheme.overrides && scheme.overrides.extraVillainGroupName;
+    const mmHasExtraVG = !!(mmData && mmData.extraVillainGroup);
+    if (schemeExtraVGName || mmHasExtraVG) {
+      const isVGNamed = !!schemeExtraVGName;
+      const vgNote = isVGNamed ? scheme.overrides.extraVillainGroupNote : mmData.extraVillainGroupNote;
+      const extraVGRow = document.createElement("li");
+      extraVGRow.className = "ios-row";
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = state.extraVillainGroup ? state.extraVillainGroup.name : "No extra Villain Group available";
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      const vgSetInfo = state.extraVillainGroup ? poolRowSubText(CATEGORY_BY_KEY.villains, state.extraVillainGroup) + " · " : "";
+      sub.textContent = vgSetInfo + "Extra Villain Group — " + (vgNote || "set aside, not part of the main Villain Groups");
+      text.appendChild(main);
+      text.appendChild(sub);
+
+      const rerollBtn = document.createElement("button");
+      rerollBtn.type = "button";
+      rerollBtn.className = "round-btn";
+      rerollBtn.textContent = "🔁";
+      if (isVGNamed) {
+        rerollBtn.title = "Fixed by this Scheme";
+        rerollBtn.disabled = true;
+      } else {
+        rerollBtn.title = "Reroll the extra Villain Group";
+        rerollBtn.disabled = !state.extraVillainGroup;
+        rerollBtn.addEventListener("click", rerollExtraVillainGroup);
+      }
+
+      extraVGRow.appendChild(text);
+      extraVGRow.appendChild(rerollBtn);
+      list.appendChild(extraVGRow);
     }
 
     if (scheme && scheme.overrides && scheme.overrides.unveils) {
@@ -1446,6 +1537,7 @@
     lines.push(`Master Strikes: ${state.options.masterStrikes}`);
     lines.push(`Twists: ${state.options.twists}`);
     if (state.extraCard) lines.push(`Extra Hero: ${state.extraCard.name}`);
+    if (state.extraVillainGroup) lines.push(`Extra Villain Group: ${state.extraVillainGroup.name}`);
     if (state.unveiledScheme) lines.push(`Unveiled Scheme: ${state.unveiledScheme.name}`);
     const scheme = currentSchemeData();
     if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);

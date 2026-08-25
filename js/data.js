@@ -61,12 +61,18 @@
  * Executives' "add an extra hero to the Hero deck"), independent of and
  * stacking with any `heroCountDelta` a Scheme separately sets (see the
  * SCHEMES comment below) — this one just comes from the Mastermind card
- * instead. Similarly, `villainCountDelta` adds to the Villain Group count
- * as part of the Mastermind's own setup (e.g. Kang, Quantum Conqueror's
- * "set aside the villains from an extra Villain Group as Timeline
- * Variants") — the extra group is picked randomly from the pool exactly
- * like a Scheme's own `villainCountDelta` does, since neither names a
- * specific required group.
+ * instead.
+ *
+ * A Mastermind entry can also carry `extraVillainGroup` (a boolean,
+ * optionally paired with `extraVillainGroupNote`) for a Mastermind that
+ * calls for a Villain Group beyond the normal Villain Groups lineup, set
+ * aside on its own rather than mixed into the main pool — e.g. Kang,
+ * Quantum Conqueror's "set aside the villains from an extra Villain
+ * Group as Timeline Variants." Same idea as a Scheme's `extraHero`, just
+ * for a Villain Group and driven by the Mastermind card instead of the
+ * Scheme — see syncExtraVillainGroup in app.js. The extra group is
+ * picked randomly and never counted in (or duplicated with) the normal
+ * Villain Groups result.
  *
  * A Hero entry can optionally carry `team` (e.g. "Avengers", "X-Men"),
  * shown as a tag and usable as a Team Theme filter to build an
@@ -257,7 +263,13 @@ const MASTERMINDS = [
 
   { name: "Darren Cross", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Cross Technologies" }] },
   { name: "Ghost, Master Thief", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Ghost Chasers" }] },
-  { name: "Kang, Quantum Conqueror", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Armada of Kang" }], villainCountDelta: 1 },
+  {
+    name: "Kang, Quantum Conqueror",
+    exp: "ant_man_wasp",
+    leads: [{ category: "villains", name: "Armada of Kang" }],
+    extraVillainGroup: true,
+    extraVillainGroupNote: "set aside as \"Timeline Variants\" — not shuffled into the Villain Deck",
+  },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -329,6 +341,19 @@ const MASTERMINDS = [
 //                  card rather than a random one). If the
 //                  extra Hero instead joins the normal Hero Deck, that's
 //                  `heroCountDelta` above instead, not this), or
+//                  `extraVillainGroupName` (same idea as `extraHeroName`,
+//                  but for a Scheme that sets aside one specific named
+//                  Villain Group on its own rather than mixing it into
+//                  the main Villain Groups lineup, e.g. "Siphon Energy
+//                  from the Quantum Realm"'s "Set aside the Quantum
+//                  Realm Villain Group as an extra group" — pair with
+//                  `extraVillainGroupNote` too. If the extra Villain
+//                  Group instead joins the main Villain Groups lineup,
+//                  that's `requiredVillainGroup` + `villainCountDelta`
+//                  above instead, not this. A Mastermind can carry the
+//                  same idea but randomized rather than named — see
+//                  `extraVillainGroup` in the Mastermind doc comment
+//                  above), or
 //                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
 //                  must be `perTeam` Heroes from each of `count` distinct
 //                  Teams, e.g. Civil War's "Avengers vs. X-Men": 3 Heroes
@@ -1527,7 +1552,11 @@ const SCHEMES = [
   {
     name: "Siphon Energy from the Quantum Realm",
     exp: "ant_man_wasp",
-    overrides: { twists: 9, requiredVillainGroup: "Quantum Realm", villainCountDelta: 1 },
+    overrides: {
+      twists: 9,
+      extraVillainGroupName: "Quantum Realm",
+      extraVillainGroupNote: "set aside as an extra group, not part of the main Villain Groups — see Twist",
+    },
     setupNote:
       'Set aside the "Quantum Realm" Villain Group as an extra group. Shuffle its Ambush Scheme into the Villain Deck.\nSpecial Rules: You may fight Villains on the Quantum Siphons. They get +1 Attack for each two Siphons.',
     twist:
