@@ -104,7 +104,7 @@
 const EXPANSIONS = [
   { id: "core", name: "Core Set (2012)", confidence: "verified" },
   { id: "dark_city", name: "Dark City", confidence: "verified" },
-  { id: "fantastic_four", name: "Fantastic Four", confidence: "moderate" },
+  { id: "fantastic_four", name: "Fantastic Four", confidence: "verified" },
   { id: "paint_town_red", name: "Paint the Town Red", confidence: "moderate" },
   { id: "guardians", name: "Guardians of the Galaxy", confidence: "moderate" },
   { id: "x_men", name: "X-Men", confidence: "moderate" },
@@ -149,7 +149,8 @@ const MASTERMINDS = [
   { name: "Mr. Sinister", exp: "dark_city", leads: [{ category: "villains", name: "Marauders" }] },
   { name: "Stryfe", exp: "dark_city", leads: [{ category: "villains", name: "MLF" }] },
 
-  { name: "Galactus", exp: "fantastic_four" },
+  { name: "Galactus", exp: "fantastic_four", leads: [{ category: "villains", name: "Heralds of Galactus" }] },
+  { name: "Mole Man", exp: "fantastic_four", leads: [{ category: "villains", name: "Subterranea" }] },
 
   { name: "Thanos", exp: "guardians" },
   { name: "Ronan the Accuser", exp: "guardians" },
@@ -443,9 +444,6 @@ const SCHEMES = [
     twist: "Each Goon in the city escapes. Shuffle all Goons from players' Victory Piles into the Villain Deck.",
     evilWins: "When 5 Goons escape.",
   },
-
-  { name: "Galactus Hungers for Earth", exp: "fantastic_four" },
-  { name: "Battle the Frightful Four", exp: "fantastic_four" },
 
   { name: "Web of Lies", exp: "paint_town_red" },
 
@@ -1196,6 +1194,44 @@ const SCHEMES = [
       "Reveal the top two cards of the Villain Deck. The Villain you revealed with the highest printed Attack enters the Astral Plane. (It does not do any Ambush abilities.) If you revealed a second Villain this way, that Villain enters the city. Put the rest of the revealed cards back in any order.",
     evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
   },
+
+  // The four Fantastic Four schemes below are transcribed directly from
+  // the physical cards.
+  {
+    name: "Bathe Earth in Cosmic Rays",
+    exp: "fantastic_four",
+    overrides: { twists: 6 },
+    setupNote: "",
+    twist:
+      "Each player in turn does the following: Reveal your hand. KO one of your non-grey Heroes. Choose a Hero from the HQ with the same or lower cost and put it into your hand.",
+    evilWins: "When the number of non-grey Heroes in the KO pile is six times the number of players.",
+  },
+  {
+    name: "Flood the Planet with Melted Glaciers",
+    exp: "fantastic_four",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      'Stack this Twist next to the Scheme as "Rising Waters." Then KO each Hero from the HQ whose cost is less than or equal to the number of Rising Waters in that stack.',
+    evilWins: "When 20 non-grey Heroes are KO'd.",
+  },
+  {
+    name: "Invincible Force Field",
+    exp: "fantastic_four",
+    overrides: { twists: 7 },
+    setupNote: "",
+    twist:
+      'Stack this Twist next to the Mastermind as a "Force Field."\nSpecial Rules: To fight the Mastermind, you must also spend 1 Recruit or 1 Attack for each Force Field next to them.\nTwist 7: Evil wins!',
+    evilWins: "See Twist 7.",
+  },
+  {
+    name: "Pull Reality into the Negative Zone",
+    exp: "fantastic_four",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist: "Twist 2, 4, and 6: Until the next Twist, Enemies cost Recruit to fight and Heroes cost Attack to recruit.\nTwist 7: Evil wins!",
+    evilWins: "See Twist 7.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1214,7 +1250,8 @@ const VILLAIN_GROUPS = [
   { name: "Streets of New York", exp: "dark_city" },
   { name: "Underworld", exp: "dark_city" },
 
-  { name: "Frightful Four", exp: "fantastic_four" },
+  { name: "Heralds of Galactus", exp: "fantastic_four" },
+  { name: "Subterranea", exp: "fantastic_four" },
 
   { name: "Sinister Syndicate", exp: "paint_town_red" },
 
@@ -1372,11 +1409,11 @@ const HEROES = [
   { name: "Punisher", exp: "dark_city", team: "Marvel Knights" },
   { name: "Wolverine", exp: "dark_city", team: "X-Force" },
 
-  { name: "Mister Fantastic", exp: "fantastic_four" },
-  { name: "Invisible Woman", exp: "fantastic_four" },
-  { name: "Human Torch", exp: "fantastic_four" },
-  { name: "Thing", exp: "fantastic_four" },
+  { name: "Human Torch", exp: "fantastic_four", team: "Fantastic Four" },
+  { name: "Invisible Woman", exp: "fantastic_four", team: "Fantastic Four" },
+  { name: "Mr. Fantastic", exp: "fantastic_four", team: "Fantastic Four" },
   { name: "Silver Surfer", exp: "fantastic_four" },
+  { name: "Thing", exp: "fantastic_four", team: "Fantastic Four" },
 
   { name: "Spider-Woman", exp: "paint_town_red" },
   { name: "Silk", exp: "paint_town_red" },
