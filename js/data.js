@@ -201,8 +201,14 @@ const MASTERMINDS = [
 //                  override) / `bystandersDelta` (added to the base
 //                  count unconditionally) / `bystandersDeltaByPlayers`
 //                  (added to the base count, only at the listed player
-//                  counts), `henchmenDelta`, `heroCount` (or
-//                  `heroCountByPlayers`), `villainCount` /
+//                  counts), `henchmenDelta`, `heroCount` /
+//                  `heroCountByPlayers` (flat overrides) /
+//                  `heroCountDelta` (added to the base, e.g. "add an
+//                  extra Hero to the Hero Deck" — note this is a
+//                  different mechanic from `extraHero` below: this one
+//                  joins the normal Hero Deck and shows as one more card
+//                  in the main Heroes result, `extraHero` doesn't),
+//                  `villainCount` /
 //                  `villainCountByPlayers` (flat overrides) /
 //                  `villainCountDelta` (added to the base, e.g. "add an
 //                  extra Villain Group"), `requiredVillainGroup` /
@@ -211,7 +217,12 @@ const MASTERMINDS = [
 //                  `requiredVillainGroupKeyword` (same, but resolved to
 //                  whichever available Villain Group(s) carry that
 //                  keyword — see VILLAIN_GROUPS' `keywords` above),
-//                  `extraHero` (a boolean — see syncExtraCard in app.js).
+//                  `extraHero` (a boolean — see syncExtraCard in app.js;
+//                  for a Scheme whose extra Hero contributes its OWN
+//                  cards straight into the Villain Deck without ever
+//                  joining the normal Hero Deck, e.g. Marvel Zombies —
+//                  if the extra Hero instead joins the normal Hero Deck,
+//                  that's `heroCountDelta` above instead, not this).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -576,9 +587,9 @@ const SCHEMES = [
   {
     name: "Secret Invasion of the Skrull Shapeshifters",
     exp: "core_2nd",
-    overrides: { twists: 6, requiredVillainGroup: "Skrulls", extraHero: true },
+    overrides: { twists: 6, requiredVillainGroup: "Skrulls", heroCountDelta: 1 },
     setupNote:
-      'Add an extra Hero to the Hero Deck (shown in the Villain Deck section). Shuffle 4 random cards from the Hero Deck into the Villain Deck.\nSpecial Rules: Hero cards in the Villain Deck and city are "Skrull Infiltrator" Villains with Attack equal to that Hero\'s cost + 3. They have "Fight: Either KO this card or choose a player to gain it as a Hero."',
+      'Shuffle 4 random cards from the Hero Deck into the Villain Deck.\nSpecial Rules: Hero cards in the Villain Deck and city are "Skrull Infiltrator" Villains with Attack equal to that Hero\'s cost + 3. They have "Fight: Either KO this card or choose a player to gain it as a Hero."',
     twist: "Twists 1–5: The leftmost Hero from the HQ enters the Sewers as a Skrull Infiltrator.\nTwist 6: All Skrulls in the city escape.",
     evilWins: "When there are 6 Hero cards in the Escape Pile.",
   },

@@ -467,6 +467,7 @@
     } else if (overrides.heroCount != null) {
       heroCount = overrides.heroCount;
     }
+    heroCount += overrides.heroCountDelta || 0;
 
     let villainCount = baseVillainCount;
     if (overrides.villainCountByPlayers && players && overrides.villainCountByPlayers[players] != null) {
