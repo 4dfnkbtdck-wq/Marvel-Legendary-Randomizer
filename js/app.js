@@ -29,6 +29,7 @@
       keywordChoices: {},
       extraCard: null,
       heroTeamSplit: null,
+      unveiledScheme: null,
     };
   }
 
@@ -53,6 +54,7 @@
         keywordChoices: {},
         extraCard: null,
         heroTeamSplit: null,
+        unveiledScheme: null,
       };
     } catch (e) {
       return defaults;
@@ -441,6 +443,7 @@
       requiredCardNames(categoryKey).forEach((name) => forceIncludeSignature(categoryKey, name));
     });
     syncExtraCard();
+    syncUnveiledScheme();
   }
 
   /** Some Schemes (e.g. What If...?'s Marvel Zombies, "add 8 random cards
@@ -483,6 +486,38 @@
     const candidates = pool.filter((c) => !mainNames.has(c.name));
     const [picked] = pickRandom(candidates, 1, state.extraCard ? [state.extraCard] : []);
     if (picked) state.extraCard = picked;
+    saveState();
+    renderResults();
+  }
+
+  /** For a "Veiled Scheme" (`overrides.unveils` — see data.js), rolls
+   * (and sticks with) which "Unveiled Scheme" it Transforms into, from
+   * UNVEILED_SCHEMES matching the current Scheme's `exp`. Same
+   * cache-and-pick shape as syncExtraCard: reuses the current pick as
+   * long as it's still a valid candidate, otherwise picks fresh. null —
+   * meaning no Unveiled Scheme shown — both when the current Scheme
+   * doesn't unveil anything and when nothing in UNVEILED_SCHEMES matches
+   * its `exp` (shouldn't normally happen, but fails safe rather than
+   * crashing). */
+  function syncUnveiledScheme() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    if (!overrides.unveils) {
+      state.unveiledScheme = null;
+      return;
+    }
+    const candidates = UNVEILED_SCHEMES.filter((u) => u.exp === scheme.exp);
+    if (state.unveiledScheme && candidates.some((u) => u.name === state.unveiledScheme.name)) return;
+    const [picked] = pickRandom(candidates, 1, []);
+    state.unveiledScheme = picked || null;
+  }
+
+  function rerollUnveiledScheme() {
+    const scheme = currentSchemeData();
+    if (!scheme) return;
+    const candidates = UNVEILED_SCHEMES.filter((u) => u.exp === scheme.exp);
+    const [picked] = pickRandom(candidates, 1, state.unveiledScheme ? [state.unveiledScheme] : []);
+    if (picked) state.unveiledScheme = picked;
     saveState();
     renderResults();
   }
@@ -642,6 +677,7 @@
       clearKeywordChoicesWithPrefix("scheme:");
       state.extraCard = null;
       state.heroTeamSplit = null;
+      state.unveiledScheme = null;
       lastSchemeSignature = schemeSignature;
     }
 
@@ -1311,6 +1347,35 @@
       list.appendChild(extraRow);
     }
 
+    if (scheme && scheme.overrides && scheme.overrides.unveils) {
+      const unveiled = state.unveiledScheme;
+      const unveiledRow = document.createElement("li");
+      unveiledRow.className = "ios-row";
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = unveiled ? unveiled.name : "No Unveiled Scheme available";
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      sub.textContent = "Unveiled Scheme — rolled when this Scheme Transforms";
+      text.appendChild(main);
+      text.appendChild(sub);
+
+      const rerollBtn = document.createElement("button");
+      rerollBtn.type = "button";
+      rerollBtn.className = "round-btn";
+      rerollBtn.textContent = "🔁";
+      rerollBtn.title = "Reroll the Unveiled Scheme";
+      rerollBtn.disabled = !unveiled;
+      rerollBtn.addEventListener("click", rerollUnveiledScheme);
+
+      unveiledRow.appendChild(text);
+      unveiledRow.appendChild(rerollBtn);
+      list.appendChild(unveiledRow);
+    }
+
     section.appendChild(list);
 
     if (scheme && scheme.twist) {
@@ -1324,6 +1389,28 @@
       evilNote.className = "scheme-note scheme-note--evil";
       evilNote.innerHTML = `<strong>${scheme.winLabel || "Evil Wins"}</strong><br>${scheme.evilWins}`;
       section.appendChild(evilNote);
+    }
+
+    if (scheme && scheme.overrides && scheme.overrides.unveils && state.unveiledScheme) {
+      const u = state.unveiledScheme;
+      if (u.whenRevealed) {
+        const whenNote = document.createElement("div");
+        whenNote.className = "scheme-note";
+        whenNote.innerHTML = `<strong>${u.name} — When Revealed</strong><br>${u.whenRevealed.replace(/\n/g, "<br>")}`;
+        section.appendChild(whenNote);
+      }
+      if (u.twist) {
+        const uTwistNote = document.createElement("div");
+        uTwistNote.className = "scheme-note";
+        uTwistNote.innerHTML = `<strong>${u.name} — On a Twist</strong><br>${u.twist.replace(/\n/g, "<br>")}`;
+        section.appendChild(uTwistNote);
+      }
+      if (u.evilWins) {
+        const uEvilNote = document.createElement("div");
+        uEvilNote.className = "scheme-note scheme-note--evil";
+        uEvilNote.innerHTML = `<strong>Evil Wins (${u.name})</strong><br>${u.evilWins}`;
+        section.appendChild(uEvilNote);
+      }
     }
 
     return section;
@@ -1351,9 +1438,16 @@
     lines.push(`Master Strikes: ${state.options.masterStrikes}`);
     lines.push(`Twists: ${state.options.twists}`);
     if (state.extraCard) lines.push(`Extra Hero: ${state.extraCard.name}`);
+    if (state.unveiledScheme) lines.push(`Unveiled Scheme: ${state.unveiledScheme.name}`);
     const scheme = currentSchemeData();
     if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);
     if (scheme && scheme.evilWins) lines.push("", `${(scheme.winLabel || "Evil Wins")}: ${scheme.evilWins}`);
+    if (state.unveiledScheme) {
+      const u = state.unveiledScheme;
+      lines.push("", `${u.name} — When Revealed:`, `  ${(u.whenRevealed || "").split("\n").join("\n  ")}`);
+      if (u.twist) lines.push("", `${u.name} — On a Twist:`, `  ${u.twist.split("\n").join("\n  ")}`);
+      if (u.evilWins) lines.push("", `${u.name} — Evil Wins: ${u.evilWins}`);
+    }
     return lines.join("\n").trim();
   }
 

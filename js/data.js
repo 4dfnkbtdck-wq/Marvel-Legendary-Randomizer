@@ -320,7 +320,17 @@ const MASTERMINDS = [
 //                  rerolling one Hero slot stays within that slot's Team
 //                  so the split holds. Falls back to a plain random Hero
 //                  Deck if fewer than `count` Teams currently qualify.
-//                  Pair with `heroCount: count * perTeam`).
+//                  Pair with `heroCount: count * perTeam`), or `unveils`
+//                  (a boolean — for a "Veiled Scheme" whose last Twist
+//                  Transforms it into one of several random "Unveiled
+//                  Scheme" cards that carry the actual Evil Wins
+//                  condition and have no Setup/Twist count of their own,
+//                  e.g. Messiah Complex. The app rolls one at random from
+//                  UNVEILED_SCHEMES — see the comment above that array —
+//                  matching this Scheme's `exp`, the moment this Scheme
+//                  is selected, and shows/rerolls it as its own card;
+//                  see syncUnveiledScheme/rerollUnveiledScheme in
+//                  app.js).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -1418,50 +1428,86 @@ const SCHEMES = [
   // The four Messiah Complex "Veiled Scheme" cards below are transcribed
   // directly from the physical cards. Setup/Twists are the Veiled
   // Scheme's own — its last Twist Transforms it into one of four random
-  // "Unveiled Scheme" cards, which carry the actual Evil Wins condition
-  // and have no Setup/Twist count of their own (not selectable on their
-  // own, so not modeled as separate Scheme entries here) — all four are
-  // summarized in `evilWins` below as reference since the app has no
-  // "mid-game Scheme swap" mechanic to pick one automatically.
+  // "Unveiled Scheme" cards (see UNVEILED_SCHEMES below), which carry
+  // the actual Evil Wins condition and have no Setup/Twist count of
+  // their own, so they're never independently selectable — instead,
+  // `overrides.unveils: true` tells the app to roll one at random from
+  // UNVEILED_SCHEMES (matching this Scheme's `exp`) the moment this
+  // Scheme is selected, and display/reroll it as its own card (see
+  // syncUnveiledScheme/rerollUnveiledScheme in app.js).
   {
     name: "Drain Mutants' Powers to...",
     exp: "messiah_complex",
-    overrides: { twists: 11 },
+    overrides: { twists: 11, unveils: true },
     setupNote: "",
     twist:
       'Twists 1-6: Stack the top two cards of the Sidekick Stack face down next to the Scheme as "Kidnapped Mutants." If there were any Kidnapped Mutants already there, put those on the bottom of the Sidekick Stack and put this Twist next to the Mastermind as a "Drained Power."\nSpecial Rules: Players may spend 3 Recruit or 3 Attack to gain a Kidnapped Mutant.\nTwist 7: KO all Kidnapped Mutants. This Scheme Transforms into a random Unveiled Scheme. Do its Twist effect.',
-    evilWins:
-      'Transforms into a random Unveiled Scheme — none has its own Setup/Twist count; they only trigger via a Veiled Scheme\'s Transform:\n"...Open Rifts to Future Timelines" — When revealed: shuffle a random extra Villain Group into the Villain Deck; Twists become "Temporal Rifts," each one plays a Henchman and the highest-VP Villain from a reveal of the Villain Deck equal to the Temporal Rift count. Evil Wins: 7 Temporal Rifts, or the Villain Deck runs out.\n"...Control the Mutant Messiah" — When revealed: shuffle a random extra Hero into a face-down "Mutant Messiah" stack; Twists become "Manipulations," each one lets you buy that turn\'s revealed Mutant Messiah card or it becomes a "Fallen Messiah." Evil Wins: 3 Fallen Messiahs, or the Villain Deck runs out.\n"...Reveal the Heroes\' Evil Clones" — Twists become "Cloning Breakthroughs," each one turns the top Hero Deck card into a pair of escalating "Evil Clone" Villains. Evil Wins: 7 Evil Clones in the city/Escape Pile, or the Villain or Hero Deck runs out.\n"...Unleash an Anti-Mutant Bioweapon" — Twists become "Bioweapon Adaptations," each one KOs HQ Heroes of a newly chosen cost (2-6). Evil Wins: 15 non-grey Heroes KO\'d, or the Villain or Hero Deck runs out.',
   },
   {
     name: "Hack Cerebro Servers to...",
     exp: "messiah_complex",
-    overrides: { twists: 10 },
+    overrides: { twists: 10, unveils: true },
     setupNote: "",
     twist:
       'Twists 1-5: Put a card from the Bystander Stack next to this Scheme as a "Hacker." KO a Hero from the HQ with cost equal to the number of Hackers. If you KO\'d a Hero this way, stack this Twist next to the Mastermind as "Stolen Cerebro Data."\nTwist 6: Put the Hackers on the bottom of the Bystander Stack. This Scheme Transforms into a random Unveiled Scheme. Do its Twist effect.',
-    evilWins:
-      'Transforms into a random Unveiled Scheme — none has its own Setup/Twist count; they only trigger via a Veiled Scheme\'s Transform:\n"...Open Rifts to Future Timelines" — When revealed: shuffle a random extra Villain Group into the Villain Deck; Twists become "Temporal Rifts," each one plays a Henchman and the highest-VP Villain from a reveal of the Villain Deck equal to the Temporal Rift count. Evil Wins: 7 Temporal Rifts, or the Villain Deck runs out.\n"...Control the Mutant Messiah" — When revealed: shuffle a random extra Hero into a face-down "Mutant Messiah" stack; Twists become "Manipulations," each one lets you buy that turn\'s revealed Mutant Messiah card or it becomes a "Fallen Messiah." Evil Wins: 3 Fallen Messiahs, or the Villain Deck runs out.\n"...Reveal the Heroes\' Evil Clones" — Twists become "Cloning Breakthroughs," each one turns the top Hero Deck card into a pair of escalating "Evil Clone" Villains. Evil Wins: 7 Evil Clones in the city/Escape Pile, or the Villain or Hero Deck runs out.\n"...Unleash an Anti-Mutant Bioweapon" — Twists become "Bioweapon Adaptations," each one KOs HQ Heroes of a newly chosen cost (2-6). Evil Wins: 15 non-grey Heroes KO\'d, or the Villain or Hero Deck runs out.',
   },
   {
     name: "Hire Singularity Investigations to...",
     exp: "messiah_complex",
-    overrides: { twists: 9 },
+    overrides: { twists: 9, unveils: true },
     setupNote: "",
     twist:
       'Twists 1-4: If there are any "Singularity Investigators" in the city, stack this Twist next to the Mastermind as a "Dark Discovery." Whether you did that or not, Investigate the Bystander Stack for a card and have it enter the city as a "Singularity Investigator" Villain. It has 6 Attack and "Fight: Rescue this as a Bystander. Then KO one of your Heroes. Then Investigate your deck for a card with a Recruit icon."\nTwist 5: This Scheme Transforms into a random Unveiled Scheme. Do its Twist effect.',
-    evilWins:
-      'Transforms into a random Unveiled Scheme — none has its own Setup/Twist count; they only trigger via a Veiled Scheme\'s Transform:\n"...Open Rifts to Future Timelines" — When revealed: shuffle a random extra Villain Group into the Villain Deck; Twists become "Temporal Rifts," each one plays a Henchman and the highest-VP Villain from a reveal of the Villain Deck equal to the Temporal Rift count. Evil Wins: 7 Temporal Rifts, or the Villain Deck runs out.\n"...Control the Mutant Messiah" — When revealed: shuffle a random extra Hero into a face-down "Mutant Messiah" stack; Twists become "Manipulations," each one lets you buy that turn\'s revealed Mutant Messiah card or it becomes a "Fallen Messiah." Evil Wins: 3 Fallen Messiahs, or the Villain Deck runs out.\n"...Reveal the Heroes\' Evil Clones" — Twists become "Cloning Breakthroughs," each one turns the top Hero Deck card into a pair of escalating "Evil Clone" Villains. Evil Wins: 7 Evil Clones in the city/Escape Pile, or the Villain or Hero Deck runs out.\n"...Unleash an Anti-Mutant Bioweapon" — Twists become "Bioweapon Adaptations," each one KOs HQ Heroes of a newly chosen cost (2-6). Evil Wins: 15 non-grey Heroes KO\'d, or the Villain or Hero Deck runs out.',
   },
   {
     name: "Raid Gene Banks to...",
     exp: "messiah_complex",
-    overrides: { twists: 8 },
+    overrides: { twists: 8, unveils: true },
     setupNote: "",
     twist:
       'Twists 1-3: If there is a Villain in the Bank, stack this Twist next to the Mastermind as a "Mutant Genome." Otherwise, move a Villain from another city space to the Bank.\nTwist 4: This Scheme Transforms into a random Unveiled Scheme. Do its Twist effect.',
-    evilWins:
-      'Transforms into a random Unveiled Scheme — none has its own Setup/Twist count; they only trigger via a Veiled Scheme\'s Transform:\n"...Open Rifts to Future Timelines" — When revealed: shuffle a random extra Villain Group into the Villain Deck; Twists become "Temporal Rifts," each one plays a Henchman and the highest-VP Villain from a reveal of the Villain Deck equal to the Temporal Rift count. Evil Wins: 7 Temporal Rifts, or the Villain Deck runs out.\n"...Control the Mutant Messiah" — When revealed: shuffle a random extra Hero into a face-down "Mutant Messiah" stack; Twists become "Manipulations," each one lets you buy that turn\'s revealed Mutant Messiah card or it becomes a "Fallen Messiah." Evil Wins: 3 Fallen Messiahs, or the Villain Deck runs out.\n"...Reveal the Heroes\' Evil Clones" — Twists become "Cloning Breakthroughs," each one turns the top Hero Deck card into a pair of escalating "Evil Clone" Villains. Evil Wins: 7 Evil Clones in the city/Escape Pile, or the Villain or Hero Deck runs out.\n"...Unleash an Anti-Mutant Bioweapon" — Twists become "Bioweapon Adaptations," each one KOs HQ Heroes of a newly chosen cost (2-6). Evil Wins: 15 non-grey Heroes KO\'d, or the Villain or Hero Deck runs out.',
+  },
+];
+
+// The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
+// from the physical cards. These aren't in SCHEMES since they can't be
+// selected on their own (no Setup/Twist count of their own) — a
+// `overrides.unveils` Scheme above rolls one at random and the app shows
+// it alongside that Scheme's own info. `whenRevealed` covers the "When
+// revealed" text (shown the moment the Scheme transforms); `twist` and
+// `evilWins` behave exactly like a normal Scheme's.
+const UNVEILED_SCHEMES = [
+  {
+    name: "...Open Rifts to Future Timelines",
+    exp: "messiah_complex",
+    whenRevealed: 'Shuffle a random additional Villain Group into the Villain Deck. Twists stacked next to the Mastermind are "Temporal Rifts."',
+    twist:
+      "Add this Twist to the Temporal Rifts. Then reveal and set aside cards from the Villain Deck equal to the number of Temporal Rifts. Play a Henchman you revealed, then play the Villain you revealed that is worth the most VP. Shuffle the other set aside cards into the Villain Deck. (If the Villain Deck runs out during this, that doesn't end the game.)",
+    evilWins: "When there are 7 Temporal Rifts or the Villain Deck runs out.",
+  },
+  {
+    name: "...Control the Mutant Messiah",
+    exp: "messiah_complex",
+    whenRevealed: 'Twists stacked next to the Mastermind are "Manipulations." Shuffle a random extra Hero into a face-down "Mutant Messiah" stack.',
+    twist:
+      'Add this Twist to the Manipulations. Investigate the Mutant Messiah stack for a card and set it aside. This turn you may gain that card to the top of your deck by spending Recruit equal to its cost, +1 Recruit for each Manipulation. If you don\'t, then put that card into a "Fallen Messiah" stack next to the Scheme.',
+    evilWins: "When there are 3 cards in the Fallen Messiah stack or the Villain Deck runs out.",
+  },
+  {
+    name: "...Reveal the Heroes' Evil Clones",
+    exp: "messiah_complex",
+    whenRevealed: 'Twists stacked next to the Mastermind are "Cloning Breakthroughs."',
+    twist:
+      'Add this Twist to the Cloning Breakthroughs. The top card of the Hero Deck enters the city as an "Evil Clone" Villain. Clone a copy of it from the HQ or Hero Deck as another Evil Clone.\nSpecial Rules: Each Evil Clone has Attack equal to its cost plus the number of Cloning Breakthroughs. It has "Fight: A player gains this as a Hero. KO one of your Heroes."',
+    evilWins: "When there are 7 Evil Clones in the city and/or Escape Pile, or the Villain Deck or Hero Deck runs out.",
+  },
+  {
+    name: "...Unleash an Anti-Mutant Bioweapon",
+    exp: "messiah_complex",
+    whenRevealed: 'Twists stacked next to the Mastermind are "Bioweapon Adaptations."',
+    twist:
+      "Add this Twist to the Bioweapon Adaptations. Then for each card in that stack, choose a different number from 2-6. KO all Heroes from the HQ that have any of those costs.",
+    evilWins: "When there are 15 non-grey Heroes in the KO pile or the Villain Deck or Hero Deck runs out.",
   },
 ];
 
@@ -1891,5 +1937,5 @@ const PLAYER_COUNT_TABLE = {
 };
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { EXPANSIONS, MASTERMINDS, SCHEMES, VILLAIN_GROUPS, HENCHMEN, HEROES, PLAYER_COUNT_TABLE };
+  module.exports = { EXPANSIONS, MASTERMINDS, SCHEMES, UNVEILED_SCHEMES, VILLAIN_GROUPS, HENCHMEN, HEROES, PLAYER_COUNT_TABLE };
 }
