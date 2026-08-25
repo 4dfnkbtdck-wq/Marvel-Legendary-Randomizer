@@ -114,7 +114,7 @@ const EXPANSIONS = [
   { id: "annihilation", name: "Annihilation", confidence: "verified" },
   { id: "ant_man", name: "Ant-Man", confidence: "verified" },
   { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "verified" },
-  { id: "deadpool", name: "Deadpool", confidence: "light" },
+  { id: "deadpool", name: "Deadpool", confidence: "verified" },
   { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "light" },
   { id: "fear_itself", name: "Fear Itself", confidence: "light" },
   { id: "asgard", name: "Heroes of Asgard", confidence: "light" },
@@ -218,6 +218,9 @@ const MASTERMINDS = [
   { name: "Maria Hill, Director of S.H.I.E.L.D.", exp: "civil_war", leads: [{ category: "villains", name: "S.H.I.E.L.D. Elite" }] },
   { name: "Misty Knight", exp: "civil_war", leads: [{ category: "villains", name: "Heroes for Hire" }] },
   { name: "Ragnarok", exp: "civil_war", leads: [{ category: "villains", name: "Registration Enforcers" }] },
+
+  { name: "Evil Deadpool", exp: "deadpool", leads: [{ category: "villains", name: "Evil Deadpool Corpse" }] },
+  { name: "Macho Gomez", exp: "deadpool", leads: [{ category: "villains", name: "Deadpool's \"Friends\"" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1105,6 +1108,45 @@ const SCHEMES = [
       "Twists 1, 3, 5, 7, 9: This Scheme fortifies the city space to its right, starting with the Bridge. Villains in that space get +1 Attack.\nOther Twists: If there's a Villain in that fortified city space, KO a Bystander.",
     evilWins: "When 3 Bystanders are in the KO pile and/or Escape Pile.",
   },
+
+  // The four Deadpool schemes below are transcribed directly from the
+  // physical cards.
+  {
+    name: "Deadpool Kills the Marvel Universe",
+    exp: "deadpool",
+    overrides: { requiredHero: "Deadpool", heroCountByPlayers: { 2: 4 }, twistsByPlayers: { 1: 6, 2: 6, 3: 6, 4: 5, 5: 5 } },
+    setupNote: "Use Deadpool as one of the Heroes.\n2 players: Use 4 Heroes total.",
+    twist: "Reveal cards from the Hero Deck until you reveal a Deadpool card. KO all the cards you revealed.",
+    evilWins: "When the Hero Deck runs out.",
+  },
+  {
+    name: "Deadpool Wants a Chimichanga",
+    exp: "deadpool",
+    overrides: { twists: 6, bystanders: 12, villainCountByPlayers: { 3: 4, 4: 5, 5: 6 } },
+    setupNote:
+      'All Bystanders represent "Chimichangas" (they\'re Bystanders too). 3-5 players: add a Villain Group.\n"Nobody Eats Just One Chimichanga!": Whenever you play a Chimichanga from the Villain Deck, play another card from the Villain Deck.',
+    twist:
+      "Put each Chimichanga from the city into the Escape Pile. Then, each player shuffles a Chimichanga from their Victory Pile back into the Villain Deck. Any player who cannot do so gains a Wound.",
+    evilWins: "When 6 Chimichangas are in the Escape Pile.",
+  },
+  {
+    name: "Deadpool Writes a Scheme",
+    exp: "deadpool",
+    overrides: { requiredHero: "Deadpool", twists: 6 },
+    setupNote: 'Use the best Hero in the game: Deadpool! Add 6 Twists of Lemon, shake vigorously, and I\'ll make it up as I go.',
+    twist:
+      'Twist 1: Everybody draws 1 card.\nTwist 2: Anyone without a Deadpool in hand discards 2 cards.\nTwist 3: Play 3 cards from the Villain Deck.\nTwist 4: Each Villain captures 4 Bystanders.\nTwist 5: Each player gains 5 Wounds.\nTwist 6: Deadpool wins 6 times!',
+    evilWins: "See Twist 6.",
+  },
+  {
+    name: "Everybody Hates Deadpool",
+    exp: "deadpool",
+    overrides: { requiredHero: "Deadpool", twists: 6 },
+    setupNote:
+      "Use at least 1 Deadpool Hero.\nSpecial Rules: All Villains have Revenge for their own Villain Groups. (If they already have Revenge, double it.)",
+    twist: "Each player reveals their hand. Whoever reveals the fewest Deadpool cards (or tied for fewest) gains a Wound.",
+    evilWins: "When 3 Villains per player have escaped.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1200,6 +1242,9 @@ const VILLAIN_GROUPS = [
   { name: "S.H.I.E.L.D. Elite", exp: "civil_war" },
   { name: "Superhuman Registration Act", exp: "civil_war" },
   { name: "Thunderbolts", exp: "civil_war" },
+
+  { name: "Deadpool's \"Friends\"", exp: "deadpool" },
+  { name: "Evil Deadpool Corpse", exp: "deadpool" },
 ];
 
 const HENCHMEN = [
@@ -1345,7 +1390,11 @@ const HEROES = [
   { name: "Steve Rogers, Director of S.H.I.E.L.D.", exp: "cap_75", team: "S.H.I.E.L.D." },
   { name: "Winter Soldier", exp: "cap_75" },
 
-  { name: "Negasonic Teenage Warhead", exp: "deadpool" },
+  { name: "Bob, Agent of HYDRA", exp: "deadpool", team: "HYDRA" },
+  { name: "Deadpool", exp: "deadpool", team: "Mercs For Money" },
+  { name: "Slapstick", exp: "deadpool", team: "Mercs For Money" },
+  { name: "Solo", exp: "deadpool", team: "Mercs For Money" },
+  { name: "Stingray", exp: "deadpool", team: "Mercs For Money" },
 
   { name: "Doctor Strange", exp: "dr_strange" },
   { name: "Scarlet Witch", exp: "dr_strange" },
