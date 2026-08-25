@@ -165,6 +165,7 @@
     randomizeCategory(CATEGORY_BY_KEY.henchmen, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.heroes, { keepLocked: true });
     reconcileHeroTeamSplit();
+    reconcileExtraHeroName();
     syncRequiredCards();
     saveToHistory();
     render();
@@ -188,6 +189,7 @@
       syncHeroTeamSplit();
       reconcileCountedCategories();
       reconcileHeroTeamSplit();
+      reconcileExtraHeroName();
       syncRequiredCards();
     }
     render();
@@ -213,6 +215,7 @@
       syncHeroTeamSplit();
       reconcileCountedCategories();
       reconcileHeroTeamSplit();
+      reconcileExtraHeroName();
       syncRequiredCards();
     }
     render();
@@ -584,6 +587,31 @@
     }
   }
 
+  /** Evicts the current `extraHeroName` Hero (if any — see
+   * currentExtraHeroName above) from the main Heroes result, if it's
+   * there and unlocked, replacing it with a fresh pick. heroDrawExclusions
+   * only keeps that Hero out of *new* picks — it doesn't touch a copy
+   * already sitting in the result from before this Scheme was selected
+   * (e.g. leftover from whatever Scheme was active previously), so this
+   * covers that case. No-op if the Hero isn't present, or is present but
+   * locked (locks are never evicted). Call this alongside
+   * reconcileHeroTeamSplit any time the Heroes result or the current
+   * Scheme may have just changed. */
+  function reconcileExtraHeroName() {
+    const extraName = currentExtraHeroName();
+    if (!extraName) return;
+    const items = state.result.heroes || [];
+    const locks = state.locks.heroes || [];
+    const idx = items.findIndex((h) => h.name === extraName);
+    if (idx === -1 || locks[idx]) return;
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const [fresh] = pickRandom(pool, 1, heroDrawExclusions("heroes", items));
+    if (fresh) {
+      items[idx] = fresh;
+      state.result.heroes = items;
+    }
+  }
+
   function clampOption(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
@@ -664,7 +692,7 @@
 
     state.options.heroCount = clampOption(heroCount, 3, 8);
     state.options.villainCount = villainCount;
-    state.options.twists = clampOption(twists, 0, 12);
+    state.options.twists = clampOption(twists, 0, 16);
     state.options.bystanders = clampOption(bystanders, 0, 30);
     state.options.henchmenCount = clampOption(henchmenCount, 1, 3);
 
@@ -1000,6 +1028,7 @@
     syncHeroTeamSplit();
     reconcileCountedCategories();
     reconcileHeroTeamSplit();
+    reconcileExtraHeroName();
     syncRequiredCards();
     renderPlayersSegmented();
     renderWarnings();
@@ -1183,6 +1212,7 @@
           reconcileCountedCategories();
         }
         reconcileHeroTeamSplit();
+        reconcileExtraHeroName();
         syncRequiredCards();
         render();
       });
@@ -1246,7 +1276,7 @@
     list.className = "ios-list";
     list.appendChild(countStepperRow("Bystanders", "bystanders", 0, 30));
     list.appendChild(countStepperRow("Master Strikes", "masterStrikes", 0, 10));
-    list.appendChild(countStepperRow("Twists", "twists", 0, 12));
+    list.appendChild(countStepperRow("Twists", "twists", 0, 16));
 
     if (scheme && scheme.overrides && (scheme.overrides.extraHero || scheme.overrides.extraHeroName) && state.extraCard) {
       const isNamed = !!scheme.overrides.extraHeroName;
