@@ -402,7 +402,7 @@
         if (required.has(items[i].name)) continue;
         flags[i] = false;
         locks[i] = false;
-        const [fresh] = pickRandom(pool, 1, items);
+        const [fresh] = pickRandom(pool, 1, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items)));
         if (fresh) items[i] = fresh;
       }
       state.result[categoryKey] = items;
@@ -814,6 +814,7 @@
       villainCount = overrides.villainCount;
     }
     villainCount += overrides.villainCountDelta || 0;
+    villainCount += (mmData && mmData.villainCountDelta) || 0;
     villainCount = clampOption(villainCount, 1, 6);
 
     let twists;
