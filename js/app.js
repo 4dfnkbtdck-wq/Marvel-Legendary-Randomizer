@@ -95,6 +95,30 @@
     return pool;
   }
 
+  /** A Scheme's `extraHeroName` (see data.js) names one specific Hero
+   * whose own cards go into the Villain Deck instead of the normal Hero
+   * Deck (e.g. Dark City's "Transform Citizens into Demons" and its
+   * Jean Grey cards) — null when the current Scheme has no such
+   * requirement. Used to keep that Hero out of the normal Hero Deck draw
+   * so it can't end up in both places at once; deliberately doesn't touch
+   * poolFor/Card Pool management, so the Hero stays visible and
+   * excludable there as normal, just not drafted while this Scheme is
+   * in play. */
+  function currentExtraHeroName() {
+    const scheme = currentSchemeData();
+    return (scheme && scheme.overrides && scheme.overrides.extraHeroName) || null;
+  }
+
+  /** Adds the current `extraHeroName` Hero (if any) to an exclude list for
+   * a Heroes draw, so it never gets pulled into the normal Hero Deck —
+   * see currentExtraHeroName above. Pass the category's own key; a no-op
+   * for every other category. */
+  function heroDrawExclusions(categoryKey, base) {
+    if (categoryKey !== "heroes") return base;
+    const extraName = currentExtraHeroName();
+    return extraName ? base.concat([{ name: extraName }]) : base;
+  }
+
   function pickRandom(list, n, exclude) {
     const excludeNames = new Set((exclude || []).map((c) => c.name));
     const candidates = list.filter((c) => !excludeNames.has(c.name));
@@ -119,7 +143,7 @@
 
     const lockedItems = keepLocked ? existing.filter((_, i) => locks[i]) : [];
     const needed = n - lockedItems.length;
-    const fresh = needed > 0 ? pickRandom(pool, needed, lockedItems) : [];
+    const fresh = needed > 0 ? pickRandom(pool, needed, heroDrawExclusions(category.key, lockedItems)) : [];
     const combined = lockedItems.concat(fresh);
 
     state.result[category.key] = combined;
@@ -153,7 +177,7 @@
     if (categoryKey === "heroes" && state.heroTeamSplit && existing[index]) {
       pool = pool.filter((c) => c.team === existing[index].team);
     }
-    const [picked] = pickRandom(pool, 1, existing);
+    const [picked] = pickRandom(pool, 1, heroDrawExclusions(categoryKey, existing));
     if (picked) {
       existing[index] = picked;
       state.result[categoryKey] = existing;
@@ -406,10 +430,21 @@
    * counted result categories, so it doesn't affect the Heroes stepper)
    * and left alone once picked, only clearing/re-picking when the Scheme
    * itself changes (see the schemeSignature check in syncSchemeNumbers)
-   * or the current pick is no longer valid. */
+   * or the current pick is no longer valid. A Scheme can instead set
+   * `extraHeroName` (see data.js) to name one specific Hero rather than
+   * picking randomly — that Hero is kept out of the main Heroes draw by
+   * heroDrawExclusions above, so it's always safe to hand straight to
+   * state.extraCard here; null (no extra card shown) if that Hero isn't
+   * currently available (excluded, its expansion off, or filtered out by
+   * the Team Theme filter). */
   function syncExtraCard() {
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
+    if (overrides.extraHeroName) {
+      const pool = poolFor(CATEGORY_BY_KEY.heroes);
+      state.extraCard = pool.find((c) => c.name === overrides.extraHeroName) || null;
+      return;
+    }
     if (!overrides.extraHero) {
       state.extraCard = null;
       return;
@@ -481,7 +516,12 @@
    * fresh pick from whichever Team is still short. Call this any time the
    * Heroes result or the split itself may have just changed — a fresh
    * randomize, a Scheme switch with the old (mismatched) Heroes still on
-   * screen, or a Player-count/exclusion change. */
+   * screen, or a Player-count/exclusion change. If a locked slot belongs
+   * to neither chosen Team (e.g. it was locked before this Scheme was
+   * selected), it's kept as-is on top of the full split — growing the
+   * Heroes count to fit, the same way a Mastermind/Scheme's required-card
+   * conflict grows a category's count in forceIncludeSignature — rather
+   * than either evicting the lock or shorting a Team's quota. */
   function reconcileHeroTeamSplit() {
     const split = state.heroTeamSplit;
     if (!split) return;
@@ -521,6 +561,10 @@
 
     state.result.heroes = kept.concat(fresh);
     state.locks.heroes = keptLocks.concat(fresh.map(() => false));
+    const heroesCategory = CATEGORY_BY_KEY.heroes;
+    if (state.result.heroes.length > state.options.heroCount) {
+      state.options.heroCount = clampOption(state.result.heroes.length, heroesCategory.min, heroesCategory.max);
+    }
   }
 
   function clampOption(value, min, max) {
@@ -604,7 +648,7 @@
     state.options.heroCount = clampOption(heroCount, 3, 8);
     state.options.villainCount = villainCount;
     state.options.twists = clampOption(twists, 0, 12);
-    state.options.bystanders = clampOption(bystanders, 0, 20);
+    state.options.bystanders = clampOption(bystanders, 0, 30);
     state.options.henchmenCount = clampOption(henchmenCount, 1, 3);
 
     saveState();
@@ -626,7 +670,7 @@
     if (!items.length || items.length === n) return;
 
     if (items.length < n) {
-      const fresh = pickRandom(poolFor(category), n - items.length, items);
+      const fresh = pickRandom(poolFor(category), n - items.length, heroDrawExclusions(categoryKey, items));
       state.result[categoryKey] = items.concat(fresh);
       state.locks[categoryKey] = locks.concat(fresh.map(() => false));
       return;
@@ -1177,11 +1221,12 @@
 
     const list = document.createElement("ul");
     list.className = "ios-list";
-    list.appendChild(countStepperRow("Bystanders", "bystanders", 0, 20));
+    list.appendChild(countStepperRow("Bystanders", "bystanders", 0, 30));
     list.appendChild(countStepperRow("Master Strikes", "masterStrikes", 0, 10));
     list.appendChild(countStepperRow("Twists", "twists", 0, 12));
 
-    if (scheme && scheme.overrides && scheme.overrides.extraHero && state.extraCard) {
+    if (scheme && scheme.overrides && (scheme.overrides.extraHero || scheme.overrides.extraHeroName) && state.extraCard) {
+      const isNamed = !!scheme.overrides.extraHeroName;
       const extraRow = document.createElement("li");
       extraRow.className = "ios-row";
 
@@ -1200,8 +1245,13 @@
       rerollBtn.type = "button";
       rerollBtn.className = "round-btn";
       rerollBtn.textContent = "🔁";
-      rerollBtn.title = "Reroll the extra Hero";
-      rerollBtn.addEventListener("click", rerollExtraCard);
+      if (isNamed) {
+        rerollBtn.title = "Fixed by this Scheme";
+        rerollBtn.disabled = true;
+      } else {
+        rerollBtn.title = "Reroll the extra Hero";
+        rerollBtn.addEventListener("click", rerollExtraCard);
+      }
 
       extraRow.appendChild(text);
       extraRow.appendChild(rerollBtn);

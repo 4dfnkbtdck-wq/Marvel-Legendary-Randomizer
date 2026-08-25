@@ -143,11 +143,11 @@ const MASTERMINDS = [
   { name: "Magneto", exp: "core", leads: [{ category: "villains", name: "Brotherhood" }] },
   { name: "Red Skull", exp: "core", leads: [{ category: "villains", name: "Hydra" }] },
 
-  { name: "Apocalypse", exp: "dark_city" },
-  { name: "Kingpin", exp: "dark_city" },
-  { name: "Mister Sinister", exp: "dark_city" },
-  { name: "Mystique", exp: "dark_city" },
-  { name: "Ultron", exp: "dark_city" },
+  { name: "Apocalypse", exp: "dark_city", leads: [{ category: "villains", name: "Four Horsemen" }] },
+  { name: "Kingpin", exp: "dark_city", leads: [{ category: "villains", name: "Streets of New York" }] },
+  { name: "Mephisto", exp: "dark_city", leads: [{ category: "villains", name: "Underworld" }] },
+  { name: "Mr. Sinister", exp: "dark_city", leads: [{ category: "villains", name: "Marauders" }] },
+  { name: "Stryfe", exp: "dark_city", leads: [{ category: "villains", name: "MLF" }] },
 
   { name: "Galactus", exp: "fantastic_four" },
 
@@ -255,7 +255,17 @@ const MASTERMINDS = [
 //                  cards." `extraHeroNote` overrides the default "8
 //                  random cards go in the Villain Deck" display text for
 //                  a Scheme that adds a different amount, e.g. "all 14
-//                  cards" — see Trap Heroes in the Microverse. If the
+//                  cards" — see Trap Heroes in the Microverse), or
+//                  `extraHeroName` (same idea, but for a Scheme that
+//                  names one specific Hero rather than picking randomly,
+//                  e.g. Dark City's "Transform Citizens into Demons"
+//                  requiring Jean Grey's own cards in the Villain Deck —
+//                  the app forces that exact Hero as the extra card
+//                  instead of choosing one, and excludes it from the
+//                  normal Hero Deck draw so it can't end up in both
+//                  places at once; pair with `extraHeroNote` too, since
+//                  there's no sensible generic default once it's a named
+//                  card rather than a random one). If the
 //                  extra Hero instead joins the normal Hero Deck, that's
 //                  `heroCountDelta` above instead, not this), or
 //                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
@@ -343,14 +353,84 @@ const SCHEMES = [
     evilWins: "",
   },
 
-  { name: "Rise of Apocalypse", exp: "dark_city" },
-  { name: "Kingpin's Criminal Empire", exp: "dark_city" },
-  { name: "Mutant Massacre", exp: "dark_city" },
-  { name: "Age of Apocalypse", exp: "dark_city" },
-  { name: "Assault on Genosha", exp: "dark_city" },
-  { name: "Reign of the Hellfire Club", exp: "dark_city" },
-  { name: "War of the X-Men", exp: "dark_city" },
-  { name: "Legacy Virus Outbreak", exp: "dark_city" },
+  // The eight Dark City schemes below are transcribed directly from the
+  // physical cards — the previous bare-name entries here (Rise of
+  // Apocalypse, Kingpin's Criminal Empire, etc.) didn't correspond to any
+  // real card despite the expansion's "verified" tag; they've been
+  // replaced entirely.
+  {
+    name: "Save Humanity",
+    exp: "dark_city",
+    overrides: { twists: 8, bystanders: 24, bystandersDeltaByPlayers: { 1: -12 } },
+    setupNote:
+      "24 Bystanders go in the Hero Deck (not the Villain Deck) — 12 at 1 player.\nSpecial Rules: You may spend 2 Recruit to rescue a Bystander from the HQ.",
+    twist: "KO all Bystanders in the HQ. Then each player reveals a Victory Point Hero or KOs a Bystander from their Victory Pile.",
+    evilWins: "When the number of Bystanders KO'd and/or carried off is 4 times the number of players.",
+  },
+  {
+    name: "Steal the Weaponized Plutonium",
+    exp: "dark_city",
+    overrides: { twists: 8, villainCountDelta: 1 },
+    setupNote:
+      "8 Twists represent Plutonium.\nSpecial Rules: Each Villain gets +1 Attack for each Plutonium it has. When a Villain with any Plutonium is defeated, shuffle that Plutonium back into the Villain Deck.",
+    twist:
+      "This Plutonium is captured by the closest Villain to the Villain Deck. If there are no Villains in the city, KO this Plutonium. Either way, play another card from the Villain Deck.",
+    evilWins: "When 4 Plutonium have been carried off by Villains.",
+  },
+  {
+    name: "Transform Citizens into Demons",
+    exp: "dark_city",
+    overrides: { twists: 8, bystanders: 0, extraHeroName: "Jean Grey", extraHeroNote: "14 Jean Grey cards go in the Villain Deck" },
+    setupNote:
+      'Special Rules: Each Jean Grey card counts as a "Goblin Queen" Villain. It\'s worth 4 Victory Points. It has Attack equal to its Cost plus the number of Demon Goblins stacked next to the Scheme.',
+    twist:
+      'Stack 5 Bystanders face down next to the Scheme. Bystanders stacked here are "Demon Goblin" Villains. They have 2 Attack. Players can fight these Demon Goblins to rescue them as Bystanders.',
+    evilWins: "When 4 Goblin Queen cards escape.",
+  },
+  {
+    name: "X-Cutioner's Song",
+    exp: "dark_city",
+    overrides: { twists: 8, bystanders: 0, extraHero: true, extraHeroNote: "all 14 cards go in the Villain Deck" },
+    setupNote:
+      "Special Rules: Whenever you play a Hero from the Villain Deck, that Hero is captured by the closest enemy to the Villain Deck. Each Villain gets +2 Attack for each Hero it has. When you fight an enemy, gain all the Heroes captured by that enemy.",
+    twist: "KO all Heroes captured by enemies. Then play another card from the Villain Deck.",
+    evilWins: "9 non-grey Heroes are KO'd or carried off.",
+  },
+  {
+    name: "Capture Baby Hope",
+    exp: "dark_city",
+    overrides: { twists: 8 },
+    setupNote:
+      "Put a token on this Scheme to represent the baby, Hope Summers.\nSpecial Rules: The Villain with the baby gets +4 Attack. If you defeat that Villain, rescue the baby to your Victory Pile (until the next Twist). The baby is worth 6 Victory Points at the end of the game. If a Villain escapes with the baby, stack a Twist next to the Mastermind and return the baby to this Scheme card.",
+    twist:
+      "If a Villain has the baby, that Villain escapes. Otherwise, the baby is captured by the closest Villain to the Villain Deck. (If there are no Villains, do nothing.)",
+    evilWins: "When there are 3 Twists stacked next to the Mastermind.",
+  },
+  {
+    name: "Detonate the Helicarrier",
+    exp: "dark_city",
+    overrides: { twists: 8, heroCount: 6 },
+    setupNote:
+      "Special Rules: Whenever a Hero is KO'd from the HQ, turn that Hero face down on that HQ space, representing an Explosion on the Helicarrier. When an HQ space has 6 Explosions, that space is Destroyed and can't hold Heroes anymore.",
+    twist: "Stack this Twist next to the Scheme. Then for each Twist in that stack, KO the leftmost Hero in the HQ and immediately refill that HQ space.",
+    evilWins: "When all HQ spaces are Destroyed or the Hero Deck runs out.",
+  },
+  {
+    name: "Massive Earthquake Generator",
+    exp: "dark_city",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist: "Each player reveals an Instinct Hero or KOs the top card of their deck.",
+    evilWins: "When the number of non-grey Heroes in the KO pile is 3 times the number of players.",
+  },
+  {
+    name: "Organized Crime Wave",
+    exp: "dark_city",
+    overrides: { twists: 8, requiredHenchmen: "Maggia Goons" },
+    setupNote: 'Include 10 Maggia Goons as one of the Henchman Groups.\nSpecial Rules: Goons also have the ability "Ambush: Play another card from the Villain Deck."',
+    twist: "Each Goon in the city escapes. Shuffle all Goons from players' Victory Piles into the Villain Deck.",
+    evilWins: "When 5 Goons escape.",
+  },
 
   { name: "Galactus Hungers for Earth", exp: "fantastic_four" },
   { name: "Battle the Frightful Four", exp: "fantastic_four" },
@@ -1036,12 +1116,12 @@ const VILLAIN_GROUPS = [
   { name: "Skrulls", exp: "core" },
   { name: "Spider-Foes", exp: "core" },
 
-  { name: "Acolytes", exp: "dark_city" },
-  { name: "Hellfire Club", exp: "dark_city" },
-  { name: "Sinister Six", exp: "dark_city" },
-  { name: "Horsemen of Apocalypse", exp: "dark_city" },
-  { name: "Kingpin's Crime Syndicate", exp: "dark_city" },
-  { name: "Assassin's Guild", exp: "dark_city" },
+  { name: "Emissaries of Evil", exp: "dark_city" },
+  { name: "Four Horsemen", exp: "dark_city" },
+  { name: "Marauders", exp: "dark_city" },
+  { name: "MLF", exp: "dark_city" },
+  { name: "Streets of New York", exp: "dark_city" },
+  { name: "Underworld", exp: "dark_city" },
 
   { name: "Frightful Four", exp: "fantastic_four" },
 
@@ -1128,8 +1208,8 @@ const HENCHMEN = [
   { name: "Sentinel", exp: "core" },
   { name: "Savage Land Mutates", exp: "core" },
 
-  { name: "Reavers' Cyborgs", exp: "dark_city" },
-  { name: "Maggia Enforcers", exp: "dark_city" },
+  { name: "Maggia Goons", exp: "dark_city" },
+  { name: "Phalanx", exp: "dark_city" },
 
   { name: "Chitauri Foot Soldiers", exp: "guardians" },
 
@@ -1176,20 +1256,23 @@ const HEROES = [
   { name: "Thor", exp: "core", team: "Avengers" },
   { name: "Wolverine", exp: "core", team: "X-Men" },
 
-  { name: "Cable", exp: "dark_city" },
-  { name: "Daredevil", exp: "dark_city" },
-  { name: "Professor X", exp: "dark_city" },
-  { name: "Blade", exp: "dark_city" },
-  { name: "Psylocke", exp: "dark_city" },
-  { name: "Jean Grey", exp: "dark_city" },
-  { name: "Beast", exp: "dark_city" },
-  { name: "X-23", exp: "dark_city" },
-  { name: "Elektra", exp: "dark_city" },
-  { name: "Moon Knight", exp: "dark_city" },
-  { name: "Punisher", exp: "dark_city" },
-  { name: "Ghost Rider", exp: "dark_city" },
-  { name: "Luke Cage", exp: "dark_city" },
-  { name: "Shadowcat", exp: "dark_city" },
+  { name: "Angel", exp: "dark_city", team: "X-Men" },
+  { name: "Bishop", exp: "dark_city", team: "X-Men" },
+  { name: "Blade", exp: "dark_city", team: "Marvel Knights" },
+  { name: "Cable", exp: "dark_city", team: "X-Force" },
+  { name: "Colossus", exp: "dark_city", team: "X-Force" },
+  { name: "Daredevil", exp: "dark_city", team: "Marvel Knights" },
+  { name: "Domino", exp: "dark_city", team: "X-Force" },
+  { name: "Elektra", exp: "dark_city", team: "Marvel Knights" },
+  { name: "Forge", exp: "dark_city", team: "X-Force" },
+  { name: "Ghost Rider", exp: "dark_city", team: "Marvel Knights" },
+  { name: "Iceman", exp: "dark_city", team: "X-Men" },
+  { name: "Iron Fist", exp: "dark_city", team: "Marvel Knights" },
+  { name: "Jean Grey", exp: "dark_city", team: "X-Men" },
+  { name: "Nightcrawler", exp: "dark_city", team: "X-Men" },
+  { name: "Professor X", exp: "dark_city", team: "X-Men" },
+  { name: "Punisher", exp: "dark_city", team: "Marvel Knights" },
+  { name: "Wolverine", exp: "dark_city", team: "X-Force" },
 
   { name: "Mister Fantastic", exp: "fantastic_four" },
   { name: "Invisible Woman", exp: "fantastic_four" },
