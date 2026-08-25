@@ -246,10 +246,16 @@ const MASTERMINDS = [
 //                  `villainCountDelta` (added to the base, e.g. "add an
 //                  extra Villain Group"), `requiredVillainGroup` /
 //                  `requiredHenchmen` / `requiredHero` (forced in like a
-//                  Mastermind's "always leads", by exact name), or
+//                  Mastermind's "always leads", by exact name),
 //                  `requiredVillainGroupKeyword` (same, but resolved to
 //                  whichever available Villain Group(s) carry that
-//                  keyword — see VILLAIN_GROUPS' `keywords` above),
+//                  keyword — see VILLAIN_GROUPS' `keywords` above), or
+//                  `requiredHeroTeam` (same idea, but resolved to
+//                  whichever available Hero(es) carry that `team` — for
+//                  Setup text that names a Team rather than a specific
+//                  Hero, e.g. Deadpool's "Everybody Hates Deadpool": "use
+//                  at least 1 Mercs For Money Hero," printed as the
+//                  team's icon rather than a card name),
 //                  `extraHero` (a boolean, optionally paired with
 //                  `extraHeroNote` — see syncExtraCard in app.js; for a
 //                  Scheme whose extra Hero contributes its OWN cards
@@ -1141,10 +1147,10 @@ const SCHEMES = [
   {
     name: "Everybody Hates Deadpool",
     exp: "deadpool",
-    overrides: { requiredHero: "Deadpool", twists: 6 },
+    overrides: { requiredHeroTeam: "Mercs For Money", twists: 6 },
     setupNote:
-      "Use at least 1 Deadpool Hero.\nSpecial Rules: All Villains have Revenge for their own Villain Groups. (If they already have Revenge, double it.)",
-    twist: "Each player reveals their hand. Whoever reveals the fewest Deadpool cards (or tied for fewest) gains a Wound.",
+      "Use at least 1 Mercs For Money Hero.\nSpecial Rules: All Villains have Revenge for their own Villain Groups. (If they already have Revenge, double it.)",
+    twist: "Each player reveals their hand. Whoever reveals the fewest Mercs For Money cards (or tied for fewest) gains a Wound.",
     evilWins: "When 3 Villains per player have escaped.",
   },
 ];
