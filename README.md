@@ -53,7 +53,7 @@ the browser (`localStorage`) between visits.
 `js/data.js` holds the whole card database as plain JS arrays — one entry
 per Mastermind / Scheme / Villain Group / Henchmen / Hero, each tagged
 with the expansion it belongs to and, for Masterminds, an optional
-`leadsCategory`/`leadsName` pair for the "always leads" mechanic above.
+`leads` array for the "always leads" mechanic above.
 
 Every expansion is listed even when its data is sparse or empty — each
 one in `EXPANSIONS` carries a `confidence`:
