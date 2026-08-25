@@ -137,6 +137,7 @@ const EXPANSIONS = [
   { id: "core_2nd", name: "Core Set (2nd Edition)", confidence: "verified" },
   { id: "2099", name: "2099", confidence: "verified" },
   { id: "black_panther", name: "Black Panther", confidence: "verified" },
+  { id: "black_widow", name: "Black Widow", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -205,6 +206,9 @@ const MASTERMINDS = [
 
   { name: "Killmonger", exp: "black_panther", leads: [{ category: "villains", name: "Killmonger's League" }] },
   { name: "Klaw", exp: "black_panther", leads: [{ category: "villains", name: "Enemies of Wakanda" }] },
+
+  { name: "Indestructible Man", exp: "black_widow", leads: [{ category: "villains", name: "Elite Assassins" }] },
+  { name: "Taskmaster", exp: "black_widow", leads: [{ category: "villains", name: "Taskmaster's Thunderbolts" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -817,6 +821,44 @@ const SCHEMES = [
       'If the Mastermind has the Throne\'s Favor, they spend it to stack this Twist next to the Scheme as a "Tribe of Wakanda Defeated." Otherwise: The Mastermind gains the Throne\'s Favor, shuffle this Twist back into the Villain Deck, and then play a card from the Villain Deck.',
     evilWins: "When the 5 Tribes of Wakanda have been defeated.",
   },
+
+  // The four Black Widow schemes below are transcribed directly from
+  // the physical cards.
+  {
+    name: "Frame Heroes for Murder",
+    exp: "black_widow",
+    overrides: { twists: 7, heroCount: 6 },
+    setupNote: "",
+    twist:
+      'Twists 1–6: Stack a card from the HQ next to the Scheme as "Incriminating Evidence" that has a different cost than any card already in that stack.\nTwist 7: Add any card from the HQ to the Incriminating Evidence.',
+    evilWins: "When there are 5 pieces of Incriminating Evidence.",
+  },
+  {
+    name: "Corrupt the Spy Agencies",
+    exp: "black_widow",
+    overrides: { twists: 7 },
+    setupNote: "",
+    twist:
+      "Twists 1–6: Each player sends one of their non-grey Heroes Undercover. Then each player may Unleash a Hero from Undercover with a lower cost than the one that player just sent Undercover.\nTwist 7: Evil Wins!",
+    evilWins: "",
+  },
+  {
+    name: "Sniper Rifle Assassins",
+    exp: "black_widow",
+    overrides: { twistsByPlayers: { 1: 10, 2: 9, 3: 8, 4: 7, 5: 6 } },
+    setupNote: "",
+    twist: "Each player must Dodge with a Hero from their hand, revealing the card they drew. KO each non-grey Hero drawn this way.",
+    evilWins: "When there are four non-grey Heroes per player in the KO pile.",
+  },
+  {
+    name: "Train Black Widows in the Red Room",
+    exp: "black_widow",
+    overrides: { twistsByPlayers: { 1: 7, 2: 6, 3: 5, 4: 4, 5: 3 } },
+    setupNote:
+      'Add 8 S.H.I.E.L.D. Officers to the Villain Deck.\nSpecial Rules: Officers in the Villain Deck and city are "Black Widow Initiate" Villains with 3+ Attack and "Dark Memories. Fight: Gain this as an Officer (without Dark Memories) or send it Undercover."',
+    twist: "A Black Widow Initiate enters the city from the Officer Stack. Play another card from the Villain Deck.",
+    evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -895,6 +937,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Enemies of Wakanda", exp: "black_panther" },
   { name: "Killmonger's League", exp: "black_panther" },
+
+  { name: "Elite Assassins", exp: "black_widow" },
+  { name: "Taskmaster's Thunderbolts", exp: "black_widow" },
 ];
 
 const HENCHMEN = [
@@ -1119,6 +1164,12 @@ const HEROES = [
   { name: "Princess Shuri", exp: "black_panther", team: "Heroes of Wakanda" },
   { name: "Queen Storm of Wakanda", exp: "black_panther", team: "Heroes of Wakanda" },
   { name: "White Wolf", exp: "black_panther", team: "Heroes of Wakanda" },
+
+  { name: "Black Widow", exp: "black_widow", team: "S.H.I.E.L.D." },
+  { name: "Falcon & Winter Soldier", exp: "black_widow", team: "Avengers" },
+  { name: "Red Guardian", exp: "black_widow" },
+  { name: "White Tiger", exp: "black_widow", team: "Marvel Knights" },
+  { name: "Yelena Belova", exp: "black_widow", team: "S.H.I.E.L.D." },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
