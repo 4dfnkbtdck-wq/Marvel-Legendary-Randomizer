@@ -106,7 +106,7 @@ const EXPANSIONS = [
   { id: "dark_city", name: "Dark City", confidence: "verified" },
   { id: "fantastic_four", name: "Fantastic Four", confidence: "verified" },
   { id: "paint_town_red", name: "Paint the Town Red", confidence: "moderate" },
-  { id: "guardians", name: "Guardians of the Galaxy", confidence: "moderate" },
+  { id: "guardians", name: "Guardians of the Galaxy", confidence: "verified" },
   { id: "x_men", name: "X-Men", confidence: "moderate" },
   { id: "champions", name: "Champions", confidence: "verified" },
   { id: "civil_war", name: "Civil War", confidence: "verified" },
@@ -152,8 +152,8 @@ const MASTERMINDS = [
   { name: "Galactus", exp: "fantastic_four", leads: [{ category: "villains", name: "Heralds of Galactus" }] },
   { name: "Mole Man", exp: "fantastic_four", leads: [{ category: "villains", name: "Subterranea" }] },
 
-  { name: "Thanos", exp: "guardians" },
-  { name: "Ronan the Accuser", exp: "guardians" },
+  { name: "Supreme Intelligence of the Kree", exp: "guardians", leads: [{ category: "villains", name: "Kree Starforce" }] },
+  { name: "Thanos", exp: "guardians", leads: [{ category: "villains", name: "Infinity Gems" }] },
 
   { name: "Dark Phoenix", exp: "x_men" },
   { name: "Onslaught", exp: "x_men" },
@@ -251,6 +251,16 @@ const MASTERMINDS = [
 //                  extra Villain Group"), `requiredVillainGroup` /
 //                  `requiredHenchmen` / `requiredHero` (forced in like a
 //                  Mastermind's "always leads", by exact name),
+//                  `requiredVillainGroups` (same idea, but an array, for
+//                  a Scheme that names more than one required Villain
+//                  Group at once, e.g. Guardians of the Galaxy's "The
+//                  Kree-Skrull War" always including both Kree Starforce
+//                  and Skrulls — note "Skrulls" isn't part of this
+//                  expansion's own Villain Groups; it's the same exact
+//                  card already used by Core Set's own Skrull Scheme, so
+//                  this one only resolves with a Skrulls-bearing
+//                  expansion also switched on, same as `requiredHero`
+//                  cross-expansion cases elsewhere in this file),
 //                  `requiredVillainGroupKeyword` (same, but resolved to
 //                  whichever available Villain Group(s) carry that
 //                  keyword — see VILLAIN_GROUPS' `keywords` above), or
@@ -446,9 +456,6 @@ const SCHEMES = [
   },
 
   { name: "Web of Lies", exp: "paint_town_red" },
-
-  { name: "Assemble the Infinity Gauntlet", exp: "guardians" },
-  { name: "Collect the Infinity Stones", exp: "guardians" },
 
   { name: "The Dark Phoenix Saga", exp: "x_men" },
   { name: "Days of Future Past", exp: "x_men" },
@@ -1266,6 +1273,45 @@ const SCHEMES = [
     evilWins: "Twist 8: Good wins! The Traitor reveals themself and also wins.",
     winLabel: "Good Wins",
   },
+
+  // The four Guardians of the Galaxy schemes below are transcribed
+  // directly from the physical cards.
+  {
+    name: "Forge the Infinity Gauntlet",
+    exp: "guardians",
+    overrides: { twists: 8, requiredVillainGroup: "Infinity Gems" },
+    setupNote: "",
+    twist:
+      "Starting to your left and going clockwise, the first player with an Infinity Gem Artifact card in play or in their discard pile chooses one of those Infinity Gems to enter the city. Then put a Shard on each Infinity Gem in the city.",
+    evilWins:
+      "When 6 Infinity Gem Villains are in the city and/or the Escape Pile.\nAlso: When a player controls 4 Infinity Gem Artifacts, that player is corrupted by power. That player wins, Evil wins, and all other players lose.",
+  },
+  {
+    name: "Intergalactic Kree Nega-Bomb",
+    exp: "guardians",
+    overrides: { twists: 8 },
+    setupNote: "Make a face-down 'Nega-Bomb Deck' of 6 Bystanders.",
+    twist:
+      "Shuffle this Twist into the Nega-Bomb Deck. Then reveal a random card from that deck. If it's a Bystander, rescue it. If it's a Twist, KO it, KO all Heroes from the HQ, and each player gains a Wound.",
+    evilWins: "When 16 non-grey Heroes are in the KO pile.",
+  },
+  {
+    name: "The Kree-Skrull War",
+    exp: "guardians",
+    overrides: { twists: 8, requiredVillainGroups: ["Kree Starforce", "Skrulls"] },
+    setupNote: "",
+    twist:
+      "Twists 1-7: All Kree and Skrulls escape from the city. Then, if there are more Kree than Skrulls in the Escape Pile, stack this Twist next to the Mastermind as a Kree Conquest. If there are more Skrulls than Kree in the Escape Pile, stack this Twist next to the Villain Deck as a Skrull Conquest.\nTwist 8: Stack this Twist on the side with the most Conquests.",
+    evilWins: "When there are 4 Kree Conquests or 4 Skrull Conquests.",
+  },
+  {
+    name: "Unite the Shards",
+    exp: "guardians",
+    overrides: { twistsByPlayers: { 1: 6, 2: 7, 3: 8, 4: 9, 5: 10 } },
+    setupNote: "30 Shards in the supply.\nSpecial Rules: During your turn, any number of times, you may spend 2 Recruit to gain one of the Mastermind's Shards.",
+    twist: "Stack this Twist next to the Scheme. Then for each Twist in that stack, the Mastermind gains a Shard.",
+    evilWins: "When the Mastermind has 10 Shards or when there are no more Shards in the supply.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1289,8 +1335,8 @@ const VILLAIN_GROUPS = [
 
   { name: "Sinister Syndicate", exp: "paint_town_red" },
 
-  { name: "Universal Church of Truth", exp: "guardians" },
-  { name: "Black Order", exp: "guardians" },
+  { name: "Infinity Gems", exp: "guardians" },
+  { name: "Kree Starforce", exp: "guardians" },
 
   { name: "Reavers", exp: "x_men" },
   { name: "Marauders", exp: "x_men" },
@@ -1376,8 +1422,6 @@ const HENCHMEN = [
 
   { name: "Maggia Goons", exp: "dark_city" },
   { name: "Phalanx", exp: "dark_city" },
-
-  { name: "Chitauri Foot Soldiers", exp: "guardians" },
 
   { name: "Prime Sentinels", exp: "x_men" },
 
@@ -1465,11 +1509,11 @@ const HEROES = [
   { name: "Scarlet Spider", exp: "paint_town_red" },
   { name: "Agent Venom", exp: "paint_town_red" },
 
-  { name: "Star-Lord", exp: "guardians" },
-  { name: "Gamora", exp: "guardians" },
-  { name: "Drax", exp: "guardians" },
-  { name: "Rocket Raccoon", exp: "guardians" },
-  { name: "Groot", exp: "guardians" },
+  { name: "Drax the Destroyer", exp: "guardians", team: "Guardians of the Galaxy" },
+  { name: "Gamora", exp: "guardians", team: "Guardians of the Galaxy" },
+  { name: "Groot", exp: "guardians", team: "Guardians of the Galaxy" },
+  { name: "Rocket Raccoon", exp: "guardians", team: "Guardians of the Galaxy" },
+  { name: "Star-Lord", exp: "guardians", team: "Guardians of the Galaxy" },
 
   { name: "Magik", exp: "x_men" },
   { name: "Cannonball", exp: "x_men" },
