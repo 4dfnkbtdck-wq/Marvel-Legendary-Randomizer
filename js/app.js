@@ -501,7 +501,7 @@
     state.options.heroCount = clampOption(heroCount, 3, 8);
     state.options.villainCount = villainCount;
     state.options.twists = clampOption(twists, 0, 12);
-    state.options.bystanders = clampOption(bystanders, 1, 20);
+    state.options.bystanders = clampOption(bystanders, 0, 20);
     state.options.henchmenCount = clampOption(henchmenCount, 1, 3);
 
     saveState();
@@ -1061,7 +1061,7 @@
 
     const list = document.createElement("ul");
     list.className = "ios-list";
-    list.appendChild(countStepperRow("Bystanders", "bystanders", 1, 20));
+    list.appendChild(countStepperRow("Bystanders", "bystanders", 0, 20));
     list.appendChild(countStepperRow("Master Strikes", "masterStrikes", 0, 10));
     list.appendChild(countStepperRow("Twists", "twists", 0, 12));
 

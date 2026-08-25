@@ -111,7 +111,7 @@ const EXPANSIONS = [
   { id: "paint_town_red", name: "Paint the Town Red", confidence: "moderate" },
   { id: "guardians", name: "Guardians of the Galaxy", confidence: "moderate" },
   { id: "x_men", name: "X-Men", confidence: "moderate" },
-  { id: "champions", name: "Champions", confidence: "moderate" },
+  { id: "champions", name: "Champions", confidence: "verified" },
   { id: "civil_war", name: "Civil War", confidence: "light" },
   { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "light" },
   { id: "annihilation", name: "Annihilation", confidence: "verified" },
@@ -212,6 +212,9 @@ const MASTERMINDS = [
 
   { name: "Arnim Zola", exp: "cap_75", leads: [{ category: "villains", name: "Zola's Creations" }] },
   { name: "Baron Heinrich Zemo", exp: "cap_75", leads: [{ category: "villains", name: "Masters of Evil (WWII)" }] },
+
+  { name: "Fing Fang Foom", exp: "champions", leads: [{ category: "villains", name: "Monsters Unleashed" }] },
+  { name: "Pagliacci", exp: "champions", leads: [{ category: "villains", name: "Wrecking Crew" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -347,7 +350,43 @@ const SCHEMES = [
   { name: "Days of Future Past", exp: "x_men" },
   { name: "Fall of the Mutants", exp: "x_men" },
 
-  { name: "Prove Yourselves, Champions", exp: "champions" },
+  // The four Champions schemes below are transcribed directly from the
+  // physical cards.
+  {
+    name: "Clash of the Monsters Unleashed",
+    exp: "champions",
+    overrides: { twists: 10 },
+    setupNote: '6 Wounds per player in the Wound Stack. Shuffle 8 Monsters Unleashed Villains into a face down "Monster Pit" deck.',
+    twist:
+      'Twists 3–10: Each player chooses a Villain from their Victory Pile as their "Gladiator." Then the top card of the Monster Pit enters the city. Each player whose Gladiator has a lower printed Attack than that Monster gains a Wound.',
+    evilWins: "When the Wound Stack or Monster Pit Deck runs out.",
+  },
+  {
+    name: "Divide and Conquer",
+    exp: "champions",
+    overrides: { twists: 8, heroCount: 7 },
+    setupNote:
+      "Sort the Hero Deck by Hero Class: Strength, Instinct, Covert, Tech, Ranged. (If a card has multiple Classes, break ties at random.) Put these 5 smaller, shuffled Hero Decks beneath the 5 HQ spaces.\nSpecial Rules: Whenever an HQ space is empty, fill it with the top card of the Hero Deck below that space.",
+    twist: "Twists 1–3: KO all Heroes in the HQ.\nTwists 4–8: KO one of the Hero Decks.",
+    evilWins: "When all Hero Decks are gone.",
+  },
+  {
+    name: "Hypnotize Every Human",
+    exp: "champions",
+    overrides: { twists: 8, henchmenDelta: 1, bystanders: 0 },
+    setupNote: "",
+    twist:
+      'Twists 1–6: Put a Bystander from the Bystander Stack above each city space as a face down 2 Attack "Hypno-Thrall" Villain. They don\'t move. When you fight one, rescue it as a Bystander. You can\'t fight a Villain in a city space that has any Hypno-Thralls above it.\nTwists 7–8: Each player puts a Villain from their Victory Pile into the Escape Pile.',
+    evilWins: "When 8 Villains are in the Escape Pile.",
+  },
+  {
+    name: "Steal All Oxygen on Earth",
+    exp: "champions",
+    overrides: { twists: 8 },
+    setupNote: 'The "Oxygen Level" starts at 8.',
+    twist: "Stack this Twist next to the Scheme. The Oxygen Level decreases by 1. Then KO each Hero from the HQ whose cost is greater than the Oxygen Level.",
+    evilWins: "When 20 non-grey Heroes are KO'd.",
+  },
 
   // The eight Legendary: Villains Plots below are transcribed directly
   // from the physical cards, same as Core Set. "Setup: 8 Twists" is
@@ -984,6 +1023,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Masters of Evil (WWII)", exp: "cap_75" },
   { name: "Zola's Creations", exp: "cap_75" },
+
+  { name: "Monsters Unleashed", exp: "champions" },
+  { name: "Wrecking Crew", exp: "champions" },
 ];
 
 const HENCHMEN = [
@@ -1082,11 +1124,11 @@ const HEROES = [
   { name: "Forge", exp: "x_men" },
   { name: "Iceman", exp: "x_men" },
 
-  { name: "Ms. Marvel (Kamala Khan)", exp: "champions" },
-  { name: "Spider-Man (Miles Morales)", exp: "champions" },
-  { name: "Nova (Sam Alexander)", exp: "champions" },
-  { name: "Viv Vision", exp: "champions" },
-  { name: "Cyclops (Young)", exp: "champions" },
+  { name: "Gwenpool", exp: "champions", team: "Champions" },
+  { name: "Ms. Marvel", exp: "champions", team: "Champions" },
+  { name: "Nova", exp: "champions", team: "Champions" },
+  { name: "Totally Awesome Hulk", exp: "champions", team: "Champions" },
+  { name: "Viv Vision", exp: "champions", team: "Champions" },
 
   { name: "Vision", exp: "civil_war" },
   { name: "War Machine", exp: "civil_war" },
