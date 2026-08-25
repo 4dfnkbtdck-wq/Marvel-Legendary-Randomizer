@@ -59,6 +59,12 @@
  * instance, isn't on a team — a hero without one just won't match any
  * team filter.
  *
+ * A Villain Group entry can optionally carry `keywords`, an array of
+ * printed-keyword strings (e.g. "Rise of the Living Dead"), for a Scheme
+ * that requires "exactly one Villain Group with [keyword]" rather than
+ * naming a specific group — see `requiredVillainGroupKeyword` below.
+ * Rarely needed: most Villain Groups have no keywords at all.
+ *
  * A Scheme entry can optionally carry `overrides`, `setupNote`, `twist`,
  * `evilWins`, and `winLabel` — see the comment directly above the
  * SCHEMES array below for the full shape. `overrides` fields are
@@ -176,11 +182,19 @@ const MASTERMINDS = [
 // verified. Each carries:
 //   overrides    — mechanical deck-construction changes the app actually
 //                  applies (see syncSchemeNumbers/syncRequiredCards in
-//                  app.js): `twists` (or `twistsByPlayers`), `bystanders`,
-//                  `henchmenDelta`, `heroCount` (or `heroCountByPlayers`),
-//                  `requiredVillainGroup` / `requiredHenchmen` /
-//                  `requiredHero` (forced in like a Mastermind's "always
-//                  leads", by name).
+//                  app.js): `twists` (or `twistsByPlayers`, or
+//                  `twistsPerVillainGroup` — a multiplier times the
+//                  resolved Villain Group count), `bystanders` (or
+//                  `bystandersDeltaByPlayers` — added to the base count,
+//                  only at the listed player counts), `henchmenDelta`,
+//                  `heroCount` (or `heroCountByPlayers`), `villainCount`
+//                  (or `villainCountByPlayers`), `requiredVillainGroup` /
+//                  `requiredHenchmen` / `requiredHero` (forced in like a
+//                  Mastermind's "always leads", by exact name), or
+//                  `requiredVillainGroupKeyword` (same, but resolved to
+//                  whichever available Villain Group(s) carry that
+//                  keyword — see VILLAIN_GROUPS' `keywords` above),
+//                  `extraHero` (a boolean — see syncExtraCard in app.js).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -443,14 +457,26 @@ const SCHEMES = [
   // directly from the physical cards. `requiredHero` (parallel to
   // `requiredVillainGroup`/`requiredHenchmen`) force-includes a specific
   // Hero the way a Scheme can already force a Villain Group or Henchmen
-  // group. Where a card's Setup/Special Rules reference a specific card
-  // by name that isn't one of this file's tracked Villain Groups/
+  // group. `requiredVillainGroupKeyword` force-includes whichever Villain
+  // Group(s) currently in the pool carry a given `keywords` entry (see
+  // VILLAIN_GROUPS below), picking randomly if more than one qualifies —
+  // for a Scheme like Marvel Zombies that names a keyword rather than a
+  // specific group, so it keeps working correctly as more expansions add
+  // more cards with that keyword. `villainCount`/`villainCountByPlayers`
+  // override the Villain Group count the same way `heroCount`/
+  // `heroCountByPlayers` already did for Heroes. `twistsPerVillainGroup`
+  // sets Twists to that multiplier times the (possibly just-overridden)
+  // Villain Group count, for a Scheme whose Twist count scales with it.
+  // `bystandersDeltaByPlayers` adds to the base per-player-count
+  // Bystanders total only at the listed player counts (vs. `bystanders`,
+  // a flat unconditional override). `extraHero` marks a Scheme that needs
+  // one random Hero beyond the normal Heroes lineup (see syncExtraCard in
+  // app.js) — shown in its own row in the Villain Deck section once
+  // randomized. Where a card's Setup/Special Rules reference a specific
+  // card by name that isn't one of this file's tracked Villain Groups/
   // Henchmen (e.g. "Frigga, Mother of Thor" — a card inside a Villain
-  // Group, not a group of its own; or "exactly one Villain Group with
-  // 'Rise of the Living Dead'" — a keyword search, not a named group),
-  // or splits the Villain Deck into several simultaneous sub-decks
-  // ("Breach the Nexus of All Realities"), that's left as setupNote/twist
-  // text only — it doesn't fit this app's numeric-override shape.
+  // Group, not a group of its own), that's left as setupNote/twist text
+  // only — it doesn't fit this app's numeric-override shape.
   {
     name: "Trash Earth with Hugest Party Ever",
     exp: "what_if",
@@ -463,8 +489,9 @@ const SCHEMES = [
   {
     name: "Breach the Nexus of All Realities",
     exp: "what_if",
+    overrides: { villainCountByPlayers: { 1: 3, 2: 3 }, twistsPerVillainGroup: 2 },
     setupNote:
-      '(1-2 players: Use 3 Villain Groups.) Stack each Villain Group separately face down as its own "Reality." Add 2 Twists to each Reality. Shuffle together all the Henchmen, Master Strikes, and Bystanders for your player count and randomly distribute them amongst all the Realities, as evenly as possible. Shuffle each Reality separately.\nSpecial Rules: Each turn, you choose which Reality (Villain Deck) plays a card. They all play into the same city.',
+      'Stack each Villain Group separately face down as its own "Reality." Shuffle together all the Henchmen, Master Strikes, and Bystanders for your player count and randomly distribute them amongst all the Realities, as evenly as possible. Shuffle each Reality separately.\nSpecial Rules: Each turn, you choose which Reality (Villain Deck) plays a card. They all play into the same city.',
     twist:
       'Stack this Twist next to this Reality as a "Dimensional Breach." If this was the second Breach for that Reality, destroy that Reality, KO\'ing all its cards.',
     evilWins: "When all Realities have been destroyed.",
@@ -481,9 +508,14 @@ const SCHEMES = [
   {
     name: "Marvel Zombies",
     exp: "what_if",
-    overrides: { twists: 4 },
+    overrides: {
+      twists: 4,
+      requiredVillainGroupKeyword: "Rise of the Living Dead",
+      extraHero: true,
+      bystandersDeltaByPlayers: { 1: 3, 2: 3 },
+    },
     setupNote:
-      'Include exactly one Villain Group with "Rise of the Living Dead." Add 8 random cards from an extra Hero to the Villain Deck. 1-2 players: Add 3 extra Bystanders.\nSpecial Rules: Hero cards from the Villain Deck are "Zombie" Villains with Attack equal to their cost + 1, worth VP equal to their cost. They have "Ambush: Rise of the Living Dead. Fight: Play a copy of this card as a Hero, then put it into your Victory Pile as a Villain." (It still has Rise.)',
+      'Add 8 random cards from the extra Hero (shown in the Villain Deck section) to the Villain Deck.\nSpecial Rules: Hero cards from the Villain Deck are "Zombie" Villains with Attack equal to their cost + 1, worth VP equal to their cost. They have "Ambush: Rise of the Living Dead. Fight: Play a copy of this card as a Hero, then put it into your Victory Pile as a Villain." (It still has Rise.)',
     twist: 'Each Villain in the city with "Rise of the Living Dead" escapes. Then play another card from the Villain Deck.',
     evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
   },
@@ -541,7 +573,7 @@ const VILLAIN_GROUPS = [
   { name: "Intergalactic Party Animals", exp: "what_if" },
   { name: "Rival Overlords", exp: "what_if" },
   { name: "Strange's Demons", exp: "what_if" },
-  { name: "Zombie Avengers", exp: "what_if" },
+  { name: "Zombie Avengers", exp: "what_if", keywords: ["Rise of the Living Dead"] },
 ];
 
 const HENCHMEN = [
