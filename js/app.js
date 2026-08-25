@@ -26,6 +26,8 @@
       history: [],
       result: {},
       locks: {},
+      keywordChoices: {},
+      extraCard: null,
     };
   }
 
@@ -47,6 +49,8 @@
         history: Array.isArray(parsed.history) ? parsed.history : [],
         result: {},
         locks: {},
+        keywordChoices: {},
+        extraCard: null,
       };
     } catch (e) {
       return defaults;
@@ -190,6 +194,17 @@
   // player, per category.
   const signatureFlags = { villains: [], henchmen: [], heroes: [] };
 
+  // Not persisted — lets syncSchemeNumbers tell an actual Scheme change
+  // (which should reroll keyword picks / the extra-Hero pick) apart from
+  // a same-Scheme resync triggered by a Player-count change alone.
+  let lastSchemeSignature = null;
+
+  // Same idea, for a Mastermind's own "leads any ___ with [word] in the
+  // name" pick (see resolveNameMatchRequirement) — reset only when the
+  // Mastermind itself changes, tracked separately from lastSchemeSignature
+  // above since either can change independently of the other.
+  let lastMastermindSignature = null;
+
   function currentMastermindData() {
     const mm = (state.result.mastermind || [])[0];
     if (!mm) return null;
@@ -202,20 +217,87 @@
     return SCHEMES.find((s) => s.name === sc.name && s.exp === sc.exp) || null;
   }
 
+  /** Drops every cached pick (see resolveFromCandidates) whose key starts
+   * with `prefix` — "scheme:" when the Scheme changes, "mastermind:"
+   * when the Mastermind changes — without disturbing the other's cache. */
+  function clearKeywordChoicesWithPrefix(prefix) {
+    Object.keys(state.keywordChoices).forEach((k) => {
+      if (k.startsWith(prefix)) delete state.keywordChoices[k];
+    });
+  }
+
+  /** Shared cache-and-pick logic for a "pick one qualifying card, then
+   * stick with it" requirement (a Scheme's keyword requirement, or a
+   * Mastermind's name-substring requirement below): reuse the cached
+   * pick under `cacheKey` if it's still among today's candidates,
+   * otherwise pick randomly and cache the result. Returns null if
+   * nothing currently qualifies. */
+  function resolveFromCandidates(cacheKey, candidates) {
+    if (!candidates.length) return null;
+    const cached = state.keywordChoices[cacheKey];
+    if (cached && candidates.some((c) => c.name === cached)) return cached;
+    const [picked] = pickRandom(candidates, 1, []);
+    if (picked) state.keywordChoices[cacheKey] = picked.name;
+    return picked ? picked.name : null;
+  }
+
+  /** Resolves a Scheme's "include exactly one [category] card with
+   * [keyword]" requirement to a concrete card name — picking randomly
+   * among whichever currently-available cards carry that keyword (there
+   * may be more than one once enough expansions are on; right now only
+   * one card in the whole database has any given keyword, but that's not
+   * guaranteed to stay true). Re-picks automatically if the cached choice
+   * becomes unavailable (excluded, expansion turned off) or hasn't been
+   * made yet. */
+  function resolveKeywordRequirement(categoryKey, keyword) {
+    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const candidates = pool.filter((c) => (c.keywords || []).includes(keyword));
+    return resolveFromCandidates(`scheme:${categoryKey}:${keyword}`, candidates);
+  }
+
+  /** Resolves a Mastermind's "leads any [category] card whose name
+   * contains one of these words" requirement (case-insensitive
+   * substring match, e.g. Magneto leading any Villain Group with
+   * "Brotherhood" or "X-Men" in its name) the same random-pick-with-
+   * cache way as resolveKeywordRequirement — just matched by name
+   * substring instead of a curated `keywords` tag, since there's nothing
+   * to tag ahead of time; it just reads off whatever's actually named
+   * that way, which is also why it can pick up a same-named group from a
+   * completely different expansion if both happen to be selected. */
+  function resolveNameMatchRequirement(categoryKey, nameContains) {
+    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const needles = nameContains.map((s) => s.toLowerCase());
+    const candidates = pool.filter((c) => needles.some((n) => c.name.toLowerCase().includes(n)));
+    const cacheKey = `mastermind:${categoryKey}:${needles.join("|")}`;
+    return resolveFromCandidates(cacheKey, candidates);
+  }
+
   /** Every card name that MUST be in play for this category right now,
    * from the current Mastermind's "always leads" (its `leads` array — one
    * Mastermind can require more than one card, e.g. a Henchmen group AND
-   * a specific Hero) and/or the current Scheme's required Villain
-   * Group / Henchmen group / Hero. */
+   * a specific Hero; each entry is either an exact `name` or, for "leads
+   * any ___ with [word] in the name," a `nameContains` list) and/or the
+   * current Scheme's required Villain Group / Henchmen group / Hero (by
+   * exact name, or — for a Villain Group — by keyword). */
   function requiredCardNames(categoryKey) {
     const names = [];
     const mmData = currentMastermindData();
     (mmData && mmData.leads ? mmData.leads : []).forEach((req) => {
-      if (req.category === categoryKey && req.name) names.push(req.name);
+      if (req.category !== categoryKey) return;
+      if (req.name) {
+        names.push(req.name);
+      } else if (req.nameContains) {
+        const name = resolveNameMatchRequirement(categoryKey, req.nameContains);
+        if (name) names.push(name);
+      }
     });
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
     if (categoryKey === "villains" && overrides.requiredVillainGroup) names.push(overrides.requiredVillainGroup);
+    if (categoryKey === "villains" && overrides.requiredVillainGroupKeyword) {
+      const name = resolveKeywordRequirement("villains", overrides.requiredVillainGroupKeyword);
+      if (name) names.push(name);
+    }
     if (categoryKey === "henchmen" && overrides.requiredHenchmen) names.push(overrides.requiredHenchmen);
     if (categoryKey === "heroes" && overrides.requiredHero) names.push(overrides.requiredHero);
     return names;
@@ -289,34 +371,95 @@
   }
 
   /** Reconciles Villain Groups / Henchmen against whatever the current
-   * Mastermind and Scheme require. Safe to call any time either changes. */
+   * Mastermind and Scheme require. Safe to call any time either changes.
+   * Also resets a Mastermind's name-substring pick (see
+   * resolveNameMatchRequirement) whenever the Mastermind itself has
+   * actually changed, the same way syncSchemeNumbers resets the Scheme's
+   * keyword pick — so it re-rolls per Mastermind rather than reshuffling
+   * on every resync. */
   function syncRequiredCards() {
+    const mmData = currentMastermindData();
+    const mmSignature = mmData ? `${mmData.name}|${mmData.exp}` : null;
+    if (mmSignature !== lastMastermindSignature) {
+      clearKeywordChoicesWithPrefix("mastermind:");
+      lastMastermindSignature = mmSignature;
+    }
+
     clearStaleRequiredCards();
     ["villains", "henchmen", "heroes"].forEach((categoryKey) => {
       requiredCardNames(categoryKey).forEach((name) => forceIncludeSignature(categoryKey, name));
     });
+    syncExtraCard();
+  }
+
+  /** Some Schemes (e.g. What If...?'s Marvel Zombies, "add 8 random cards
+   * from an extra Hero to the Villain Deck") call for a Hero beyond your
+   * normal Hero Deck lineup, chosen at random and never duplicating one
+   * of the main Heroes result. Kept in state.extraCard (not one of the
+   * counted result categories, so it doesn't affect the Heroes stepper)
+   * and left alone once picked, only clearing/re-picking when the Scheme
+   * itself changes (see the schemeSignature check in syncSchemeNumbers)
+   * or the current pick is no longer valid. */
+  function syncExtraCard() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    if (!overrides.extraHero) {
+      state.extraCard = null;
+      return;
+    }
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
+    const candidates = pool.filter((c) => !mainNames.has(c.name));
+    if (state.extraCard && candidates.some((c) => c.name === state.extraCard.name)) return;
+    const [picked] = pickRandom(candidates, 1, []);
+    state.extraCard = picked || null;
+  }
+
+  function rerollExtraCard() {
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
+    const candidates = pool.filter((c) => !mainNames.has(c.name));
+    const [picked] = pickRandom(candidates, 1, state.extraCard ? [state.extraCard] : []);
+    if (picked) state.extraCard = picked;
+    saveState();
+    renderResults();
   }
 
   function clampOption(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
 
-  /** Recomputes Heroes / Twists / Bystanders / Henchmen from the current
-   * Player count (falling back to the Core Set solo/no-preset defaults)
-   * plus whatever the current Scheme's `overrides` layer on top — e.g.
-   * Negative Zone Prison Breakout's extra Henchman group, or Secret
-   * Invasion's required 6 Heroes. Never touches Villain Group count,
-   * since no Core Set Scheme overrides it. Only called on a Scheme or
-   * Player-count change — never fights a manual stepper edit. */
+  /** Recomputes Heroes / Villain Groups / Twists / Bystanders / Henchmen
+   * from the current Player count (falling back to the Core Set solo/
+   * no-preset defaults) plus whatever the current Scheme's `overrides`
+   * layer on top — e.g. Negative Zone Prison Breakout's extra Henchman
+   * group, Secret Invasion's required 6 Heroes, or Breach the Nexus of
+   * All Realities' 3-Villain-Groups-at-1-2-players and 2-Twists-per-
+   * Villain-Group. Villain Group count is untouched unless a Scheme
+   * overrides it — most don't. Only called on a Scheme or Player-count
+   * change — never fights a manual stepper edit.
+   *
+   * Also resets the keyword-requirement cache and the extra-Hero pick
+   * (see resolveKeywordRequirement/syncExtraCard) whenever the Scheme
+   * itself has actually changed, so they get a fresh pick per Scheme
+   * rather than reshuffling on every Player-count-only resync. */
   function syncSchemeNumbers() {
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
+    const schemeSignature = scheme ? `${scheme.name}|${scheme.exp}` : null;
+    if (schemeSignature !== lastSchemeSignature) {
+      clearKeywordChoicesWithPrefix("scheme:");
+      state.extraCard = null;
+      lastSchemeSignature = schemeSignature;
+    }
+
     const players = state.options.players;
     const preset = players ? PLAYER_COUNT_TABLE[players] : null;
 
     const baseHeroCount = preset ? preset.heroCount : 5;
     const baseHenchmenCount = preset ? preset.henchmenCount : 1;
     const baseBystanders = preset ? preset.bystanders : 8;
+    const baseVillainCount = preset ? preset.villainCount : 3;
 
     let heroCount = baseHeroCount;
     if (overrides.heroCountByPlayers && players && overrides.heroCountByPlayers[players] != null) {
@@ -325,17 +468,35 @@
       heroCount = overrides.heroCount;
     }
 
-    let twists = 5;
-    if (overrides.twistsByPlayers && players && overrides.twistsByPlayers[players] != null) {
+    let villainCount = baseVillainCount;
+    if (overrides.villainCountByPlayers && players && overrides.villainCountByPlayers[players] != null) {
+      villainCount = overrides.villainCountByPlayers[players];
+    } else if (overrides.villainCount != null) {
+      villainCount = overrides.villainCount;
+    }
+    villainCount += overrides.villainCountDelta || 0;
+    villainCount = clampOption(villainCount, 1, 6);
+
+    let twists;
+    if (overrides.twistsPerVillainGroup != null) {
+      twists = overrides.twistsPerVillainGroup * villainCount;
+    } else if (overrides.twistsByPlayers && players && overrides.twistsByPlayers[players] != null) {
       twists = overrides.twistsByPlayers[players];
     } else if (overrides.twists != null) {
       twists = overrides.twists;
+    } else {
+      twists = 5;
     }
 
-    const bystanders = overrides.bystanders != null ? overrides.bystanders : baseBystanders;
+    let bystanders = overrides.bystanders != null ? overrides.bystanders : baseBystanders;
+    bystanders += overrides.bystandersDelta || 0;
+    if (overrides.bystandersDeltaByPlayers && players && overrides.bystandersDeltaByPlayers[players] != null) {
+      bystanders += overrides.bystandersDeltaByPlayers[players];
+    }
     const henchmenCount = baseHenchmenCount + (overrides.henchmenDelta || 0);
 
     state.options.heroCount = clampOption(heroCount, 3, 8);
+    state.options.villainCount = villainCount;
     state.options.twists = clampOption(twists, 0, 12);
     state.options.bystanders = clampOption(bystanders, 1, 20);
     state.options.henchmenCount = clampOption(henchmenCount, 1, 3);
@@ -381,12 +542,27 @@
 
   function requiredReason(categoryKey, item) {
     const mmData = currentMastermindData();
-    if (mmData && (mmData.leads || []).some((req) => req.category === categoryKey && req.name === item.name)) {
+    if (
+      mmData &&
+      (mmData.leads || []).some((req) => {
+        if (req.category !== categoryKey) return false;
+        if (req.name) return req.name === item.name;
+        if (req.nameContains) return resolveNameMatchRequirement(categoryKey, req.nameContains) === item.name;
+        return false;
+      })
+    ) {
       return `always led by ${mmData.name}`;
     }
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
     if (categoryKey === "villains" && overrides.requiredVillainGroup === item.name) {
+      return `required by ${scheme.name}`;
+    }
+    if (
+      categoryKey === "villains" &&
+      overrides.requiredVillainGroupKeyword &&
+      resolveKeywordRequirement("villains", overrides.requiredVillainGroupKeyword) === item.name
+    ) {
       return `required by ${scheme.name}`;
     }
     if (categoryKey === "henchmen" && overrides.requiredHenchmen === item.name) {
@@ -625,8 +801,7 @@
     const preset = PLAYER_COUNT_TABLE[n];
     if (!preset) return;
     state.options.players = n;
-    state.options.villainCount = preset.villainCount;
-    syncSchemeNumbers(); // sets heroCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
+    syncSchemeNumbers(); // sets heroCount/villainCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
     reconcileCountedCategories();
     syncRequiredCards();
     renderPlayersSegmented();
@@ -873,6 +1048,34 @@
     list.appendChild(countStepperRow("Bystanders", "bystanders", 1, 20));
     list.appendChild(countStepperRow("Master Strikes", "masterStrikes", 0, 10));
     list.appendChild(countStepperRow("Twists", "twists", 0, 12));
+
+    if (scheme && scheme.overrides && scheme.overrides.extraHero && state.extraCard) {
+      const extraRow = document.createElement("li");
+      extraRow.className = "ios-row";
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = state.extraCard.name;
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      sub.textContent = "Extra Hero — 8 random cards go in the Villain Deck";
+      text.appendChild(main);
+      text.appendChild(sub);
+
+      const rerollBtn = document.createElement("button");
+      rerollBtn.type = "button";
+      rerollBtn.className = "round-btn";
+      rerollBtn.textContent = "🔁";
+      rerollBtn.title = "Reroll the extra Hero";
+      rerollBtn.addEventListener("click", rerollExtraCard);
+
+      extraRow.appendChild(text);
+      extraRow.appendChild(rerollBtn);
+      list.appendChild(extraRow);
+    }
+
     section.appendChild(list);
 
     if (scheme && scheme.twist) {
@@ -912,6 +1115,7 @@
     lines.push(`Bystanders: ${state.options.bystanders}`);
     lines.push(`Master Strikes: ${state.options.masterStrikes}`);
     lines.push(`Twists: ${state.options.twists}`);
+    if (state.extraCard) lines.push(`Extra Hero: ${state.extraCard.name}`);
     const scheme = currentSchemeData();
     if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);
     if (scheme && scheme.evilWins) lines.push("", `${(scheme.winLabel || "Evil Wins")}: ${scheme.evilWins}`);

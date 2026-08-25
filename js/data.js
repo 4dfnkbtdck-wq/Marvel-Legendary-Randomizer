@@ -38,26 +38,38 @@
  * won't draw from an empty pool, and will warn if a pool is too small
  * for the setup size requested.
  *
- * A Mastermind entry can optionally carry `leads`, an array of
- * `{ category, name }` pairs ("villains", "henchmen", or "heroes"),
- * matching the "always leads ___" (and, rarely, "always include ___ as a
- * Hero") text on the physical Mastermind card. When set, the app
- * auto-includes each of those cards whenever the Mastermind is in play
- * (unless you've excluded it in Card Pool, or every slot in that
- * category is already manually locked). Most Masterminds have exactly
- * one entry — e.g. Doctor Doom always leads the Doombot Legion, a
- * Henchman, not a Villain Group — but it's an array because a few
- * require more than one simultaneously (e.g. Killmonger, The Betrayer
- * leads a Henchmen group AND always includes a specific Hero). Omit
- * `leads` entirely for a Mastermind with no specific required card (e.g.
- * one that "leads any villain group" — that's not a forced named card,
- * just flavor text).
+ * A Mastermind entry can optionally carry `leads`, an array of entries
+ * ("villains", "henchmen", or "heroes" `category`, plus either an exact
+ * `name` or a `nameContains` array), matching the "always leads ___"
+ * (and, rarely, "always include ___ as a Hero") text on the physical
+ * Mastermind card. When set, the app auto-includes a matching card
+ * whenever the Mastermind is in play (unless you've excluded it in Card
+ * Pool, or every slot in that category is already manually locked).
+ * Most entries use exact `name` — e.g. Doctor Doom always leads the
+ * Doombot Legion, a Henchman, not a Villain Group. Use `nameContains`
+ * instead for "leads any ___ with [word] in the name" text (e.g. Doctor
+ * Octopus leading any Villain Group with "Sinister" in its name) — the
+ * app picks randomly among whichever cards currently qualify, by a
+ * case-insensitive substring match against the name, and re-picks if
+ * more than one word can match (an array = OR, e.g. Magneto's
+ * "Brotherhood" or "X-Men"). `leads` is an array on the entry itself
+ * because a few Masterminds require more than one card simultaneously
+ * (e.g. Killmonger, The Betrayer leads a Henchmen group AND always
+ * includes a specific Hero). Omit `leads` entirely for a Mastermind with
+ * no specific required card (e.g. one that "leads any villain group" —
+ * that's not a forced requirement of any kind, just flavor text).
  *
  * A Hero entry can optionally carry `team` (e.g. "Avengers", "X-Men"),
  * shown as a tag and usable as a Team Theme filter to build an
  * all-one-team lineup. It's fine to leave it off — Deadpool, for
  * instance, isn't on a team — a hero without one just won't match any
  * team filter.
+ *
+ * A Villain Group entry can optionally carry `keywords`, an array of
+ * printed-keyword strings (e.g. "Rise of the Living Dead"), for a Scheme
+ * that requires "exactly one Villain Group with [keyword]" rather than
+ * naming a specific group — see `requiredVillainGroupKeyword` below.
+ * Rarely needed: most Villain Groups have no keywords at all.
  *
  * A Scheme entry can optionally carry `overrides`, `setupNote`, `twist`,
  * `evilWins`, and `winLabel` — see the comment directly above the
@@ -115,6 +127,7 @@ const EXPANSIONS = [
   { id: "villains", name: "Legendary: Villains", confidence: "verified" },
   { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
   { id: "what_if", name: "Marvel Studios: What If...?", confidence: "verified" },
+  { id: "core_2nd", name: "Core Set (2nd Edition)", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -169,6 +182,12 @@ const MASTERMINDS = [
   },
   { name: "Ultron Infinity", exp: "what_if", leads: [{ category: "henchmen", name: "Ultron Sentries" }] },
   { name: "Zombie Scarlet Witch", exp: "what_if", leads: [{ category: "villains", name: "Zombie Avengers" }] },
+
+  { name: "Doctor Doom", exp: "core_2nd", leads: [{ category: "henchmen", name: "Doombot Legion" }] },
+  { name: "Doctor Octopus", exp: "core_2nd", leads: [{ category: "villains", nameContains: ["Sinister"] }] },
+  { name: "Loki", exp: "core_2nd", leads: [{ category: "villains", name: "Enemies of Asgard" }] },
+  { name: "Magneto", exp: "core_2nd", leads: [{ category: "villains", nameContains: ["Brotherhood", "X-Men"] }] },
+  { name: "Red Skull", exp: "core_2nd", leads: [{ category: "villains", nameContains: ["Hydra"] }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -176,11 +195,23 @@ const MASTERMINDS = [
 // verified. Each carries:
 //   overrides    — mechanical deck-construction changes the app actually
 //                  applies (see syncSchemeNumbers/syncRequiredCards in
-//                  app.js): `twists` (or `twistsByPlayers`), `bystanders`,
-//                  `henchmenDelta`, `heroCount` (or `heroCountByPlayers`),
-//                  `requiredVillainGroup` / `requiredHenchmen` /
-//                  `requiredHero` (forced in like a Mastermind's "always
-//                  leads", by name).
+//                  app.js): `twists` (or `twistsByPlayers`, or
+//                  `twistsPerVillainGroup` — a multiplier times the
+//                  resolved Villain Group count), `bystanders` (a flat
+//                  override) / `bystandersDelta` (added to the base
+//                  count unconditionally) / `bystandersDeltaByPlayers`
+//                  (added to the base count, only at the listed player
+//                  counts), `henchmenDelta`, `heroCount` (or
+//                  `heroCountByPlayers`), `villainCount` /
+//                  `villainCountByPlayers` (flat overrides) /
+//                  `villainCountDelta` (added to the base, e.g. "add an
+//                  extra Villain Group"), `requiredVillainGroup` /
+//                  `requiredHenchmen` / `requiredHero` (forced in like a
+//                  Mastermind's "always leads", by exact name), or
+//                  `requiredVillainGroupKeyword` (same, but resolved to
+//                  whichever available Villain Group(s) carry that
+//                  keyword — see VILLAIN_GROUPS' `keywords` above),
+//                  `extraHero` (a boolean — see syncExtraCard in app.js).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -443,14 +474,26 @@ const SCHEMES = [
   // directly from the physical cards. `requiredHero` (parallel to
   // `requiredVillainGroup`/`requiredHenchmen`) force-includes a specific
   // Hero the way a Scheme can already force a Villain Group or Henchmen
-  // group. Where a card's Setup/Special Rules reference a specific card
-  // by name that isn't one of this file's tracked Villain Groups/
+  // group. `requiredVillainGroupKeyword` force-includes whichever Villain
+  // Group(s) currently in the pool carry a given `keywords` entry (see
+  // VILLAIN_GROUPS below), picking randomly if more than one qualifies —
+  // for a Scheme like Marvel Zombies that names a keyword rather than a
+  // specific group, so it keeps working correctly as more expansions add
+  // more cards with that keyword. `villainCount`/`villainCountByPlayers`
+  // override the Villain Group count the same way `heroCount`/
+  // `heroCountByPlayers` already did for Heroes. `twistsPerVillainGroup`
+  // sets Twists to that multiplier times the (possibly just-overridden)
+  // Villain Group count, for a Scheme whose Twist count scales with it.
+  // `bystandersDeltaByPlayers` adds to the base per-player-count
+  // Bystanders total only at the listed player counts (vs. `bystanders`,
+  // a flat unconditional override). `extraHero` marks a Scheme that needs
+  // one random Hero beyond the normal Heroes lineup (see syncExtraCard in
+  // app.js) — shown in its own row in the Villain Deck section once
+  // randomized. Where a card's Setup/Special Rules reference a specific
+  // card by name that isn't one of this file's tracked Villain Groups/
   // Henchmen (e.g. "Frigga, Mother of Thor" — a card inside a Villain
-  // Group, not a group of its own; or "exactly one Villain Group with
-  // 'Rise of the Living Dead'" — a keyword search, not a named group),
-  // or splits the Villain Deck into several simultaneous sub-decks
-  // ("Breach the Nexus of All Realities"), that's left as setupNote/twist
-  // text only — it doesn't fit this app's numeric-override shape.
+  // Group, not a group of its own), that's left as setupNote/twist text
+  // only — it doesn't fit this app's numeric-override shape.
   {
     name: "Trash Earth with Hugest Party Ever",
     exp: "what_if",
@@ -463,8 +506,9 @@ const SCHEMES = [
   {
     name: "Breach the Nexus of All Realities",
     exp: "what_if",
+    overrides: { villainCountByPlayers: { 1: 3, 2: 3 }, twistsPerVillainGroup: 2 },
     setupNote:
-      '(1-2 players: Use 3 Villain Groups.) Stack each Villain Group separately face down as its own "Reality." Add 2 Twists to each Reality. Shuffle together all the Henchmen, Master Strikes, and Bystanders for your player count and randomly distribute them amongst all the Realities, as evenly as possible. Shuffle each Reality separately.\nSpecial Rules: Each turn, you choose which Reality (Villain Deck) plays a card. They all play into the same city.',
+      'Stack each Villain Group separately face down as its own "Reality." Shuffle together all the Henchmen, Master Strikes, and Bystanders for your player count and randomly distribute them amongst all the Realities, as evenly as possible. Shuffle each Reality separately.\nSpecial Rules: Each turn, you choose which Reality (Villain Deck) plays a card. They all play into the same city.',
     twist:
       'Stack this Twist next to this Reality as a "Dimensional Breach." If this was the second Breach for that Reality, destroy that Reality, KO\'ing all its cards.',
     evilWins: "When all Realities have been destroyed.",
@@ -481,10 +525,104 @@ const SCHEMES = [
   {
     name: "Marvel Zombies",
     exp: "what_if",
-    overrides: { twists: 4 },
+    overrides: {
+      twists: 4,
+      requiredVillainGroupKeyword: "Rise of the Living Dead",
+      extraHero: true,
+      bystandersDeltaByPlayers: { 1: 3, 2: 3 },
+    },
     setupNote:
-      'Include exactly one Villain Group with "Rise of the Living Dead." Add 8 random cards from an extra Hero to the Villain Deck. 1-2 players: Add 3 extra Bystanders.\nSpecial Rules: Hero cards from the Villain Deck are "Zombie" Villains with Attack equal to their cost + 1, worth VP equal to their cost. They have "Ambush: Rise of the Living Dead. Fight: Play a copy of this card as a Hero, then put it into your Victory Pile as a Villain." (It still has Rise.)',
+      'Add 8 random cards from the extra Hero (shown in the Villain Deck section) to the Villain Deck.\nSpecial Rules: Hero cards from the Villain Deck are "Zombie" Villains with Attack equal to their cost + 1, worth VP equal to their cost. They have "Ambush: Rise of the Living Dead. Fight: Play a copy of this card as a Hero, then put it into your Victory Pile as a Villain." (It still has Rise.)',
     twist: 'Each Villain in the city with "Rise of the Living Dead" escapes. Then play another card from the Villain Deck.',
+    evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
+  },
+
+  // The nine Core Set (2nd Edition) schemes below are transcribed
+  // directly from the physical cards. Several share a title with a Core
+  // Set (2012) scheme but have meaningfully rewritten Setup/Twist/Evil
+  // Wins text in this edition — transcribed fresh from the photos, not
+  // copied from the 2012 entries above, since the numbers and mechanics
+  // genuinely differ card to card (e.g. Portals to the Dark Dimension
+  // reverses which Twists go to the Mastermind vs. the city, and flips
+  // "leftmost" to "rightmost"). "Enshrouded Identity" is new to this
+  // edition and has no 2012 counterpart at all.
+  {
+    name: "Unleash the Power of the Cosmic Cube",
+    exp: "core_2nd",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      "Twists 1–3: Each player discards a card.\nTwist 4: Each player discards two cards.\nTwists 5–6: Each player gains a Wound.\nTwist 7: Each player gains two Wounds.\nTwist 8: Evil Wins!",
+    evilWins: "",
+  },
+  {
+    name: "Portals to the Dark Dimension",
+    exp: "core_2nd",
+    overrides: { twists: 7 },
+    setupNote: 'Each Twist is a "Dark Portal."',
+    twist:
+      "Twists 1–5: Put this Dark Portal above the rightmost city space that doesn't yet have a Dark Portal. Villains in that city space get +1 Attack.\nTwist 6: Put this Dark Portal above the Mastermind. The Mastermind gets +1 Attack.\nTwist 7: Evil Wins!",
+    evilWins: "",
+  },
+  {
+    name: "Replace Earth's Leaders with Killbots",
+    exp: "core_2nd",
+    overrides: { twists: 10 },
+    setupNote:
+      'Stack 1 additional Twist next to this Scheme as a "Killgorithm."\nSpecial Rules: Bystanders in the Villain Deck are "Killbot" Villains with Attack equal to the number of Killgorithms. They have: "Fight: Rescue this as a Bystander."',
+    twist: "Twists 1–9: Add this Twist to the Killgorithms. Two Killbots enter the city from the Bystander Deck.\nTwist 10: All Killbots in the city escape.",
+    evilWins: "When there are 6 Bystander cards in the Escape Pile.",
+  },
+  {
+    name: "Secret Invasion of the Skrull Shapeshifters",
+    exp: "core_2nd",
+    overrides: { twists: 6, requiredVillainGroup: "Skrulls", extraHero: true },
+    setupNote:
+      'Add an extra Hero to the Hero Deck (shown in the Villain Deck section). Shuffle 4 random cards from the Hero Deck into the Villain Deck.\nSpecial Rules: Hero cards in the Villain Deck and city are "Skrull Infiltrator" Villains with Attack equal to that Hero\'s cost + 3. They have "Fight: Either KO this card or choose a player to gain it as a Hero."',
+    twist: "Twists 1–5: The leftmost Hero from the HQ enters the Sewers as a Skrull Infiltrator.\nTwist 6: All Skrulls in the city escape.",
+    evilWins: "When there are 6 Hero cards in the Escape Pile.",
+  },
+  {
+    name: "Super Hero Civil War",
+    exp: "core_2nd",
+    overrides: { twistsByPlayers: { 1: 6, 2: 6, 3: 6, 4: 5, 5: 5 }, heroCountByPlayers: { 2: 4 } },
+    setupNote: "",
+    twist: "KO all Heroes from the HQ.",
+    evilWins: "When the Hero Deck runs out.",
+  },
+  {
+    name: "Bank Robbery Hostage Crisis",
+    exp: "core_2nd",
+    overrides: { twists: 9, villainCountDelta: 1 },
+    setupNote: "Special Rules: Each Villain gets +1 Attack for each Bystander it has.",
+    twist:
+      "Twists 1–8: Any Villain in the Bank captures 2 Bystanders. If the Bank is empty, move a Villain from another city space to the Bank instead. Either way, play another card from the Villain Deck.\nTwist 9: Put all Bystanders from the city into the Escape Pile.",
+    evilWins: "When 5 Bystanders are in the Escape Pile or the Villain Deck runs out.",
+  },
+  {
+    name: "Enshrouded Identity",
+    exp: "core_2nd",
+    overrides: { twistsByPlayers: { 1: 4, 2: 5, 3: 6, 4: 7, 5: 8 } },
+    setupNote:
+      'There is no Mastermind yet — this Scheme starts with 3 S.H.I.E.L.D. Officers as "Bodyguards" in the Mastermind\'s place instead. (The Mastermind below is still randomized as usual for whenever one gets added — just don\'t reveal or use it until the Special Rules below add it.)\nSpecial Rules: Bodyguards are Villains with 3 Attack and "Fight: Either KO this card or choose a player to gain it as a Hero." Whenever a Master Strike occurs, if there is no Mastermind yet, add a Bodyguard instead. The first time there are no Bodyguards, add a random Mastermind to the game. (Do any "Start of Game" effects it has.) You can\'t fight that Mastermind while it has any Bodyguards.',
+    twist: "Add two Bodyguards.",
+    evilWins: "When there are 9 Bodyguards or the Villain Deck runs out.",
+  },
+  {
+    name: "The Legacy Virus",
+    exp: "core_2nd",
+    overrides: { twists: 9 },
+    setupNote: "Wound Deck holds 6 Wounds per player.",
+    twist:
+      'Stack this Twist next to the Scheme as a "Virus Mutation." Then each player reveals a Hero whose cost is greater than the number of Virus Mutations or gains a Wound.',
+    evilWins: "When the Wound Deck or the Villain Deck runs out.",
+  },
+  {
+    name: "Negative Zone Prison Breakout",
+    exp: "core_2nd",
+    overrides: { twistsByPlayers: { 1: 7, 2: 8, 3: 9, 4: 10, 5: 11 }, villainCountDelta: 1, bystandersDelta: 4 },
+    setupNote: "",
+    twist: "Play two cards from the Villain Deck.",
     evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
   },
 ];
@@ -541,7 +679,20 @@ const VILLAIN_GROUPS = [
   { name: "Intergalactic Party Animals", exp: "what_if" },
   { name: "Rival Overlords", exp: "what_if" },
   { name: "Strange's Demons", exp: "what_if" },
-  { name: "Zombie Avengers", exp: "what_if" },
+  { name: "Zombie Avengers", exp: "what_if", keywords: ["Rise of the Living Dead"] },
+
+  // Doctor Octopus (core_2nd) leads any group with "Sinister" in its
+  // name, and Magneto any with "Brotherhood" or "X-Men" — a name-match,
+  // not a curated `keywords` tag, so nothing extra needs setting on
+  // these entries beyond the name itself; see Mastermind `leads` above.
+  { name: "Brotherhood of Mutants", exp: "core_2nd" },
+  { name: "Enemies of Asgard", exp: "core_2nd" },
+  { name: "Hydra", exp: "core_2nd" },
+  { name: "Masters of Evil", exp: "core_2nd" },
+  { name: "Radiation", exp: "core_2nd" },
+  { name: "Sinister Spider-Foes", exp: "core_2nd" },
+  { name: "Skrulls", exp: "core_2nd" },
+  { name: "Sinister Syndicate", exp: "core_2nd" },
 ];
 
 const HENCHMEN = [
@@ -571,6 +722,11 @@ const HENCHMEN = [
   { name: "Giants of Jotunheim", exp: "what_if" },
   { name: "Ultron Sentries", exp: "what_if" },
   { name: "Vibranium Liberator Drones", exp: "what_if" },
+
+  { name: "Doombot Legion", exp: "core_2nd" },
+  { name: "Hand Ninjas", exp: "core_2nd" },
+  { name: "Savage Land Mutates", exp: "core_2nd" },
+  { name: "Sentinel", exp: "core_2nd" },
 ];
 
 const HEROES = [
@@ -730,6 +886,22 @@ const HEROES = [
   { name: "Party Thor", exp: "what_if", team: "Guardians of the Multiverse" },
   { name: "Star-Lord T'Challa", exp: "what_if", team: "Guardians of the Multiverse" },
   { name: "Uatu, The Watcher", exp: "what_if", team: "Guardians of the Multiverse" },
+
+  { name: "Black Widow", exp: "core_2nd", team: "Avengers" },
+  { name: "Captain America", exp: "core_2nd", team: "Avengers" },
+  { name: "Cyclops", exp: "core_2nd", team: "X-Men" },
+  { name: "Emma Frost", exp: "core_2nd", team: "X-Men" },
+  { name: "Gambit", exp: "core_2nd", team: "X-Men" },
+  { name: "Hawkeye", exp: "core_2nd", team: "Avengers" },
+  { name: "Hulk", exp: "core_2nd", team: "Avengers" },
+  { name: "Iron Man", exp: "core_2nd", team: "Avengers" },
+  { name: "Nick Fury", exp: "core_2nd", team: "S.H.I.E.L.D." },
+  { name: "Rogue", exp: "core_2nd", team: "X-Men" },
+  { name: "Spider-Man", exp: "core_2nd", team: "Spider-Friends" },
+  { name: "Spider-Man (Miles Morales)", exp: "core_2nd", team: "Spider-Friends" },
+  { name: "Storm", exp: "core_2nd", team: "X-Men" },
+  { name: "Thor", exp: "core_2nd", team: "Avengers" },
+  { name: "Wolverine", exp: "core_2nd", team: "X-Men" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
