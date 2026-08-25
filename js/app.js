@@ -188,7 +188,7 @@
   // Runtime-only bookkeeping (not persisted): which result slots were filled
   // by forceIncludeSignature (a required card) rather than chosen by the
   // player, per category.
-  const signatureFlags = { villains: [], henchmen: [] };
+  const signatureFlags = { villains: [], henchmen: [], heroes: [] };
 
   function currentMastermindData() {
     const mm = (state.result.mastermind || [])[0];
@@ -203,16 +203,21 @@
   }
 
   /** Every card name that MUST be in play for this category right now,
-   * from the current Mastermind's "always leads" and/or the current
-   * Scheme's required Villain Group / Henchmen group. */
+   * from the current Mastermind's "always leads" (its `leads` array — one
+   * Mastermind can require more than one card, e.g. a Henchmen group AND
+   * a specific Hero) and/or the current Scheme's required Villain
+   * Group / Henchmen group / Hero. */
   function requiredCardNames(categoryKey) {
     const names = [];
     const mmData = currentMastermindData();
-    if (mmData && mmData.leadsCategory === categoryKey && mmData.leadsName) names.push(mmData.leadsName);
+    (mmData && mmData.leads ? mmData.leads : []).forEach((req) => {
+      if (req.category === categoryKey && req.name) names.push(req.name);
+    });
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
     if (categoryKey === "villains" && overrides.requiredVillainGroup) names.push(overrides.requiredVillainGroup);
     if (categoryKey === "henchmen" && overrides.requiredHenchmen) names.push(overrides.requiredHenchmen);
+    if (categoryKey === "heroes" && overrides.requiredHero) names.push(overrides.requiredHero);
     return names;
   }
 
@@ -222,7 +227,7 @@
    * card doesn't permanently squat a slot and starve room for whatever's
    * required now. */
   function clearStaleRequiredCards() {
-    ["villains", "henchmen"].forEach((categoryKey) => {
+    ["villains", "henchmen", "heroes"].forEach((categoryKey) => {
       const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
       const required = new Set(requiredCardNames(categoryKey).filter((name) => pool.some((c) => c.name === name)));
       const flags = signatureFlags[categoryKey];
@@ -287,7 +292,7 @@
    * Mastermind and Scheme require. Safe to call any time either changes. */
   function syncRequiredCards() {
     clearStaleRequiredCards();
-    ["villains", "henchmen"].forEach((categoryKey) => {
+    ["villains", "henchmen", "heroes"].forEach((categoryKey) => {
       requiredCardNames(categoryKey).forEach((name) => forceIncludeSignature(categoryKey, name));
     });
   }
@@ -376,7 +381,7 @@
 
   function requiredReason(categoryKey, item) {
     const mmData = currentMastermindData();
-    if (mmData && mmData.leadsCategory === categoryKey && mmData.leadsName === item.name) {
+    if (mmData && (mmData.leads || []).some((req) => req.category === categoryKey && req.name === item.name)) {
       return `always led by ${mmData.name}`;
     }
     const scheme = currentSchemeData();
@@ -385,6 +390,9 @@
       return `required by ${scheme.name}`;
     }
     if (categoryKey === "henchmen" && overrides.requiredHenchmen === item.name) {
+      return `required by ${scheme.name}`;
+    }
+    if (categoryKey === "heroes" && overrides.requiredHero === item.name) {
       return `required by ${scheme.name}`;
     }
     return null;

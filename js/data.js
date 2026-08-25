@@ -38,13 +38,20 @@
  * won't draw from an empty pool, and will warn if a pool is too small
  * for the setup size requested.
  *
- * A Mastermind entry can optionally carry `leadsCategory` ("villains" or
- * "henchmen") + `leadsName`, matching the "always leads ___" text on the
- * physical Mastermind card. When set, the app auto-includes that card
- * whenever the Mastermind is in play (unless you've excluded it in Card
- * Pool, or every slot in that category is already manually locked). Note
- * it can point at either category — e.g. Doctor Doom always leads the
- * Doombot Legion, which is a Henchman, not a Villain Group.
+ * A Mastermind entry can optionally carry `leads`, an array of
+ * `{ category, name }` pairs ("villains", "henchmen", or "heroes"),
+ * matching the "always leads ___" (and, rarely, "always include ___ as a
+ * Hero") text on the physical Mastermind card. When set, the app
+ * auto-includes each of those cards whenever the Mastermind is in play
+ * (unless you've excluded it in Card Pool, or every slot in that
+ * category is already manually locked). Most Masterminds have exactly
+ * one entry — e.g. Doctor Doom always leads the Doombot Legion, a
+ * Henchman, not a Villain Group — but it's an array because a few
+ * require more than one simultaneously (e.g. Killmonger, The Betrayer
+ * leads a Henchmen group AND always includes a specific Hero). Omit
+ * `leads` entirely for a Mastermind with no specific required card (e.g.
+ * one that "leads any villain group" — that's not a forced named card,
+ * just flavor text).
  *
  * A Hero entry can optionally carry `team` (e.g. "Avengers", "X-Men"),
  * shown as a tag and usable as a Team Theme filter to build an
@@ -107,13 +114,14 @@ const EXPANSIONS = [
   { id: "revelations", name: "Revelations", confidence: "none" },
   { id: "villains", name: "Legendary: Villains", confidence: "verified" },
   { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
+  { id: "what_if", name: "Marvel Studios: What If...?", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
-  { name: "Doctor Doom", exp: "core", leadsCategory: "henchmen", leadsName: "Doombot Legion" },
-  { name: "Loki", exp: "core", leadsCategory: "villains", leadsName: "Enemies of Asgard" },
-  { name: "Magneto", exp: "core", leadsCategory: "villains", leadsName: "Brotherhood" },
-  { name: "Red Skull", exp: "core", leadsCategory: "villains", leadsName: "Hydra" },
+  { name: "Doctor Doom", exp: "core", leads: [{ category: "henchmen", name: "Doombot Legion" }] },
+  { name: "Loki", exp: "core", leads: [{ category: "villains", name: "Enemies of Asgard" }] },
+  { name: "Magneto", exp: "core", leads: [{ category: "villains", name: "Brotherhood" }] },
+  { name: "Red Skull", exp: "core", leads: [{ category: "villains", name: "Hydra" }] },
 
   { name: "Apocalypse", exp: "dark_city" },
   { name: "Kingpin", exp: "dark_city" },
@@ -139,14 +147,28 @@ const MASTERMINDS = [
   { name: "Sin", exp: "fear_itself" },
   { name: "Doctor Doom (Battleworld)", exp: "secret_wars" },
 
-  { name: "Doctor Strange", exp: "villains", leadsCategory: "villains", leadsName: "Defenders" },
-  { name: "Nick Fury", exp: "villains", leadsCategory: "villains", leadsName: "Avengers" },
-  { name: "Odin", exp: "villains", leadsCategory: "henchmen", leadsName: "Asgardian Warrior" },
-  { name: "Professor X", exp: "villains", leadsCategory: "villains", leadsName: "X-Men First Class" },
+  { name: "Doctor Strange", exp: "villains", leads: [{ category: "villains", name: "Defenders" }] },
+  { name: "Nick Fury", exp: "villains", leads: [{ category: "villains", name: "Avengers" }] },
+  { name: "Odin", exp: "villains", leads: [{ category: "henchmen", name: "Asgardian Warrior" }] },
+  { name: "Professor X", exp: "villains", leads: [{ category: "villains", name: "X-Men First Class" }] },
 
-  { name: "Iron Monger", exp: "first_ten_years", leadsCategory: "villains", leadsName: "Iron Foes" },
-  { name: "Loki", exp: "first_ten_years", leadsCategory: "villains", leadsName: "Enemies of Asgard" },
-  { name: "Red Skull", exp: "first_ten_years", leadsCategory: "villains", leadsName: "HYDRA" },
+  { name: "Iron Monger", exp: "first_ten_years", leads: [{ category: "villains", name: "Iron Foes" }] },
+  { name: "Loki", exp: "first_ten_years", leads: [{ category: "villains", name: "Enemies of Asgard" }] },
+  { name: "Red Skull", exp: "first_ten_years", leads: [{ category: "villains", name: "HYDRA" }] },
+
+  // Hank Pym, Yellowjacket "leads any villain group" — not a specific
+  // named card, so there's nothing to force-include; `leads` stays empty.
+  { name: "Hank Pym, Yellowjacket", exp: "what_if" },
+  {
+    name: "Killmonger, The Betrayer",
+    exp: "what_if",
+    leads: [
+      { category: "henchmen", name: "Vibranium Liberator Drones" },
+      { category: "heroes", name: "Killmonger, Spec Ops" },
+    ],
+  },
+  { name: "Ultron Infinity", exp: "what_if", leads: [{ category: "henchmen", name: "Ultron Sentries" }] },
+  { name: "Zombie Scarlet Witch", exp: "what_if", leads: [{ category: "villains", name: "Zombie Avengers" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -156,8 +178,9 @@ const MASTERMINDS = [
 //                  applies (see syncSchemeNumbers/syncRequiredCards in
 //                  app.js): `twists` (or `twistsByPlayers`), `bystanders`,
 //                  `henchmenDelta`, `heroCount` (or `heroCountByPlayers`),
-//                  `requiredVillainGroup` / `requiredHenchmen` (forced in
-//                  like a Mastermind's "always leads", by name).
+//                  `requiredVillainGroup` / `requiredHenchmen` /
+//                  `requiredHero` (forced in like a Mastermind's "always
+//                  leads", by name).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -415,6 +438,55 @@ const SCHEMES = [
       "Twist 1: Put the Dark Portal above the Mastermind; the Mastermind gets +1 Attack.\nTwists 2–6: Put the Dark Portal in the leftmost city space that doesn't yet have one; Villains there get +1 Attack.\nTwist 7: Evil Wins!",
     evilWins: "",
   },
+
+  // The four Marvel Studios: What If...? schemes below are transcribed
+  // directly from the physical cards. `requiredHero` (parallel to
+  // `requiredVillainGroup`/`requiredHenchmen`) force-includes a specific
+  // Hero the way a Scheme can already force a Villain Group or Henchmen
+  // group. Where a card's Setup/Special Rules reference a specific card
+  // by name that isn't one of this file's tracked Villain Groups/
+  // Henchmen (e.g. "Frigga, Mother of Thor" — a card inside a Villain
+  // Group, not a group of its own; or "exactly one Villain Group with
+  // 'Rise of the Living Dead'" — a keyword search, not a named group),
+  // or splits the Villain Deck into several simultaneous sub-decks
+  // ("Breach the Nexus of All Realities"), that's left as setupNote/twist
+  // text only — it doesn't fit this app's numeric-override shape.
+  {
+    name: "Trash Earth with Hugest Party Ever",
+    exp: "what_if",
+    overrides: { twists: 6, requiredHero: "Party Thor", requiredVillainGroup: "Intergalactic Party Animals" },
+    setupNote: "Special Rules: You can't fight or defeat Frigga.",
+    twist:
+      'If Frigga, Mother of Thor, is in play, stack this Twist next to the Scheme as "Discovered Wreckage." Otherwise: Search the Villain Deck for Frigga and she does her Ambush ability. Then shuffle this Twist back into the Villain Deck.',
+    evilWins: "When 5 Wreckages have been Discovered.",
+  },
+  {
+    name: "Breach the Nexus of All Realities",
+    exp: "what_if",
+    setupNote:
+      '(1-2 players: Use 3 Villain Groups.) Stack each Villain Group separately face down as its own "Reality." Add 2 Twists to each Reality. Shuffle together all the Henchmen, Master Strikes, and Bystanders for your player count and randomly distribute them amongst all the Realities, as evenly as possible. Shuffle each Reality separately.\nSpecial Rules: Each turn, you choose which Reality (Villain Deck) plays a card. They all play into the same city.',
+    twist:
+      'Stack this Twist next to this Reality as a "Dimensional Breach." If this was the second Breach for that Reality, destroy that Reality, KO\'ing all its cards.',
+    evilWins: "When all Realities have been destroyed.",
+  },
+  {
+    name: "Collect an Interstellar Zoo",
+    exp: "what_if",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      'Each player reveals their hand. Starting with the current player, then clockwise, the first player to have one of this kind of Hero in their hand or discard pile stacks it next to this Scheme, "stolen for the Zoo."\nTwist 1: Strength Hero. Twist 2: Instinct Hero. Twist 3: Covert Hero. Twist 4: Tech Hero. Twist 5: Ranged Hero (assumed to follow this file\'s canonical Strength/Instinct/Covert/Tech/Ranged order — verify against the physical card if the exact icon match matters).\nTwist 6: 5-cost Hero. Twist 7: 4-cost Hero. Twist 8: 3-cost Hero. Twist 9: 0-cost Hero. Twist 10: a Hero with a Recruit icon.\nTwist 11: a Hero with an Attack icon.',
+    evilWins: "When the Zoo has 5 Heroes.",
+  },
+  {
+    name: "Marvel Zombies",
+    exp: "what_if",
+    overrides: { twists: 4 },
+    setupNote:
+      'Include exactly one Villain Group with "Rise of the Living Dead." Add 8 random cards from an extra Hero to the Villain Deck. 1-2 players: Add 3 extra Bystanders.\nSpecial Rules: Hero cards from the Villain Deck are "Zombie" Villains with Attack equal to their cost + 1, worth VP equal to their cost. They have "Ambush: Rise of the Living Dead. Fight: Play a copy of this card as a Hero, then put it into your Victory Pile as a Villain." (It still has Rise.)',
+    twist: 'Each Villain in the city with "Rise of the Living Dead" escapes. Then play another card from the Villain Deck.',
+    evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -464,6 +536,12 @@ const VILLAIN_GROUPS = [
   { name: "Gamma Hunters", exp: "first_ten_years" },
   { name: "HYDRA", exp: "first_ten_years" },
   { name: "Iron Foes", exp: "first_ten_years" },
+
+  { name: "Black Order Guards", exp: "what_if" },
+  { name: "Intergalactic Party Animals", exp: "what_if" },
+  { name: "Rival Overlords", exp: "what_if" },
+  { name: "Strange's Demons", exp: "what_if" },
+  { name: "Zombie Avengers", exp: "what_if" },
 ];
 
 const HENCHMEN = [
@@ -489,6 +567,10 @@ const HENCHMEN = [
   { name: "Hammer Drone Army", exp: "first_ten_years" },
   { name: "Hydra Spies", exp: "first_ten_years" },
   { name: "Ten Rings Fanatics", exp: "first_ten_years" },
+
+  { name: "Giants of Jotunheim", exp: "what_if" },
+  { name: "Ultron Sentries", exp: "what_if" },
+  { name: "Vibranium Liberator Drones", exp: "what_if" },
 ];
 
 const HEROES = [
@@ -639,6 +721,15 @@ const HEROES = [
   { name: "Iron Man", exp: "first_ten_years", team: "Avengers" },
   { name: "Nick Fury", exp: "first_ten_years", team: "S.H.I.E.L.D." },
   { name: "Thor", exp: "first_ten_years", team: "Avengers" },
+
+  { name: "Apocalyptic Black Widow", exp: "what_if", team: "Guardians of the Multiverse" },
+  { name: "Captain Carter", exp: "what_if", team: "Guardians of the Multiverse" },
+  { name: "Doctor Strange Supreme", exp: "what_if", team: "Guardians of the Multiverse" },
+  { name: "Gamora, Destroyer of Thanos", exp: "what_if", team: "Guardians of the Multiverse" },
+  { name: "Killmonger, Spec Ops", exp: "what_if", team: "Guardians of the Multiverse" },
+  { name: "Party Thor", exp: "what_if", team: "Guardians of the Multiverse" },
+  { name: "Star-Lord T'Challa", exp: "what_if", team: "Guardians of the Multiverse" },
+  { name: "Uatu, The Watcher", exp: "what_if", team: "Guardians of the Multiverse" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
