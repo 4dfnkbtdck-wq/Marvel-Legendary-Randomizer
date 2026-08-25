@@ -126,7 +126,7 @@ const EXPANSIONS = [
   { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "light" },
   { id: "venom", name: "Venom", confidence: "light" },
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
-  { id: "dimensions", name: "Dimensions", confidence: "none" },
+  { id: "dimensions", name: "Dimensions", confidence: "light" },
   { id: "revelations", name: "Revelations", confidence: "none" },
   { id: "villains", name: "Legendary: Villains", confidence: "verified" },
   { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
@@ -221,6 +221,8 @@ const MASTERMINDS = [
 
   { name: "Evil Deadpool", exp: "deadpool", leads: [{ category: "villains", name: "Evil Deadpool Corpse" }] },
   { name: "Macho Gomez", exp: "deadpool", leads: [{ category: "villains", name: "Deadpool's \"Friends\"" }] },
+
+  { name: "J. Jonah Jameson", exp: "dimensions", leads: [{ category: "henchmen", name: "Spider-Slayer" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1288,6 +1290,9 @@ const HENCHMEN = [
 
   { name: "Cape-Killers", exp: "civil_war" },
   { name: "Mandroid", exp: "civil_war" },
+
+  { name: "Circus of Crime", exp: "dimensions" },
+  { name: "Spider-Slayer", exp: "dimensions" },
 ];
 
 const HEROES = [
@@ -1401,6 +1406,12 @@ const HEROES = [
   { name: "Slapstick", exp: "deadpool", team: "Mercs For Money" },
   { name: "Solo", exp: "deadpool", team: "Mercs For Money" },
   { name: "Stingray", exp: "deadpool", team: "Mercs For Money" },
+
+  { name: "Howard the Duck", exp: "dimensions" },
+  { name: "Jessica Jones", exp: "dimensions", team: "Marvel Knights" },
+  { name: "Man-Thing", exp: "dimensions" },
+  { name: "Ms. America", exp: "dimensions", team: "Avengers" },
+  { name: "Squirrel Girl", exp: "dimensions", team: "Avengers" },
 
   { name: "Doctor Strange", exp: "dr_strange" },
   { name: "Scarlet Witch", exp: "dr_strange" },
