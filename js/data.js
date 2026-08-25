@@ -114,7 +114,7 @@ const EXPANSIONS = [
   { id: "champions", name: "Champions", confidence: "moderate" },
   { id: "civil_war", name: "Civil War", confidence: "light" },
   { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "light" },
-  { id: "annihilation", name: "Annihilation", confidence: "light" },
+  { id: "annihilation", name: "Annihilation", confidence: "verified" },
   { id: "ant_man", name: "Ant-Man", confidence: "light" },
   { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "light" },
   { id: "deadpool", name: "Deadpool", confidence: "light" },
@@ -164,7 +164,8 @@ const MASTERMINDS = [
   { name: "Maestro", exp: "world_war_hulk" },
   { name: "Vulture", exp: "spiderman_homecoming" },
   { name: "Vulcan", exp: "realm_of_kings" },
-  { name: "Annihilus", exp: "annihilation" },
+  { name: "Annihilus", exp: "annihilation", leads: [{ category: "villains", name: "Annihilation Wave" }] },
+  { name: "Kang the Conqueror", exp: "annihilation", leads: [{ category: "villains", name: "Timelines of Kang" }] },
   { name: "Sin", exp: "fear_itself" },
   { name: "Doctor Doom (Battleworld)", exp: "secret_wars" },
 
@@ -687,6 +688,46 @@ const SCHEMES = [
       'Put the Hero from the HQ space under the Bank into a "Mega-Corp Domination" Stack matching its Hero Class (off of the board). Do the listed effect for that Mega-Corp:\nGreen Globe: Each player discards a card with a Recruit icon.\nAlchemax: Each player discards a Hero of the printed type or gains a Wound.\nPublic Eye: Each player discards two cards, then draws a card.\nD/MONIX: Each player discards a card with an Attack icon.\nStark-Fujikawa: A Villain from your Victory Pile reenters the city.',
     evilWins: "When a single Mega-Corp has 3 Dominations.",
   },
+
+  // The four Annihilation schemes below are transcribed directly from
+  // the physical cards.
+  {
+    name: "Breach Parallel Dimensions",
+    exp: "annihilation",
+    overrides: { twists: 6, bystandersDelta: 4 },
+    setupNote:
+      'Deal the shuffled Villain Deck into several "Dimension" decks where the first Dimension has 1 card, the next has 2 cards, then 3, 4, etc. (The final Dimension might not have enough cards to reach its full number.)\nSpecial Rules: Each turn, you choose which Dimension you play a card from. All players have "Focus 1 Recruit → Reveal the top card of any Dimension and put it back on the top or bottom of that deck." If a Dimension ever has no cards left, even in the middle of a card ability, it is destroyed. Mark it with a face up Wound.',
+    twist: "Choose a Dimension and play two cards from it. (It's ok if it only has 1.)",
+    evilWins: "When at least half of the original Dimensions are destroyed.",
+  },
+  {
+    name: "Pulse Waves from the Negative Zone",
+    exp: "annihilation",
+    overrides: { twists: 9 },
+    setupNote: "",
+    twist:
+      'Twists 1, 3, 5, 7: "Negative Pulse" — this turn, Heroes in the HQ cost -1 Recruit and Villains and Masterminds get -1 Attack.\nTwists 2, 4, 6, 8: "Positive Pulse" — this turn, Heroes in the HQ cost +1 Recruit and Villains and Masterminds get +1 Attack.\nTwist 9: Evil Wins!',
+    evilWins: "",
+  },
+  {
+    name: "Put Humanity on Trial",
+    exp: "annihilation",
+    overrides: { twists: 11 },
+    setupNote:
+      'Stack 11 Bystanders next to the Scheme face down as "Galactic Jurors."\nSpecial Rules: Each Twist gives you a challenge to achieve this turn. If you do it, you have convinced a Juror, and you rescue them. If you don\'t, put that Juror face up next to the Villain Deck, voting to condemn Humanity.',
+    twist:
+      'Twists 1–2: "Opening Arguments" — discard three cards with different names.\nTwists 3, 5, 7: "Question Witnesses" — recruit a Hero that costs 5 or more.\nTwists 4, 6, 8: "Introduce Evidence" — defeat Villain(s) worth 3VP or more.\nTwists 9–11: "Closing Arguments" — defeat the Mastermind.',
+    evilWins: "When 6 Jurors vote to condemn Humanity.",
+  },
+  {
+    name: "Sneak Attack the Heroes' Homes",
+    exp: "annihilation",
+    overrides: { twists: 6 },
+    setupNote:
+      "Each player chooses a Hero to be part of the Hero Deck. Randomly select other Heroes up to the normal number of Heroes. Each player adds to their starting deck three non-rare cards with different names from the Hero they chose and three Wounds.",
+    twist: "Twists 1–5: Each player discards a non-grey Hero or gains a Wound.\nTwist 6: Evil Wins!",
+    evilWins: "",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -758,6 +799,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Alchemax Enforcers", exp: "2099" },
   { name: "False Aesir of Alchemax", exp: "2099" },
+
+  { name: "Annihilation Wave", exp: "annihilation" },
+  { name: "Timelines of Kang", exp: "annihilation" },
 ];
 
 const HENCHMEN = [
@@ -866,9 +910,11 @@ const HEROES = [
   { name: "War Machine", exp: "civil_war" },
   { name: "Black Panther", exp: "civil_war" },
 
-  { name: "Nova (Richard Rider)", exp: "annihilation" },
-  { name: "Quasar", exp: "annihilation" },
-  { name: "Gladiator", exp: "annihilation" },
+  { name: "Brainstorm", exp: "annihilation", team: "Fantastic Four" },
+  { name: "Fantastic Four United", exp: "annihilation", team: "Fantastic Four" },
+  { name: "Heralds of Galactus", exp: "annihilation" },
+  { name: "Psi-Lord", exp: "annihilation", team: "Fantastic Four" },
+  { name: "Super-Skrull", exp: "annihilation" },
 
   { name: "Ant-Man", exp: "ant_man" },
   { name: "Wasp", exp: "ant_man" },
