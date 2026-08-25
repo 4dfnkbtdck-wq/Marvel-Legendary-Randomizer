@@ -377,6 +377,18 @@ const MASTERMINDS = [
 //                  same idea but randomized rather than named — see
 //                  `extraVillainGroup` in the Mastermind doc comment
 //                  above), or
+//                  `extraHeroCount` (a number, optionally paired with
+//                  `extraHeroGroupLabel`) for a Scheme that draws a
+//                  whole second, separate group of random Heroes on top
+//                  of the normal Hero Deck, e.g. "The Time Heist"'s
+//                  4-Hero "Past Hero Deck" (paired with `heroCount: 4`
+//                  to shrink the normal Hero Deck to match the card's
+//                  "Use 4 Heroes in the Hero Deck, plus 4 other
+//                  Heroes..."). `extraHeroGroupLabel` names the shown
+//                  section (falls back to "Extra Heroes"); see
+//                  syncExtraHeroGroup in app.js. Same "extra card" idea
+//                  as `extraHero` above, just for several cards at once
+//                  rather than one), or
 //                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
 //                  must be `perTeam` Heroes from each of `count` distinct
 //                  Teams, e.g. Civil War's "Avengers vs. X-Men": 3 Heroes
@@ -1665,7 +1677,7 @@ const SCHEMES = [
   {
     name: "The Time Heist",
     exp: "infinity_saga",
-    overrides: { twists: 11 },
+    overrides: { twists: 11, heroCount: 4, extraHeroCount: 4, extraHeroGroupLabel: "Past Hero Deck" },
     setupNote:
       'Use 4 Heroes in the Hero Deck, plus 4 other Heroes to make a "Past Hero Deck." Above the board, make room for an alternate city called "The Past." It has the normal 5 spaces, from Sewers to Bridge. The Past has its own "Past HQ" filled by the "Past Hero Deck." To start, play as if "The Past" city, HQ, and Hero Deck don\'t exist.',
     twist:

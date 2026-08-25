@@ -29,6 +29,7 @@
       keywordChoices: {},
       extraCard: null,
       extraVillainGroup: null,
+      extraHeroGroup: [],
       heroTeamSplit: null,
       unveiledScheme: null,
     };
@@ -55,6 +56,7 @@
         keywordChoices: {},
         extraCard: null,
         extraVillainGroup: null,
+        extraHeroGroup: [],
         heroTeamSplit: null,
         unveiledScheme: null,
       };
@@ -146,6 +148,18 @@
     return extraName ? base.concat([{ name: extraName }]) : base;
   }
 
+  /** Adds the current `extraHeroGroup` members (if any — see
+   * syncExtraHeroGroup) to an exclude list for a Heroes draw, so a card
+   * already sitting in the extra group (e.g. "The Time Heist"'s Past Hero
+   * Deck) never also gets pulled into the normal Heroes result — mirrors
+   * heroDrawExclusions/villainDrawExclusions above. Pass the category's own
+   * key; a no-op for every other category. */
+  function extraHeroGroupDrawExclusions(categoryKey, base) {
+    if (categoryKey !== "heroes") return base;
+    const names = (state.extraHeroGroup || []).map((h) => h.name);
+    return names.length ? base.concat(names.map((name) => ({ name }))) : base;
+  }
+
   function pickRandom(list, n, exclude) {
     const excludeNames = new Set((exclude || []).map((c) => c.name));
     const candidates = list.filter((c) => !excludeNames.has(c.name));
@@ -170,7 +184,10 @@
 
     const lockedItems = keepLocked ? existing.filter((_, i) => locks[i]) : [];
     const needed = n - lockedItems.length;
-    const fresh = needed > 0 ? pickRandom(pool, needed, villainDrawExclusions(category.key, heroDrawExclusions(category.key, lockedItems))) : [];
+    const fresh =
+      needed > 0
+        ? pickRandom(pool, needed, extraHeroGroupDrawExclusions(category.key, villainDrawExclusions(category.key, heroDrawExclusions(category.key, lockedItems))))
+        : [];
     const combined = lockedItems.concat(fresh);
 
     state.result[category.key] = combined;
@@ -206,7 +223,7 @@
     if (categoryKey === "heroes" && state.heroTeamSplit && existing[index]) {
       pool = pool.filter((c) => c.team === existing[index].team);
     }
-    const [picked] = pickRandom(pool, 1, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, existing)));
+    const [picked] = pickRandom(pool, 1, extraHeroGroupDrawExclusions(categoryKey, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, existing))));
     if (picked) {
       existing[index] = picked;
       state.result[categoryKey] = existing;
@@ -402,7 +419,7 @@
         if (required.has(items[i].name)) continue;
         flags[i] = false;
         locks[i] = false;
-        const [fresh] = pickRandom(pool, 1, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items)));
+        const [fresh] = pickRandom(pool, 1, extraHeroGroupDrawExclusions(categoryKey, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items))));
         if (fresh) items[i] = fresh;
       }
       state.result[categoryKey] = items;
@@ -473,6 +490,7 @@
     });
     syncExtraCard();
     syncExtraVillainGroup();
+    syncExtraHeroGroup();
     syncUnveiledScheme();
   }
 
@@ -570,6 +588,64 @@
     const candidates = pool.filter((c) => !mainNames.has(c.name));
     const [picked] = pickRandom(candidates, 1, state.extraVillainGroup ? [state.extraVillainGroup] : []);
     if (picked) state.extraVillainGroup = picked;
+    saveState();
+    renderResults();
+  }
+
+  /** A Scheme can carry `extraHeroCount` (a number, optionally paired with
+   * `extraHeroGroupLabel`) for a Scheme that draws a whole second, separate
+   * group of random Heroes beyond the normal Heroes result — e.g. "The Time
+   * Heist"'s 4-Hero "Past Hero Deck" on top of a normal Hero Deck reduced to
+   * 4 via `heroCount`. Same "extra card" idea as `extraHero`/
+   * `extraVillainGroup` above, just for several cards at once. Kept in
+   * state.extraHeroGroup (not one of the counted result categories) and
+   * reused where still valid — not duplicated with the main Heroes result
+   * or with itself — only topping up or re-picking what's missing, so a
+   * reroll of one slot (see rerollExtraHeroGroupSlot) doesn't reshuffle the
+   * others. Cleared/re-picked fresh when the Scheme itself changes (see the
+   * schemeSignature check in syncSchemeNumbers). */
+  function syncExtraHeroGroup() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    const n = overrides.extraHeroCount || 0;
+    if (!n) {
+      state.extraHeroGroup = [];
+      return;
+    }
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const validNames = new Set(pool.map((c) => c.name));
+    const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
+    const kept = [];
+    const keptNames = new Set();
+    (state.extraHeroGroup || []).forEach((c) => {
+      if (kept.length >= n) return;
+      if (!c || !validNames.has(c.name) || mainNames.has(c.name) || keptNames.has(c.name)) return;
+      kept.push(c);
+      keptNames.add(c.name);
+    });
+    const needed = n - kept.length;
+    if (needed <= 0) {
+      state.extraHeroGroup = kept;
+      return;
+    }
+    const exclude = kept.concat(Array.from(mainNames, (name) => ({ name })));
+    const fresh = pickRandom(pool, needed, exclude);
+    state.extraHeroGroup = kept.concat(fresh);
+  }
+
+  /** Rerolls just one slot of the current `extraHeroGroup` (see
+   * syncExtraHeroGroup above), leaving the rest of the group and the main
+   * Heroes result untouched. */
+  function rerollExtraHeroGroupSlot(index) {
+    const group = state.extraHeroGroup || [];
+    const current = group[index];
+    if (!current) return;
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
+    const exclude = group.filter((_, i) => i !== index).concat(Array.from(mainNames, (name) => ({ name }))).concat([current]);
+    const [picked] = pickRandom(pool, 1, exclude);
+    if (picked) group[index] = picked;
+    state.extraHeroGroup = group;
     saveState();
     renderResults();
   }
@@ -784,6 +860,7 @@
       clearKeywordChoicesWithPrefix("scheme:");
       state.extraCard = null;
       state.extraVillainGroup = null;
+      state.extraHeroGroup = [];
       state.heroTeamSplit = null;
       state.unveiledScheme = null;
       lastSchemeSignature = schemeSignature;
@@ -864,7 +941,7 @@
     if (!items.length || items.length === n) return;
 
     if (items.length < n) {
-      const fresh = pickRandom(poolFor(category), n - items.length, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items)));
+      const fresh = pickRandom(poolFor(category), n - items.length, extraHeroGroupDrawExclusions(categoryKey, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items))));
       state.result[categoryKey] = items.concat(fresh);
       state.locks[categoryKey] = locks.concat(fresh.map(() => false));
       return;
@@ -1401,7 +1478,64 @@
       el.results.appendChild(section);
 
       if (category.key === "scheme") el.results.appendChild(villainDeckSection(items[0]));
+      if (category.key === "heroes") el.results.appendChild(extraHeroGroupSection());
     });
+  }
+
+  /** Shown right under the Heroes section whenever the current Scheme sets
+   * `overrides.extraHeroCount` (see syncExtraHeroGroup above) — a second,
+   * separate group of random Heroes, e.g. "The Time Heist"'s "Past Hero
+   * Deck." Titled by `overrides.extraHeroGroupLabel` (falling back to
+   * "Extra Heroes"). Each row has its own reroll button, but no
+   * choose-specific-card or lock control — this is a lighter-weight "extra
+   * card" pool, not a full counted category. Returns an empty (harmless to
+   * append) DocumentFragment when the current Scheme has no such group. */
+  function extraHeroGroupSection() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    if (!overrides.extraHeroCount) return document.createDocumentFragment();
+
+    const section = document.createElement("section");
+    section.className = "ios-group";
+
+    const header = document.createElement("div");
+    header.className = "group-header";
+    const headerSpan = document.createElement("span");
+    headerSpan.textContent = overrides.extraHeroGroupLabel || "Extra Heroes";
+    header.appendChild(headerSpan);
+    section.appendChild(header);
+
+    const list = document.createElement("ul");
+    list.className = "ios-list";
+    (state.extraHeroGroup || []).forEach((hero, index) => {
+      const li = document.createElement("li");
+      li.className = "ios-row";
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = hero.name;
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      sub.textContent = poolRowSubText(CATEGORY_BY_KEY.heroes, hero);
+      text.appendChild(main);
+      text.appendChild(sub);
+
+      const rerollBtn = document.createElement("button");
+      rerollBtn.type = "button";
+      rerollBtn.className = "round-btn";
+      rerollBtn.textContent = "🔁";
+      rerollBtn.title = "Reroll just this one";
+      rerollBtn.addEventListener("click", () => rerollExtraHeroGroupSlot(index));
+
+      li.appendChild(text);
+      li.appendChild(rerollBtn);
+      list.appendChild(li);
+    });
+    section.appendChild(list);
+
+    return section;
   }
 
   /** A reference section shown once you've randomized, covering everything
@@ -1594,6 +1728,12 @@
     lines.push(`Twists: ${state.options.twists}`);
     if (state.extraCard) lines.push(`Extra Hero: ${state.extraCard.name}`);
     if (state.extraVillainGroup) lines.push(`Extra Villain Group: ${state.extraVillainGroup.name}`);
+    if (state.extraHeroGroup && state.extraHeroGroup.length) {
+      const groupScheme = currentSchemeData();
+      const label = (groupScheme && groupScheme.overrides && groupScheme.overrides.extraHeroGroupLabel) || "Extra Heroes";
+      lines.push(`${label}:`);
+      state.extraHeroGroup.forEach((h) => lines.push(`  - ${h.name} (${h.exp})`));
+    }
     if (state.unveiledScheme) lines.push(`Unveiled Scheme: ${state.unveiledScheme.name}`);
     const scheme = currentSchemeData();
     if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);
