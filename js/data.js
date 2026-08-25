@@ -1604,9 +1604,9 @@ const SCHEMES = [
   {
     name: "Star-Lord's Awesome Mix Tape",
     exp: "guardians_movie",
-    overrides: { twists: 7, heroCount: 7 },
+    overrides: { twists: 7, heroCount: 7, requiredHeroTeam: "Guardians of the Galaxy" },
     setupNote:
-      "Use 7 Heroes including at least one Covert Hero. Use double the normal number of Villain and Henchman Groups, but use only half the cards from each of those groups, randomly & secretly. (1 player: 2 Henchmen per group)",
+      "Use 7 Heroes including at least one Guardians of the Galaxy Hero. Use double the normal number of Villain and Henchman Groups, but use only half the cards from each of those groups, randomly & secretly. (1 player: 2 Henchmen per group)",
     twist: "KO all Heroes from the HQ. Villains in the Sewers and Bridge swap spaces. Likewise Villains in the Bank and Streets.",
     evilWins: "When there are 32 non-grey Heroes in the KO pile.",
   },
