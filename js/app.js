@@ -576,10 +576,23 @@
 
   /** Sub-line text for a card row: expansion name, plus a Team tag for
    * Heroes, plus why a Villain Group / Henchman is required, if it is. */
-  function subText(category, item) {
+  /** Sub-line text for a card row in Card Pool's Manage/Choose sheets:
+   * expansion name, plus a Team tag for Heroes. Cards with the same
+   * printed name can appear more than once across expansions with
+   * meaningfully different rules (e.g. "Secret Invasion of the Skrull
+   * Shapeshifters" or "Super Hero Civil War") — without this, two
+   * identical-looking rows would be impossible to tell apart. */
+  function poolRowSubText(category, item) {
     const expName = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
     const parts = [expName];
     if (category.key === "heroes" && item.team) parts.push(item.team);
+    return parts.join(" · ");
+  }
+
+  /** Sub-line text for a result row: poolRowSubText, plus why a Villain
+   * Group / Henchman / Hero is required, if it is. */
+  function subText(category, item) {
+    const parts = [poolRowSubText(category, item)];
     const reason = requiredReason(category.key, item);
     if (reason) parts.push(reason);
     return parts.join(" · ");
@@ -1229,18 +1242,14 @@
 
     const text = document.createElement("span");
     text.className = "row-text";
-    if (category.key === "heroes" && item.team) {
-      const main = document.createElement("span");
-      main.className = "row-text-main";
-      main.textContent = item.name;
-      const sub = document.createElement("span");
-      sub.className = "row-text-sub";
-      sub.textContent = item.team;
-      text.appendChild(main);
-      text.appendChild(sub);
-    } else {
-      text.textContent = item.name;
-    }
+    const main = document.createElement("span");
+    main.className = "row-text-main";
+    main.textContent = item.name;
+    const sub = document.createElement("span");
+    sub.className = "row-text-sub";
+    sub.textContent = poolRowSubText(category, item);
+    text.appendChild(main);
+    text.appendChild(sub);
 
     const switchWrap = document.createElement("span");
     switchWrap.className = "ios-switch";
@@ -1279,18 +1288,14 @@
 
     const text = document.createElement("span");
     text.className = "row-text";
-    if (category.key === "heroes" && item.team) {
-      const main = document.createElement("span");
-      main.className = "row-text-main";
-      main.textContent = item.name;
-      const sub = document.createElement("span");
-      sub.className = "row-text-sub";
-      sub.textContent = item.team;
-      text.appendChild(main);
-      text.appendChild(sub);
-    } else {
-      text.textContent = item.name;
-    }
+    const main = document.createElement("span");
+    main.className = "row-text-main";
+    main.textContent = item.name;
+    const sub = document.createElement("span");
+    sub.className = "row-text-sub";
+    sub.textContent = poolRowSubText(category, item);
+    text.appendChild(main);
+    text.appendChild(sub);
 
     btn.appendChild(text);
 
