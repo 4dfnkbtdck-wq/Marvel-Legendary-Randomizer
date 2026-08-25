@@ -117,7 +117,7 @@ const EXPANSIONS = [
   { id: "deadpool", name: "Deadpool", confidence: "verified" },
   { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "verified" },
   { id: "fear_itself", name: "Fear Itself", confidence: "verified" },
-  { id: "asgard", name: "Heroes of Asgard", confidence: "light" },
+  { id: "asgard", name: "Heroes of Asgard", confidence: "verified" },
   { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "light" },
   { id: "new_mutants", name: "New Mutants", confidence: "light" },
   { id: "noir", name: "Noir", confidence: "light" },
@@ -154,6 +154,9 @@ const MASTERMINDS = [
 
   { name: "Supreme Intelligence of the Kree", exp: "guardians", leads: [{ category: "villains", name: "Kree Starforce" }] },
   { name: "Thanos", exp: "guardians", leads: [{ category: "villains", name: "Infinity Gems" }] },
+
+  { name: "Hela, Goddess of Death", exp: "asgard", leads: [{ category: "villains", name: "Omens of Ragnarok" }] },
+  { name: "Malekith the Accursed", exp: "asgard", leads: [{ category: "villains", name: "Dark Council" }] },
 
   { name: "Dark Phoenix", exp: "x_men" },
   { name: "Onslaught", exp: "x_men" },
@@ -1312,6 +1315,45 @@ const SCHEMES = [
     twist: "Stack this Twist next to the Scheme. Then for each Twist in that stack, the Mastermind gains a Shard.",
     evilWins: "When the Mastermind has 10 Shards or when there are no more Shards in the supply.",
   },
+
+  // The four Heroes of Asgard schemes below are transcribed directly
+  // from the physical cards.
+  {
+    name: "Asgardian Test of Worth",
+    exp: "asgard",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      'Twists 1-7: Each player who is not Worthy discards a card. Then, if at least half the players (round up) are not Worthy, put this Twist next to the Scheme as a "Moral Failing."\nTwists 8-11: Put this Twist next to the Scheme as a "Moral Failing."',
+    evilWins: "When there are 5 Moral Failings.",
+  },
+  {
+    name: "The Dark World of Svartalfheim",
+    exp: "asgard",
+    overrides: { twists: 10 },
+    setupNote: "",
+    twist:
+      'Put this Twist next to a city space or HQ space that doesn\'t already have one, as "Eternal Darkness."\nSpecial Rules: Villains in city spaces with Eternal Darkness get +1 Attack. To recruit a Hero in an HQ space with Eternal Darkness, you must pay an extra 1 Recruit.',
+    evilWins: "When all city spaces or all HQ spaces are covered in Eternal Darkness.",
+  },
+  {
+    name: "Ragnarok, Twilight of the Gods",
+    exp: "asgard",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      'Choose a Villain from your Victory Pile worth at least 2VP to enter the city. Then, if the total Attack of Villains in the city is at least as high as the Guardian Attack listed below, put this Twist next to the Scheme as a "Guardian Defeated."\nTwist 1: Balder, 11 Attack\nTwist 2: Odin, 24 Attack\nTwist 3: Vidar, 19 Attack\nTwist 4: Tyr, 16 Attack\nTwist 5: Heimdall, 12 Attack\nTwist 6: Frey, 7 Attack\nTwist 7: Frigga, 8 Attack\nTwist 8-11: Warriors of Valhalla, 6 Attack',
+    evilWins: "When there are 5 Guardians Defeated.",
+  },
+  {
+    name: "War of the Frost Giants",
+    exp: "asgard",
+    overrides: { twists: 9 },
+    setupNote: "",
+    twist:
+      'Twists 1-7: This Twist enters the city as a "Frost Giant Invader" Villain worth 6VP with 6 Attack and the ability "If you are not Worthy, this gets +4 Attack."\nTwists 8-9: Same effect, then a Frost Giant Invader from each player\'s Victory Pile enters the city.',
+    evilWins: "When there are 5 Frost Giant Invaders in the city and/or Escape Pile.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1337,6 +1379,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Infinity Gems", exp: "guardians" },
   { name: "Kree Starforce", exp: "guardians" },
+
+  { name: "Dark Council", exp: "asgard" },
+  { name: "Omens of Ragnarok", exp: "asgard" },
 
   { name: "Reavers", exp: "x_men" },
   { name: "Marauders", exp: "x_men" },
@@ -1586,10 +1631,11 @@ const HEROES = [
   { name: "Doctor Voodoo", exp: "dr_strange", team: "Avengers" },
   { name: "The Vishanti", exp: "dr_strange" },
 
-  { name: "Valkyrie", exp: "asgard" },
-  { name: "Sif", exp: "asgard" },
-  { name: "Beta Ray Bill", exp: "asgard" },
-  { name: "Balder", exp: "asgard" },
+  { name: "Beta Ray Bill", exp: "asgard", team: "Heroes of Asgard" },
+  { name: "Lady Sif", exp: "asgard", team: "Heroes of Asgard" },
+  { name: "Thor", exp: "asgard", team: "Heroes of Asgard" },
+  { name: "Valkyrie", exp: "asgard", team: "Heroes of Asgard" },
+  { name: "The Warriors Three", exp: "asgard", team: "Heroes of Asgard" },
 
   { name: "Captain Marvel (Carol Danvers)", exp: "into_the_cosmos" },
   { name: "Adam Warlock", exp: "into_the_cosmos" },
