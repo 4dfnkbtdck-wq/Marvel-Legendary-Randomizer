@@ -126,7 +126,7 @@ const EXPANSIONS = [
   { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "light" },
   { id: "venom", name: "Venom", confidence: "light" },
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
-  { id: "dimensions", name: "Dimensions", confidence: "light" },
+  { id: "dimensions", name: "Dimensions", confidence: "verified" },
   { id: "revelations", name: "Revelations", confidence: "none" },
   { id: "villains", name: "Legendary: Villains", confidence: "verified" },
   { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
