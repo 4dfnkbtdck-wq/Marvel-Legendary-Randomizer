@@ -115,7 +115,7 @@ const EXPANSIONS = [
   { id: "ant_man", name: "Ant-Man", confidence: "verified" },
   { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "verified" },
   { id: "deadpool", name: "Deadpool", confidence: "verified" },
-  { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "light" },
+  { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "verified" },
   { id: "fear_itself", name: "Fear Itself", confidence: "light" },
   { id: "asgard", name: "Heroes of Asgard", confidence: "light" },
   { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "light" },
@@ -160,7 +160,8 @@ const MASTERMINDS = [
   { name: "Morgan Le Fay", exp: "ant_man", leads: [{ category: "villains", name: "Queen's Vengeance" }] },
   { name: "Ultron", exp: "ant_man", leads: [{ category: "villains", name: "Ultron's Legacy" }] },
   { name: "Carnage", exp: "venom" },
-  { name: "Nightmare", exp: "dr_strange" },
+  { name: "Dormammu", exp: "dr_strange", leads: [{ category: "villains", name: "Lords of the Netherworld" }] },
+  { name: "Nightmare", exp: "dr_strange", leads: [{ category: "villains", name: "Fear Lords" }] },
   { name: "Maestro", exp: "world_war_hulk" },
   { name: "Vulture", exp: "spiderman_homecoming" },
   { name: "Vulcan", exp: "realm_of_kings" },
@@ -1155,6 +1156,46 @@ const SCHEMES = [
     twist: "Each player reveals their hand. Whoever reveals the fewest Mercs For Money cards (or tied for fewest) gains a Wound.",
     evilWins: "When 3 Villains per player have escaped.",
   },
+
+  // The four Doctor Strange and the Shadows of Nightmare schemes below
+  // are transcribed directly from the physical cards.
+  {
+    name: "Cursed Pages of the Darkhold Tome",
+    exp: "dr_strange",
+    overrides: { twists: 11, villainCountDelta: 1 },
+    setupNote:
+      '11 Twists represent Cursed Pages of the Darkhold Tome.\nSpecial Rules: Cursed Pages are Ritual Artifacts with "If you fought a Villain or Mastermind, you may discard this to get +3 Recruit."',
+    twist:
+      "Put this Cursed Page next to the Mastermind, plus a Cursed Page from any player's control or discard pile or the KO pile. For this turn only, the first time you fight a Villain or Mastermind, put one of the Mastermind's Cursed Pages into your discard pile.",
+    evilWins: "When the Mastermind has 7 Cursed Pages at the end of any player's turn or the Villain Deck runs out.",
+  },
+  {
+    name: "Duels of Science and Magic",
+    exp: "dr_strange",
+    overrides: { twistsByPlayers: { 1: 10, 2: 9, 3: 11, 4: 10, 5: 11 } },
+    setupNote: "",
+    twist:
+      'Twist 1, 3, and 5 ("Duel of Science"): Each player reveals a Tech or Ranged Hero or discards down to 4 cards. If at least half the players (round up) failed to reveal, put this Twist next to the Mastermind as a "Duel Won."\nTwist 2, 4, and 6 ("Duel of Magic"): Same effect, but with Strength or Instinct.\nTwist 7-11 ("Duel of Science and Magic"): Same effect, but each player must reveal at least three of these types: Strength, Instinct, Tech, Ranged.',
+    evilWins: "When the Mastermind has won 5 Duels.",
+  },
+  {
+    name: "Claim Souls for Demons",
+    exp: "dr_strange",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      'Twist 1-3: Each player makes a Demonic Bargain to rescue a Bystander. If that Bargain wounds that player, stack that Bystander next to the Scheme as a "Tormented Soul" instead.\nTwist 4-8: Each player makes a Demonic Bargain to gain a S.H.I.E.L.D. Officer. If that Bargain wounds that player, stack that Officer next to the Scheme as a "Tormented Soul" instead.',
+    evilWins: "When the number of Tormented Souls is four times the number of players.",
+  },
+  {
+    name: "War for the Dream Dimension",
+    exp: "dr_strange",
+    overrides: { twists: 7, villainCountDelta: 1 },
+    setupNote: "",
+    twist:
+      "Reveal the top two cards of the Villain Deck. The Villain you revealed with the highest printed Attack enters the Astral Plane. (It does not do any Ambush abilities.) If you revealed a second Villain this way, that Villain enters the city. Put the rest of the revealed cards back in any order.",
+    evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1186,7 +1227,8 @@ const VILLAIN_GROUPS = [
   { name: "Queen's Vengeance", exp: "ant_man" },
   { name: "Ultron's Legacy", exp: "ant_man" },
   { name: "Klyntar Symbiotes", exp: "venom" },
-  { name: "Mindless Ones", exp: "dr_strange" },
+  { name: "Fear Lords", exp: "dr_strange" },
+  { name: "Lords of the Netherworld", exp: "dr_strange" },
   { name: "The Worthy", exp: "fear_itself" },
 
   // Legendary: Villains — these are Hero Groups (the opposition), not
@@ -1413,10 +1455,11 @@ const HEROES = [
   { name: "Ms. America", exp: "dimensions", team: "Avengers" },
   { name: "Squirrel Girl", exp: "dimensions", team: "Avengers" },
 
-  { name: "Doctor Strange", exp: "dr_strange" },
-  { name: "Scarlet Witch", exp: "dr_strange" },
-  { name: "Wong", exp: "dr_strange" },
-  { name: "Clea", exp: "dr_strange" },
+  { name: "The Ancient One", exp: "dr_strange" },
+  { name: "Clea", exp: "dr_strange", team: "Marvel Knights" },
+  { name: "Doctor Strange", exp: "dr_strange", team: "Avengers" },
+  { name: "Doctor Voodoo", exp: "dr_strange", team: "Avengers" },
+  { name: "The Vishanti", exp: "dr_strange" },
 
   { name: "Valkyrie", exp: "asgard" },
   { name: "Sif", exp: "asgard" },
