@@ -115,7 +115,7 @@ const EXPANSIONS = [
   { id: "civil_war", name: "Civil War", confidence: "light" },
   { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "light" },
   { id: "annihilation", name: "Annihilation", confidence: "verified" },
-  { id: "ant_man", name: "Ant-Man", confidence: "light" },
+  { id: "ant_man", name: "Ant-Man", confidence: "verified" },
   { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "light" },
   { id: "deadpool", name: "Deadpool", confidence: "light" },
   { id: "dr_strange", name: "Doctor Strange and the Shadows of Nightmare", confidence: "light" },
@@ -158,7 +158,8 @@ const MASTERMINDS = [
   { name: "Dark Phoenix", exp: "x_men" },
   { name: "Onslaught", exp: "x_men" },
 
-  { name: "MODOK", exp: "ant_man" },
+  { name: "Morgan Le Fay", exp: "ant_man", leads: [{ category: "villains", name: "Queen's Vengeance" }] },
+  { name: "Ultron", exp: "ant_man", leads: [{ category: "villains", name: "Ultron's Legacy" }] },
   { name: "Carnage", exp: "venom" },
   { name: "Nightmare", exp: "dr_strange" },
   { name: "Maestro", exp: "world_war_hulk" },
@@ -229,12 +230,17 @@ const MASTERMINDS = [
 //                  `requiredVillainGroupKeyword` (same, but resolved to
 //                  whichever available Villain Group(s) carry that
 //                  keyword — see VILLAIN_GROUPS' `keywords` above),
-//                  `extraHero` (a boolean — see syncExtraCard in app.js;
-//                  for a Scheme whose extra Hero contributes its OWN
-//                  cards straight into the Villain Deck without ever
-//                  joining the normal Hero Deck, e.g. Marvel Zombies —
-//                  if the extra Hero instead joins the normal Hero Deck,
-//                  that's `heroCountDelta` above instead, not this).
+//                  `extraHero` (a boolean, optionally paired with
+//                  `extraHeroNote` — see syncExtraCard in app.js; for a
+//                  Scheme whose extra Hero contributes its OWN cards
+//                  straight into the Villain Deck without ever joining
+//                  the normal Hero Deck, e.g. Marvel Zombies' "8 random
+//                  cards." `extraHeroNote` overrides the default "8
+//                  random cards go in the Villain Deck" display text for
+//                  a Scheme that adds a different amount, e.g. "all 14
+//                  cards" — see Trap Heroes in the Microverse. If the
+//                  extra Hero instead joins the normal Hero Deck, that's
+//                  `heroCountDelta` above instead, not this).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -728,6 +734,44 @@ const SCHEMES = [
     twist: "Twists 1–5: Each player discards a non-grey Hero or gains a Wound.\nTwist 6: Evil Wins!",
     evilWins: "",
   },
+
+  // The four Ant-Man schemes below are transcribed directly from the
+  // physical cards.
+  {
+    name: "Age of Ultron",
+    exp: "ant_man",
+    overrides: { twists: 11, heroCountByPlayers: { 4: 6, 5: 7 } },
+    setupNote: "Special Rules: Evolved Ultrons have 4 Attack and are Empowered by each color in the Evolution pile. They're worth 6VP.",
+    twist: 'Put the top card of the Hero Deck next to the Scheme in an "Evolution" pile. Then this Twist enters the city as an "Evolved Ultron" Villain.',
+    evilWins: "When 7 Evolved Ultrons are in the city and/or Escape Pile.",
+  },
+  {
+    name: "Pull Earth into Medieval Times",
+    exp: "ant_man",
+    overrides: { twists: 9 },
+    setupNote: "",
+    twist:
+      "Twists 1–6: Until the start of your next turn, all Villains and Masterminds everywhere have Chivalrous Duel.\nTwists 7–9: Each player puts a Villain from their Victory Pile into the Escape Pile.",
+    evilWins: "When 3 Villains per player have escaped.",
+  },
+  {
+    name: "Transform Commuters into Giant Ants",
+    exp: "ant_man",
+    overrides: { twistsByPlayers: { 1: 7, 2: 8, 3: 9, 4: 10, 5: 11 } },
+    setupNote: "",
+    twist:
+      'Stack this Twist next to the Scheme. Then for each Twist in that stack, put a Bystander face down next to the Mastermind as a 2 Attack "Giant Ant" Villain. When you fight one, rescue it as a Bystander.',
+    evilWins: "When there are 10 Giant Ants next to the Mastermind.",
+  },
+  {
+    name: "Trap Heroes in the Microverse",
+    exp: "ant_man",
+    overrides: { twists: 11, extraHero: true, extraHeroNote: "all 14 cards go in the Villain Deck" },
+    setupNote:
+      'Special Rules: Heroes in the Villain Deck are "Micro-Sized" Villains with Attack equal to their printed cost. They have Size-Changing for their card color and no other abilities while in the city. When you fight one, choose any player to gain it as a Hero.',
+    twist: "Play two cards from the Villain Deck.",
+    evilWins: "When 3 Villains per player have escaped or the Villain Deck runs out.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -756,7 +800,8 @@ const VILLAIN_GROUPS = [
   { name: "Reavers", exp: "x_men" },
   { name: "Marauders", exp: "x_men" },
 
-  { name: "A.I.M.", exp: "ant_man" },
+  { name: "Queen's Vengeance", exp: "ant_man" },
+  { name: "Ultron's Legacy", exp: "ant_man" },
   { name: "Klyntar Symbiotes", exp: "venom" },
   { name: "Mindless Ones", exp: "dr_strange" },
   { name: "The Worthy", exp: "fear_itself" },
@@ -916,10 +961,11 @@ const HEROES = [
   { name: "Psi-Lord", exp: "annihilation", team: "Fantastic Four" },
   { name: "Super-Skrull", exp: "annihilation" },
 
-  { name: "Ant-Man", exp: "ant_man" },
-  { name: "Wasp", exp: "ant_man" },
-  { name: "Giant-Man", exp: "ant_man" },
-  { name: "Yellowjacket", exp: "ant_man" },
+  { name: "Ant-Man", exp: "ant_man", team: "Avengers" },
+  { name: "Black Knight", exp: "ant_man", team: "Avengers" },
+  { name: "Jocasta", exp: "ant_man", team: "Avengers" },
+  { name: "Wasp", exp: "ant_man", team: "Avengers" },
+  { name: "Wonder Man", exp: "ant_man", team: "Avengers" },
 
   { name: "Captain America (Sam Wilson)", exp: "cap_75" },
   { name: "Captain America (Bucky Barnes)", exp: "cap_75" },

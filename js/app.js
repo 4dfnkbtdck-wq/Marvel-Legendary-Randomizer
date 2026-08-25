@@ -1076,7 +1076,7 @@
       main.textContent = state.extraCard.name;
       const sub = document.createElement("span");
       sub.className = "row-text-sub";
-      sub.textContent = "Extra Hero — 8 random cards go in the Villain Deck";
+      sub.textContent = "Extra Hero — " + (scheme.overrides.extraHeroNote || "8 random cards go in the Villain Deck");
       text.appendChild(main);
       text.appendChild(sub);
 
