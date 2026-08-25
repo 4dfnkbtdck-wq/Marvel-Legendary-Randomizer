@@ -78,9 +78,6 @@ Groups/Henchmen/Heroes structure (its Villains go in Heroes, its Hero
 Groups go in Villain Groups, and so on). It's fine to combine it with
 other expansions — you'll get a mixed hero/villain lineup, which is a
 legitimate (if unusual) way to play; it's your call, not the app's.
-**Legendary: Civil War** *is* included normally, but only for its
-ordinary Heroes — its special "Team Iron Man vs. Team Cap" mode isn't
-modeled here.
 
 To add an expansion or correct an entry:
 

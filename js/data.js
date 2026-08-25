@@ -28,9 +28,6 @@
  * call, not this app's, whether to select it alongside anything else.
  * Its Scheme ("Plot") cards use "Good Wins" instead of "Evil Wins" — see
  * `winLabel` below.
- * "Legendary: Civil War" IS included normally, but only for its ordinary
- * Heroes — its special "Team Iron Man vs. Team Cap" mode isn't modeled
- * here.
  *
  * To add an expansion: add one entry to EXPANSIONS, then push entries
  * into any of HEROES / MASTERMINDS / SCHEMES / VILLAIN_GROUPS / HENCHMEN
@@ -112,7 +109,7 @@ const EXPANSIONS = [
   { id: "guardians", name: "Guardians of the Galaxy", confidence: "moderate" },
   { id: "x_men", name: "X-Men", confidence: "moderate" },
   { id: "champions", name: "Champions", confidence: "verified" },
-  { id: "civil_war", name: "Civil War", confidence: "light" },
+  { id: "civil_war", name: "Civil War", confidence: "verified" },
   { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "light" },
   { id: "annihilation", name: "Annihilation", confidence: "verified" },
   { id: "ant_man", name: "Ant-Man", confidence: "verified" },
@@ -215,6 +212,12 @@ const MASTERMINDS = [
 
   { name: "Fing Fang Foom", exp: "champions", leads: [{ category: "villains", name: "Monsters Unleashed" }] },
   { name: "Pagliacci", exp: "champions", leads: [{ category: "villains", name: "Wrecking Crew" }] },
+
+  { name: "Authoritarian Iron Man", exp: "civil_war", leads: [{ category: "villains", name: "Superhuman Registration Act" }] },
+  { name: "Baron Helmut Zemo", exp: "civil_war", leads: [{ category: "villains", name: "Thunderbolts" }] },
+  { name: "Maria Hill, Director of S.H.I.E.L.D.", exp: "civil_war", leads: [{ category: "villains", name: "S.H.I.E.L.D. Elite" }] },
+  { name: "Misty Knight", exp: "civil_war", leads: [{ category: "villains", name: "Heroes for Hire" }] },
+  { name: "Ragnarok", exp: "civil_war", leads: [{ category: "villains", name: "Registration Enforcers" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -939,6 +942,78 @@ const SCHEMES = [
     twist: 'Twists 1–5: Put a card from the Hero Deck face down next to the Scheme as part of the "Enigma Code." Mix up those cards face-down.\nTwist 6: Evil Wins!',
     evilWins: "",
   },
+
+  // The eight Civil War schemes below are transcribed directly from the
+  // physical cards.
+  {
+    name: "Nitro the Supervillain Threatens Crowds",
+    exp: "civil_war",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist: "KO all Bystanders held by Villains. Then, the Villain with the highest Attack captures 3 Bystanders.",
+    evilWins: "When 15 Bystanders are in the KO pile and/or Escape Pile.",
+  },
+  {
+    name: "Predict Future Crime",
+    exp: "civil_war",
+    overrides: { twists: 6, villainCountDelta: 1 },
+    setupNote: "Add an extra Villain Group.",
+    twist: "Reveal the top 3 cards of the Villain Deck. Play each Villain you revealed. Put the rest back in any order.",
+    evilWins: "When there are 2 Villains per player in the Escape Pile.",
+  },
+  {
+    name: "Reveal Heroes' Secret Identities",
+    exp: "civil_war",
+    overrides: { twists: 6, heroCount: 7 },
+    setupNote: "",
+    twist:
+      'Put a Hero from the HQ next to the Scheme as an "Unmasked" Hero. All cards with "Unmasked" Hero Names cost +1 Recruit to recruit. You can\'t Unmask a Hero Name that has already been Unmasked.',
+    evilWins: "When 5 Heroes are Unmasked.",
+  },
+  {
+    name: "United States Split by Civil War",
+    exp: "civil_war",
+    overrides: { twists: 10 },
+    setupNote: "",
+    twist:
+      'If there is a Villain on the Streets or Bridge, put this Twist in a stack of "Western States Victories." Otherwise, if there is a Villain in the Sewers, put this Twist in a stack of "Eastern States Victories."',
+    evilWins: "When there are 3 Western Victories or 3 Eastern Victories.",
+  },
+  {
+    name: "Avengers vs. X-Men",
+    exp: "civil_war",
+    overrides: { twists: 9 },
+    setupNote: "Hero Deck has 3 Heroes of one Team and 3 Heroes of another Team (Avengers, X-Men, Guardians, Marvel Knights, etc.).",
+    twist:
+      "Twists 1–7: Each player reveals their hand. Each player that has cards of both those Teams gains a Wound.\nTwist 8: Evil wins!",
+    evilWins: "See Twist 8.",
+  },
+  {
+    name: "Dark Reign of H.A.M.M.E.R. Officers",
+    exp: "civil_war",
+    overrides: { twists: 7 },
+    setupNote: "",
+    twist:
+      "Stack this Twist next to the Scheme. Then, for each Twist in that stack, put a S.H.I.E.L.D. Officer next to the Mastermind as a 3-Attack Villain with S.H.I.E.L.D. Clearance. You can fight them to gain them as Heroes.",
+    evilWins: "When there are 7 Officers next to the Mastermind.",
+  },
+  {
+    name: "Epic Super Hero Civil War",
+    exp: "civil_war",
+    overrides: { twistsByPlayers: { 1: 9, 2: 9, 3: 9, 4: 6, 5: 6 }, heroCountByPlayers: { 1: 4 } },
+    setupNote: "",
+    twist: "Stack this Twist next to the Scheme. Then, for each Twist in that stack, KO a Hero from the HQ and immediately refill that HQ space.",
+    evilWins: "When the Hero Deck runs out.",
+  },
+  {
+    name: "Imprison Unregistered Superhumans",
+    exp: "civil_war",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      "Twists 1, 3, 5, 7, 9: This Scheme fortifies the city space to its right, starting with the Bridge. Villains in that space get +1 Attack.\nOther Twists: If there's a Villain in that fortified city space, KO a Bystander.",
+    evilWins: "When 3 Bystanders are in the KO pile and/or Escape Pile.",
+  },
 ];
 
 const VILLAIN_GROUPS = [
@@ -1026,6 +1101,14 @@ const VILLAIN_GROUPS = [
 
   { name: "Monsters Unleashed", exp: "champions" },
   { name: "Wrecking Crew", exp: "champions" },
+
+  { name: "CSA Special Marshals", exp: "civil_war" },
+  { name: "Great Lake Avengers", exp: "civil_war" },
+  { name: "Heroes for Hire", exp: "civil_war" },
+  { name: "Registration Enforcers", exp: "civil_war" },
+  { name: "S.H.I.E.L.D. Elite", exp: "civil_war" },
+  { name: "Superhuman Registration Act", exp: "civil_war" },
+  { name: "Thunderbolts", exp: "civil_war" },
 ];
 
 const HENCHMEN = [
@@ -1060,6 +1143,9 @@ const HENCHMEN = [
   { name: "Hand Ninjas", exp: "core_2nd" },
   { name: "Savage Land Mutates", exp: "core_2nd" },
   { name: "Sentinel", exp: "core_2nd" },
+
+  { name: "Cape-Killers", exp: "civil_war" },
+  { name: "Mandroid", exp: "civil_war" },
 ];
 
 const HEROES = [
@@ -1130,9 +1216,22 @@ const HEROES = [
   { name: "Totally Awesome Hulk", exp: "champions", team: "Champions" },
   { name: "Viv Vision", exp: "champions", team: "Champions" },
 
-  { name: "Vision", exp: "civil_war" },
-  { name: "War Machine", exp: "civil_war" },
-  { name: "Black Panther", exp: "civil_war" },
+  { name: "Captain America, Secret Avenger", exp: "civil_war", team: "Avengers" },
+  { name: "Cloak & Dagger", exp: "civil_war", team: "Avengers" },
+  { name: "Daredevil", exp: "civil_war", team: "Avengers" },
+  { name: "Falcon", exp: "civil_war", team: "Avengers" },
+  { name: "Goliath", exp: "civil_war", team: "Avengers" },
+  { name: "Hercules", exp: "civil_war", team: "Avengers" },
+  { name: "Hulkling", exp: "civil_war", team: "Avengers" },
+  { name: "Luke Cage", exp: "civil_war", team: "Avengers" },
+  { name: "Patriot", exp: "civil_war", team: "Avengers" },
+  { name: "Peter Parker", exp: "civil_war", team: "Avengers" },
+  { name: "Speedball", exp: "civil_war", team: "New Warriors" },
+  { name: "Stature", exp: "civil_war", team: "Avengers" },
+  { name: "Storm & Black Panther", exp: "civil_war", team: "Avengers" },
+  { name: "Tigra", exp: "civil_war", team: "Avengers" },
+  { name: "Vision", exp: "civil_war", team: "Avengers" },
+  { name: "Wiccan", exp: "civil_war", team: "Avengers" },
 
   { name: "Brainstorm", exp: "annihilation", team: "Fantastic Four" },
   { name: "Fantastic Four United", exp: "annihilation", team: "Fantastic Four" },
