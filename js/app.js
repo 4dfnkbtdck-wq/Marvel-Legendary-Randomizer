@@ -337,6 +337,7 @@
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
     if (categoryKey === "villains" && overrides.requiredVillainGroup) names.push(overrides.requiredVillainGroup);
+    if (categoryKey === "villains" && overrides.requiredVillainGroups) names.push(...overrides.requiredVillainGroups);
     if (categoryKey === "villains" && overrides.requiredVillainGroupKeyword) {
       const name = resolveKeywordRequirement("villains", overrides.requiredVillainGroupKeyword);
       if (name) names.push(name);
@@ -722,6 +723,9 @@
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
     if (categoryKey === "villains" && overrides.requiredVillainGroup === item.name) {
+      return `required by ${scheme.name}`;
+    }
+    if (categoryKey === "villains" && overrides.requiredVillainGroups && overrides.requiredVillainGroups.includes(item.name)) {
       return `required by ${scheme.name}`;
     }
     if (
