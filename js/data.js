@@ -159,6 +159,7 @@ const EXPANSIONS = [
   { id: "messiah_complex", name: "Messiah Complex", confidence: "verified" },
   { id: "ant_man_wasp", name: "Marvel Studios Ant-Man and the Wasp", confidence: "verified" },
   { id: "guardians_movie", name: "Marvel Studios Guardians of the Galaxy", confidence: "verified" },
+  { id: "infinity_saga", name: "Marvel Studios Infinity Saga", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -283,6 +284,9 @@ const MASTERMINDS = [
   // empty (see Hank Pym, Yellowjacket above for the same case).
   { name: "Ego, The Living Planet", exp: "guardians_movie", villainCountDelta: 1 },
   { name: "Ronan the Accuser", exp: "guardians_movie", leads: [{ category: "villains", name: "Followers of Ronan" }] },
+
+  { name: "Ebony Maw", exp: "infinity_saga", leads: [{ category: "villains", name: "Children of Thanos" }] },
+  { name: "Thanos", exp: "infinity_saga", leads: [{ category: "villains", name: "Infinity Stones" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1635,6 +1639,49 @@ const SCHEMES = [
       'Twists 1-8: Put this Twist next to the Scheme as an "Abilisk Tentacle" Villain worth 4VP. It captures a non-grey Hero from your discard pile. Its Attack is 3 + the cost of that Hero. It has "Fight: KO one of your grey Heroes. A player of your choice gains the captured Hero." 2+ players: The player on your right plays a Tentacle from their Victory Pile, capturing from them.\nTwist 9: Replay all defeated Tentacles.',
     evilWins: "When there are 5 Tentacles.",
   },
+
+  // The four "Marvel Studios Infinity Saga" Schemes below blend Avengers:
+  // Infinity War and Avengers: Endgame under one expansion (same
+  // precedent as the other Marvel Studios expansions above) — two are
+  // from Infinity War, two are from Endgame.
+  {
+    name: "Halve All Life in the Universe",
+    exp: "infinity_saga",
+    overrides: { twists: 5 },
+    setupNote: "",
+    twist:
+      "Twist 1,3,5: Choose 3 Heroes from the HQ and KO them.\nTwist 2,4: Deal the Hero Deck into two facedown piles (as equally as possible). KO one of them.",
+    evilWins: "When the Hero Deck or Villain Deck runs out.",
+  },
+  {
+    name: "Sacrifice for the Soul Stone",
+    exp: "infinity_saga",
+    overrides: { twistsByPlayers: { 1: 5, 2: 6, 3: 7, 4: 8, 5: 9 } },
+    setupNote: "Twists equal to the number of players plus 4.",
+    twist:
+      'You may KO one of your non-grey Heroes and one of your grey Heroes to "Sacrifice for the Soul Stone." If you do, draw three cards, shuffle this Twist back into Villain Deck, then play another card from the Villain Deck. If you don\'t, stack a Hero from the HQ next to the Mastermind, "Sacrificed for the Soul Stone."',
+    evilWins: "When the Mastermind has sacrificed 5 Heroes for the Soul Stone.",
+  },
+  {
+    name: "The Time Heist",
+    exp: "infinity_saga",
+    overrides: { twists: 11 },
+    setupNote:
+      'Use 4 Heroes in the Hero Deck, plus 4 other Heroes to make a "Past Hero Deck." Above the board, make room for an alternate city called "The Past." It has the normal 5 spaces, from Sewers to Bridge. The Past has its own "Past HQ" filled by the "Past Hero Deck." To start, play as if "The Past" city, HQ, and Hero Deck don\'t exist.',
+    twist:
+      'Twist 1,3,5,7,9: Until the next Twist, move the Villain Deck next to "The Past," and play as if "The Past" city, HQ, and Hero Deck exist, while the normal city, HQ, and Hero Deck don\'t exist. (Use the normal decks and spaces for everything except the city, HQ, and Hero Deck.)\nTwist 10: Evil wins!',
+    evilWins: "On Twist 10 (see Twist text above).",
+  },
+  {
+    name: "Warp Reality into a TV Show",
+    exp: "infinity_saga",
+    overrides: { twists: 11 },
+    setupNote:
+      'The rightmost city space represents a TV show from "the 50s." The space on its left is "the 60s," then "the 70s." The city is only those 3 spaces. The HQ is only the 3 spaces beneath those. Move the Mastermind & Officer Deck to mark the city\'s left edge.',
+    twist:
+      "Twist 1-4: Another TV show (city space) appears on the left side of the city, representing the 80s, 90s, 2000s, & 2010s. Another HQ space appears beneath it.\nTwist 5-11: Destroy the rightmost TV show and the HQ space beneath it. KO any Hero in that HQ space. Push forward any Villain there. Move the Villain Deck & Hero Deck to mark the city's right edge.",
+    evilWins: "When all TV is destroyed.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -1798,6 +1845,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Followers of Ronan", exp: "guardians_movie" },
   { name: "Ravagers", exp: "guardians_movie" },
+
+  { name: "Children of Thanos", exp: "infinity_saga" },
+  { name: "Infinity Stones", exp: "infinity_saga" },
 ];
 
 const HENCHMEN = [
@@ -2114,6 +2164,12 @@ const HEROES = [
   { name: "Mantis", exp: "guardians_movie", team: "Guardians of the Galaxy" },
   { name: "Rocket & Groot", exp: "guardians_movie", team: "Guardians of the Galaxy" },
   { name: "Star-Lord", exp: "guardians_movie", team: "Guardians of the Galaxy" },
+
+  { name: "Black Panther", exp: "infinity_saga", team: "Avengers" },
+  { name: "Bruce Banner", exp: "infinity_saga", team: "Avengers" },
+  { name: "Captain Marvel", exp: "infinity_saga", team: "Avengers" },
+  { name: "Doctor Strange", exp: "infinity_saga", team: "Avengers" },
+  { name: "Wanda & Vision", exp: "infinity_saga", team: "Avengers" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
