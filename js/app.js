@@ -153,10 +153,8 @@
     }
     if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
-      if (categoryKey === "scheme") {
-        syncSchemeNumbers();
-        reconcileCountedCategories();
-      }
+      syncSchemeNumbers();
+      reconcileCountedCategories();
       syncRequiredCards();
     }
     render();
@@ -178,10 +176,8 @@
     locks[index] = true;
     state.locks[categoryKey] = locks;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
-      if (categoryKey === "scheme") {
-        syncSchemeNumbers();
-        reconcileCountedCategories();
-      }
+      syncSchemeNumbers();
+      reconcileCountedCategories();
       syncRequiredCards();
     }
     render();
@@ -435,9 +431,13 @@
    * layer on top — e.g. Negative Zone Prison Breakout's extra Henchman
    * group, Secret Invasion's required 6 Heroes, or Breach the Nexus of
    * All Realities' 3-Villain-Groups-at-1-2-players and 2-Twists-per-
-   * Villain-Group. Villain Group count is untouched unless a Scheme
-   * overrides it — most don't. Only called on a Scheme or Player-count
-   * change — never fights a manual stepper edit.
+   * Villain-Group — plus, for Heroes specifically, the current
+   * Mastermind's own `heroCountDelta` if it has one (e.g. Alchemax
+   * Executives adding an extra Hero as part of its own setup, on top of
+   * whatever the Scheme separately adds). Villain Group count is
+   * untouched unless a Scheme overrides it — most don't. Called on a
+   * Scheme, Mastermind, or Player-count change — never fights a manual
+   * stepper edit.
    *
    * Also resets the keyword-requirement cache and the extra-Hero pick
    * (see resolveKeywordRequirement/syncExtraCard) whenever the Scheme
@@ -467,6 +467,9 @@
     } else if (overrides.heroCount != null) {
       heroCount = overrides.heroCount;
     }
+    heroCount += overrides.heroCountDelta || 0;
+    const mmData = currentMastermindData();
+    heroCount += (mmData && mmData.heroCountDelta) || 0;
 
     let villainCount = baseVillainCount;
     if (overrides.villainCountByPlayers && players && overrides.villainCountByPlayers[players] != null) {
@@ -993,7 +996,7 @@
       rerollSection.textContent = "Reroll All";
       rerollSection.addEventListener("click", () => {
         randomizeCategory(category, { keepLocked: true });
-        if (category.key === "scheme") {
+        if (category.key === "mastermind" || category.key === "scheme") {
           syncSchemeNumbers();
           reconcileCountedCategories();
         }

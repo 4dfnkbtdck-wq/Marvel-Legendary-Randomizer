@@ -59,6 +59,13 @@
  * no specific required card (e.g. one that "leads any villain group" —
  * that's not a forced requirement of any kind, just flavor text).
  *
+ * A Mastermind entry can also carry `heroCountDelta` — a flat number
+ * added to the Heroes count as part of its own setup (e.g. Alchemax
+ * Executives' "add an extra hero to the Hero deck"), independent of and
+ * stacking with any `heroCountDelta` a Scheme separately sets (see the
+ * SCHEMES comment below) — this one just comes from the Mastermind card
+ * instead.
+ *
  * A Hero entry can optionally carry `team` (e.g. "Avengers", "X-Men"),
  * shown as a tag and usable as a Team Theme filter to build an
  * all-one-team lineup. It's fine to leave it off — Deadpool, for
@@ -128,6 +135,7 @@ const EXPANSIONS = [
   { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
   { id: "what_if", name: "Marvel Studios: What If...?", confidence: "verified" },
   { id: "core_2nd", name: "Core Set (2nd Edition)", confidence: "verified" },
+  { id: "2099", name: "2099", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -188,6 +196,9 @@ const MASTERMINDS = [
   { name: "Loki", exp: "core_2nd", leads: [{ category: "villains", name: "Enemies of Asgard" }] },
   { name: "Magneto", exp: "core_2nd", leads: [{ category: "villains", nameContains: ["Brotherhood", "X-Men"] }] },
   { name: "Red Skull", exp: "core_2nd", leads: [{ category: "villains", nameContains: ["Hydra"] }] },
+
+  { name: "Alchemax Executives", exp: "2099", leads: [{ category: "villains", name: "Alchemax Enforcers" }], heroCountDelta: 1 },
+  { name: "Sinister Six 2099", exp: "2099", leads: [{ category: "villains", nameContains: ["Alchemax", "Sinister"] }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -201,8 +212,14 @@ const MASTERMINDS = [
 //                  override) / `bystandersDelta` (added to the base
 //                  count unconditionally) / `bystandersDeltaByPlayers`
 //                  (added to the base count, only at the listed player
-//                  counts), `henchmenDelta`, `heroCount` (or
-//                  `heroCountByPlayers`), `villainCount` /
+//                  counts), `henchmenDelta`, `heroCount` /
+//                  `heroCountByPlayers` (flat overrides) /
+//                  `heroCountDelta` (added to the base, e.g. "add an
+//                  extra Hero to the Hero Deck" — note this is a
+//                  different mechanic from `extraHero` below: this one
+//                  joins the normal Hero Deck and shows as one more card
+//                  in the main Heroes result, `extraHero` doesn't),
+//                  `villainCount` /
 //                  `villainCountByPlayers` (flat overrides) /
 //                  `villainCountDelta` (added to the base, e.g. "add an
 //                  extra Villain Group"), `requiredVillainGroup` /
@@ -211,7 +228,12 @@ const MASTERMINDS = [
 //                  `requiredVillainGroupKeyword` (same, but resolved to
 //                  whichever available Villain Group(s) carry that
 //                  keyword — see VILLAIN_GROUPS' `keywords` above),
-//                  `extraHero` (a boolean — see syncExtraCard in app.js).
+//                  `extraHero` (a boolean — see syncExtraCard in app.js;
+//                  for a Scheme whose extra Hero contributes its OWN
+//                  cards straight into the Villain Deck without ever
+//                  joining the normal Hero Deck, e.g. Marvel Zombies —
+//                  if the extra Hero instead joins the normal Hero Deck,
+//                  that's `heroCountDelta` above instead, not this).
 //   setupNote    — remaining Setup text not covered by a mechanical
 //                  override (e.g. "Skrull Villain Group required" is
 //                  covered by `requiredVillainGroup`, but "shuffle 12
@@ -576,9 +598,9 @@ const SCHEMES = [
   {
     name: "Secret Invasion of the Skrull Shapeshifters",
     exp: "core_2nd",
-    overrides: { twists: 6, requiredVillainGroup: "Skrulls", extraHero: true },
+    overrides: { twists: 6, requiredVillainGroup: "Skrulls", heroCountDelta: 1 },
     setupNote:
-      'Add an extra Hero to the Hero Deck (shown in the Villain Deck section). Shuffle 4 random cards from the Hero Deck into the Villain Deck.\nSpecial Rules: Hero cards in the Villain Deck and city are "Skrull Infiltrator" Villains with Attack equal to that Hero\'s cost + 3. They have "Fight: Either KO this card or choose a player to gain it as a Hero."',
+      'Shuffle 4 random cards from the Hero Deck into the Villain Deck.\nSpecial Rules: Hero cards in the Villain Deck and city are "Skrull Infiltrator" Villains with Attack equal to that Hero\'s cost + 3. They have "Fight: Either KO this card or choose a player to gain it as a Hero."',
     twist: "Twists 1–5: The leftmost Hero from the HQ enters the Sewers as a Skrull Infiltrator.\nTwist 6: All Skrulls in the city escape.",
     evilWins: "When there are 6 Hero cards in the Escape Pile.",
   },
@@ -624,6 +646,46 @@ const SCHEMES = [
     setupNote: "",
     twist: "Play two cards from the Villain Deck.",
     evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
+  },
+
+  // The four 2099 schemes below are transcribed directly from the
+  // physical cards.
+  {
+    name: "Become President of the United States",
+    exp: "2099",
+    overrides: { twists: 11 },
+    setupNote:
+      'Special Rules: Once per turn, you may stack one of your non-grey Heroes next to this Scheme to earn "Ten Million Votes" for that Hero Name. If you do, you may also send one of your grey Heroes Undercover as "Secret Service."',
+    twist:
+      'If there\'s a Villain in the Bank or Streets, the Mastermind "vows to crush crime," and you stack this Twist next to the Mastermind as "Ten Million Votes." Otherwise, you may discard two cards to "counter negative advertising," shuffle this Twist back into the Villain Deck, and play another card from that deck. If you don\'t discard, stack this Twist next to the Mastermind as "Ten Million Votes."',
+    evilWins: "When the Mastermind is elected President by having Forty Million more Votes than the highest-voted Hero Name.",
+  },
+  {
+    name: "Befoul Earth into a Polluted Wasteland",
+    exp: "2099",
+    overrides: { twists: 8, heroCountDelta: 1 },
+    setupNote:
+      'The 8 Twists represent "Toxic Sludge."\nSpecial Rules: To recruit a Hero, you must also pay 2 Recruit for each Toxic Sludge under it. During your turn, if there is any Sludge under the HQ, you may "flush the Toxic Sludge into the river." If you do, then KO all the Sludge and the Heroes in those HQ spaces, and each player gains a Wound.',
+    twist: "Put this Toxic Sludge under an HQ space. No space can have two Sludges unless all spaces already have one.",
+    evilWins: "When the Hero Deck runs out or there are 8 Toxic Sludges under the HQ and/or in the river (KO pile).",
+  },
+  {
+    name: "Pull Reality into Cyberspace",
+    exp: "2099",
+    overrides: { twists: 7 },
+    setupNote:
+      "The 7 Twists represent \"Cyberspace.\"\nSpecial Rules: Enemies under any Cyberspace get +1 Attack for each Cyberspace on the board, and they can be fought with any combination of Recruit and Attack.",
+    twist: "Twists 1–5: Put this Cyberspace above the rightmost city space that isn't yet under Cyberspace.\nTwist 6: Put this Cyberspace above the Mastermind.\nTwist 7: Evil Wins!",
+    evilWins: "",
+  },
+  {
+    name: "Subjugate Earth with Mega-Corporations",
+    exp: "2099",
+    overrides: { twists: 11, heroCountDelta: 1 },
+    setupNote: "",
+    twist:
+      'Put the Hero from the HQ space under the Bank into a "Mega-Corp Domination" Stack matching its Hero Class (off of the board). Do the listed effect for that Mega-Corp:\nGreen Globe: Each player discards a card with a Recruit icon.\nAlchemax: Each player discards a Hero of the printed type or gains a Wound.\nPublic Eye: Each player discards two cards, then draws a card.\nD/MONIX: Each player discards a card with an Attack icon.\nStark-Fujikawa: A Villain from your Victory Pile reenters the city.',
+    evilWins: "When a single Mega-Corp has 3 Dominations.",
   },
 ];
 
@@ -693,6 +755,9 @@ const VILLAIN_GROUPS = [
   { name: "Sinister Spider-Foes", exp: "core_2nd" },
   { name: "Skrulls", exp: "core_2nd" },
   { name: "Sinister Syndicate", exp: "core_2nd" },
+
+  { name: "Alchemax Enforcers", exp: "2099" },
+  { name: "False Aesir of Alchemax", exp: "2099" },
 ];
 
 const HENCHMEN = [
@@ -902,6 +967,12 @@ const HEROES = [
   { name: "Storm", exp: "core_2nd", team: "X-Men" },
   { name: "Thor", exp: "core_2nd", team: "Avengers" },
   { name: "Wolverine", exp: "core_2nd", team: "X-Men" },
+
+  { name: "Doctor Doom 2099", exp: "2099" },
+  { name: "Ghost Rider 2099", exp: "2099", team: "Marvel Knights" },
+  { name: "Hulk 2099", exp: "2099", team: "Marvel Knights" },
+  { name: "Ravage 2099", exp: "2099", team: "Marvel Knights" },
+  { name: "Spider-Man 2099", exp: "2099", team: "Spider-Friends" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
