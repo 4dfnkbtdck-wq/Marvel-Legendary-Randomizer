@@ -459,7 +459,10 @@
    * heroDrawExclusions above, so it's always safe to hand straight to
    * state.extraCard here; null (no extra card shown) if that Hero isn't
    * currently available (excluded, its expansion off, or filtered out by
-   * the Team Theme filter). */
+   * the Team Theme filter). A Scheme can also set `extraHeroKeyword` to
+   * narrow the random pick down to only Heroes carrying that `keywords`
+   * tag (e.g. "Size-Changing" for Auction Shrink Tech to Highest Bidder)
+   * rather than picking from every available Hero. */
   function syncExtraCard() {
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
@@ -472,7 +475,8 @@
       state.extraCard = null;
       return;
     }
-    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    let pool = poolFor(CATEGORY_BY_KEY.heroes);
+    if (overrides.extraHeroKeyword) pool = pool.filter((c) => (c.keywords || []).includes(overrides.extraHeroKeyword));
     const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
     const candidates = pool.filter((c) => !mainNames.has(c.name));
     if (state.extraCard && candidates.some((c) => c.name === state.extraCard.name)) return;
@@ -481,7 +485,10 @@
   }
 
   function rerollExtraCard() {
-    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    let pool = poolFor(CATEGORY_BY_KEY.heroes);
+    if (overrides.extraHeroKeyword) pool = pool.filter((c) => (c.keywords || []).includes(overrides.extraHeroKeyword));
     const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
     const candidates = pool.filter((c) => !mainNames.has(c.name));
     const [picked] = pickRandom(candidates, 1, state.extraCard ? [state.extraCard] : []);
@@ -706,6 +713,7 @@
       villainCount = overrides.villainCount;
     }
     villainCount += overrides.villainCountDelta || 0;
+    villainCount += (mmData && mmData.villainCountDelta) || 0;
     villainCount = clampOption(villainCount, 1, 6);
 
     let twists;

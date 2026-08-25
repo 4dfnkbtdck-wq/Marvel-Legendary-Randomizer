@@ -61,13 +61,22 @@
  * Executives' "add an extra hero to the Hero deck"), independent of and
  * stacking with any `heroCountDelta` a Scheme separately sets (see the
  * SCHEMES comment below) — this one just comes from the Mastermind card
- * instead.
+ * instead. Similarly, `villainCountDelta` adds to the Villain Group count
+ * as part of the Mastermind's own setup (e.g. Kang, Quantum Conqueror's
+ * "set aside the villains from an extra Villain Group as Timeline
+ * Variants") — the extra group is picked randomly from the pool exactly
+ * like a Scheme's own `villainCountDelta` does, since neither names a
+ * specific required group.
  *
  * A Hero entry can optionally carry `team` (e.g. "Avengers", "X-Men"),
  * shown as a tag and usable as a Team Theme filter to build an
  * all-one-team lineup. It's fine to leave it off — Deadpool, for
  * instance, isn't on a team — a hero without one just won't match any
- * team filter.
+ * team filter. It can also carry `keywords` (same idea as a Villain
+ * Group's `keywords` below), a curated tag not printed on the card itself
+ * but noting a trait shared across many Heroes from different
+ * expansions (e.g. "Size-Changing", used by `extraHeroKeyword` below to
+ * pick from just that subset) — most Heroes have none.
  *
  * A Villain Group entry can optionally carry `keywords`, an array of
  * printed-keyword strings (e.g. "Rise of the Living Dead"), for a Scheme
@@ -248,12 +257,7 @@ const MASTERMINDS = [
 
   { name: "Darren Cross", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Cross Technologies" }] },
   { name: "Ghost, Master Thief", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Ghost Chasers" }] },
-  // Kang, Quantum Conqueror's card also reads "...and set aside the
-  // villains from an extra Villain Group as 'Timeline Variants'" — a
-  // Mastermind-level setup instruction with no matching field in this
-  // schema (see the Mastermind doc comment above); left as flavor/setup
-  // text only, not mechanically modeled.
-  { name: "Kang, Quantum Conqueror", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Armada of Kang" }] },
+  { name: "Kang, Quantum Conqueror", exp: "ant_man_wasp", leads: [{ category: "villains", name: "Armada of Kang" }], villainCountDelta: 1 },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -307,7 +311,12 @@ const MASTERMINDS = [
 //                  cards." `extraHeroNote` overrides the default "8
 //                  random cards go in the Villain Deck" display text for
 //                  a Scheme that adds a different amount, e.g. "all 14
-//                  cards" — see Trap Heroes in the Microverse), or
+//                  cards" — see Trap Heroes in the Microverse; pair with
+//                  `extraHeroKeyword` to narrow the random pick to only
+//                  Heroes carrying a given `keywords` tag rather than any
+//                  Hero, e.g. "Auction Shrink Tech to Highest Bidder"
+//                  requiring "a random extra Hero that has any
+//                  Size-Changing cards"), or
 //                  `extraHeroName` (same idea, but for a Scheme that
 //                  names one specific Hero rather than picking randomly,
 //                  e.g. Dark City's "Transform Citizens into Demons"
@@ -1488,6 +1497,7 @@ const SCHEMES = [
     overrides: {
       twists: 11,
       extraHero: true,
+      extraHeroKeyword: "Size-Changing",
       extraHeroNote: "all 14 cards form a \"Shrink Tech\" stack next to the Scheme — not the Villain Deck. See Twist.",
     },
     setupNote: 'Set aside all 14 cards of a random extra Hero that has any Size-Changing cards as "Shrink Tech."',
@@ -1809,27 +1819,27 @@ const HEROES = [
   { name: "Forge", exp: "x_men" },
   { name: "Iceman", exp: "x_men" },
 
-  { name: "Gwenpool", exp: "champions", team: "Champions" },
-  { name: "Ms. Marvel", exp: "champions", team: "Champions" },
-  { name: "Nova", exp: "champions", team: "Champions" },
-  { name: "Totally Awesome Hulk", exp: "champions", team: "Champions" },
-  { name: "Viv Vision", exp: "champions", team: "Champions" },
+  { name: "Gwenpool", exp: "champions", team: "Champions", keywords: ["Size-Changing"] },
+  { name: "Ms. Marvel", exp: "champions", team: "Champions", keywords: ["Size-Changing"] },
+  { name: "Nova", exp: "champions", team: "Champions", keywords: ["Size-Changing"] },
+  { name: "Totally Awesome Hulk", exp: "champions", team: "Champions", keywords: ["Size-Changing"] },
+  { name: "Viv Vision", exp: "champions", team: "Champions", keywords: ["Size-Changing"] },
 
   { name: "Captain America, Secret Avenger", exp: "civil_war", team: "Avengers" },
   { name: "Cloak & Dagger", exp: "civil_war", team: "Avengers" },
   { name: "Daredevil", exp: "civil_war", team: "Avengers" },
   { name: "Falcon", exp: "civil_war", team: "Avengers" },
-  { name: "Goliath", exp: "civil_war", team: "Avengers" },
+  { name: "Goliath", exp: "civil_war", team: "Avengers", keywords: ["Size-Changing"] },
   { name: "Hercules", exp: "civil_war", team: "Avengers" },
-  { name: "Hulkling", exp: "civil_war", team: "Avengers" },
+  { name: "Hulkling", exp: "civil_war", team: "Avengers", keywords: ["Size-Changing"] },
   { name: "Luke Cage", exp: "civil_war", team: "Avengers" },
   { name: "Patriot", exp: "civil_war", team: "Avengers" },
   { name: "Peter Parker", exp: "civil_war", team: "Avengers" },
   { name: "Speedball", exp: "civil_war", team: "New Warriors" },
-  { name: "Stature", exp: "civil_war", team: "Avengers" },
+  { name: "Stature", exp: "civil_war", team: "Avengers", keywords: ["Size-Changing"] },
   { name: "Storm & Black Panther", exp: "civil_war", team: "Avengers" },
   { name: "Tigra", exp: "civil_war", team: "Avengers" },
-  { name: "Vision", exp: "civil_war", team: "Avengers" },
+  { name: "Vision", exp: "civil_war", team: "Avengers", keywords: ["Size-Changing"] },
   { name: "Wiccan", exp: "civil_war", team: "Avengers" },
 
   { name: "Brainstorm", exp: "annihilation", team: "Fantastic Four" },
@@ -1838,11 +1848,11 @@ const HEROES = [
   { name: "Psi-Lord", exp: "annihilation", team: "Fantastic Four" },
   { name: "Super-Skrull", exp: "annihilation" },
 
-  { name: "Ant-Man", exp: "ant_man", team: "Avengers" },
+  { name: "Ant-Man", exp: "ant_man", team: "Avengers", keywords: ["Size-Changing"] },
   { name: "Black Knight", exp: "ant_man", team: "Avengers" },
-  { name: "Jocasta", exp: "ant_man", team: "Avengers" },
-  { name: "Wasp", exp: "ant_man", team: "Avengers" },
-  { name: "Wonder Man", exp: "ant_man", team: "Avengers" },
+  { name: "Jocasta", exp: "ant_man", team: "Avengers", keywords: ["Size-Changing"] },
+  { name: "Wasp", exp: "ant_man", team: "Avengers", keywords: ["Size-Changing"] },
+  { name: "Wonder Man", exp: "ant_man", team: "Avengers", keywords: ["Size-Changing"] },
 
   { name: "Agent X-13", exp: "cap_75", team: "S.H.I.E.L.D." },
   { name: "Captain America (Falcon)", exp: "cap_75", team: "Avengers" },
@@ -1986,14 +1996,14 @@ const HEROES = [
   { name: "White Tiger", exp: "black_widow", team: "Marvel Knights" },
   { name: "Yelena Belova", exp: "black_widow", team: "S.H.I.E.L.D." },
 
-  { name: "Ant Army", exp: "ant_man_wasp" },
-  { name: "Ant-Man", exp: "ant_man_wasp", team: "Avengers" },
-  { name: "Cassie Lang", exp: "ant_man_wasp", team: "Avengers" },
+  { name: "Ant Army", exp: "ant_man_wasp", keywords: ["Size-Changing"] },
+  { name: "Ant-Man", exp: "ant_man_wasp", team: "Avengers", keywords: ["Size-Changing"] },
+  { name: "Cassie Lang", exp: "ant_man_wasp", team: "Avengers", keywords: ["Size-Changing"] },
   { name: "Freedom Fighters", exp: "ant_man_wasp" },
-  { name: "Janet Van Dyne", exp: "ant_man_wasp" },
+  { name: "Janet Van Dyne", exp: "ant_man_wasp", keywords: ["Size-Changing"] },
   { name: "Jentorra", exp: "ant_man_wasp" },
   { name: "Scott Lang, Cat Burglar", exp: "ant_man_wasp", team: "Crime Syndicate" },
-  { name: "Wasp", exp: "ant_man_wasp", team: "Avengers" },
+  { name: "Wasp", exp: "ant_man_wasp", team: "Avengers", keywords: ["Size-Changing"] },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
