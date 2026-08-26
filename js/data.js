@@ -2481,7 +2481,7 @@ const HEROES = [
   { name: "White Wolf", exp: "black_panther", team: "Heroes of Wakanda", gender: "male" },
 
   { name: "Black Widow", exp: "black_widow", team: "S.H.I.E.L.D.", gender: "female" },
-  { name: "Falcon & Winter Soldier", exp: "black_widow", team: "Avengers", gender: "male" },
+  { name: "Falcon & Winter Soldier", exp: "black_widow", team: "Avengers" },
   { name: "Red Guardian", exp: "black_widow", gender: "male" },
   { name: "White Tiger", exp: "black_widow", team: "Marvel Knights", gender: "female" },
   { name: "Yelena Belova", exp: "black_widow", team: "S.H.I.E.L.D.", gender: "female" },
@@ -2498,7 +2498,7 @@ const HEROES = [
   { name: "Drax", exp: "guardians_movie", team: "Guardians of the Galaxy", gender: "male" },
   { name: "Gamora", exp: "guardians_movie", team: "Guardians of the Galaxy", gender: "female" },
   { name: "Mantis", exp: "guardians_movie", team: "Guardians of the Galaxy", gender: "female" },
-  { name: "Rocket & Groot", exp: "guardians_movie", team: "Guardians of the Galaxy", gender: "male" },
+  { name: "Rocket & Groot", exp: "guardians_movie", team: "Guardians of the Galaxy" },
   { name: "Star-Lord", exp: "guardians_movie", team: "Guardians of the Galaxy", gender: "male" },
 
   { name: "Black Panther", exp: "infinity_saga", team: "Avengers", gender: "male" },
