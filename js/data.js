@@ -167,6 +167,7 @@ const EXPANSIONS = [
   { id: "guardians_movie", name: "Marvel Studios Guardians of the Galaxy", confidence: "verified" },
   { id: "infinity_saga", name: "Marvel Studios Infinity Saga", confidence: "verified" },
   { id: "midnight_sons", name: "Midnight Sons", confidence: "verified" },
+  { id: "secret_wars_2", name: "Secret Wars: Volume 2", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -319,6 +320,11 @@ const MASTERMINDS = [
   { name: "Nimrod, Super Sentinel", exp: "secret_wars", leads: [{ category: "villains", name: "Sentinel Territories" }] },
   { name: "Wasteland Hulk", exp: "secret_wars", leads: [{ category: "villains", name: "Wasteland" }] },
   { name: "Zombie Green Goblin", exp: "secret_wars", leads: [{ category: "villains", name: "The Deadlands" }] },
+
+  { name: "Immortal Emperor Zheng-Zhu", exp: "secret_wars_2", leads: [{ category: "villains", name: "K'un-Lun" }] },
+  { name: "King Hyperion", exp: "secret_wars_2", leads: [{ category: "villains", name: "Utopolis" }] },
+  { name: "Shiklah, the Demon Bride", exp: "secret_wars_2", leads: [{ category: "villains", name: "Monster Metropolis" }] },
+  { name: "Spider-Queen", exp: "secret_wars_2", leads: [{ category: "henchmen", name: "Spider-Infected" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -2254,6 +2260,94 @@ const SCHEMES = [
       "Twist 1: Add a random second Mastermind to the game with one Mastermind Tactic.\nTwists 2-4: If the second Mastermind is still in play, it gains another Mastermind Tactic.\nTwist 5-6: Each Mastermind captures a Bystander.\nTwist 7: Evil wins!",
     evilWins: "",
   },
+
+  // The eight Secret Wars: Volume 2 Schemes below are transcribed directly
+  // from the physical cards. "The Mark of Khonshu" requires the "Khonshu
+  // Guardians" Henchman Group (`requiredHenchmen`) and sets aside an extra
+  // Hero's full 14 cards (`extraHero`/`extraHeroNote`, same idea as Volume
+  // 1's "Master of Tyrants" precedent for a "not the normal Villain/Hero
+  // Deck" destination). "The Fountain of Eternal Life" scales its Twists
+  // down to 4 at 1 player only (`twistsByPlayers`). "Enthrone the Barons
+  // of Battleworld" and "The God-Emperor of Battleworld" both describe a
+  // Villain/this Scheme ascending into a brand-new in-game Mastermind —
+  // left as reference text only, since the app has no mechanism for
+  // minting a Mastermind mid-game the way it does for a Scheme
+  // Transforming into a fixed companion Scheme (see Revelations).
+  {
+    name: "The Mark of Khonshu",
+    exp: "secret_wars_2",
+    overrides: {
+      twists: 10,
+      requiredHenchmen: "Khonshu Guardians",
+      extraHero: true,
+      extraHeroNote: "all 14 cards go in the Villain Deck",
+    },
+    setupNote:
+      'Special Rules: Heroes in the Villain Deck are "Khonshu Guardian" Villains with Attack equal to their printed cost. While in the Sewers, Rooftops, or Bridge, they are in "wolf form" and have double their Attack. When you defeat one, gain it as a Hero.',
+    twist: "Play two cards from the Villain Deck.",
+    evilWins: "When 7 Khonshu Guardians escape (includes both Villain and Henchman).",
+  },
+  {
+    name: "Master the Mysteries of Kung-Fu",
+    exp: "secret_wars_2",
+    overrides: { twists: 8 },
+    setupNote:
+      "Special Rules: Villains and the Mastermind have the Circle of Kung-Fu matching the number of Twists stacked next to the Scheme.",
+    twist: "Stack this Twist next to the Scheme.",
+    evilWins: "When the number of escaped Villains is double the number of players.",
+  },
+  {
+    name: "Secret Wars",
+    exp: "secret_wars_2",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist: "Twists 1-3: Add another random Mastermind to the game with one Tactic.\nTwist 8: Evil wins!",
+    evilWins: "",
+  },
+  {
+    name: "Sinister Ambitions",
+    exp: "secret_wars_2",
+    overrides: { twists: 6 },
+    setupNote:
+      "Add 10 random Ambition cards to the Villain Deck.\nSpecial Rules: Ambition cards are Villains with their printed Attack. Add +1 Attack for each Twist stacked next to the Scheme. They are worth 4VP. Whenever an Ambition Villain escapes, do its Ambition effect.",
+    twist:
+      "Twist 1-5: Stack this Twist next to the Scheme. Play another card from the Villain Deck.\nTwist 6: Each Ambition Villain in the city escapes.",
+    evilWins: "When 4 Ambition Villains escape.",
+  },
+  {
+    name: "Deadlands Hordes Charge the Wall",
+    exp: "secret_wars_2",
+    overrides: { twists: 8, villainCountDelta: 1 },
+    setupNote: "",
+    twist: "Each Villain simultaneously charges two spaces. Play another card from the Villain Deck.",
+    evilWins: "When the number of escaped Villains equals the number of players plus 6.",
+  },
+  {
+    name: "Enthrone the Barons of Battleworld",
+    exp: "secret_wars_2",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      'Twists 1-7: The Villain in the city or Escape Pile with the highest printed Attack ascends to become a new Mastermind. It gets +2 Attack. It gains the ability "Master Strike: Each player discards a card with cost equal to this Mastermind\'s printed Recruit." (Keep them separate from any Villains who ascend through Escape effects.)\nTwist 8: The Villain in each player\'s Victory Pile with the highest printed Attack ascends the same way.',
+    evilWins: "When there are 6 Masterminds.",
+  },
+  {
+    name: "The Fountain of Eternal Life",
+    exp: "secret_wars_2",
+    overrides: { twistsByPlayers: { 1: 4, 2: 8, 3: 8, 4: 8, 5: 8 } },
+    setupNote: 'Special Rules: All Villains and Mastermind Tactics have "Fight: Fateful Resurrection."',
+    twist: "A Villain from your Victory Pile enters the Sewers. Put this Twist on the bottom of the Villain Deck.",
+    evilWins: "When the number of escaped Villains is 3 times the number of players.",
+  },
+  {
+    name: "The God-Emperor of Battleworld",
+    exp: "secret_wars_2",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      'Twist 1: This Scheme ascends to become a new 9-Attack "God-Emperor" Mastermind worth 9VP. It has "Master Strike: Each player with exactly six cards in hand reveals a Hero or puts two cards from their hand on top of their deck."\nTwist 2-6: Stack this Twist next to the Scheme. The God-Emperor gets another +2 Attack.\nTwist 7: If the God-Emperor lives, it KOs all other Masterminds.\nTwist 8: Evil wins! (If any Mastermind still lives.)',
+    evilWins: "",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2452,6 +2546,13 @@ const VILLAIN_GROUPS = [
   { name: "Manhattan (Earth-1610)", exp: "secret_wars" },
   { name: "Sentinel Territories", exp: "secret_wars" },
   { name: "Wasteland", exp: "secret_wars" },
+
+  { name: "Deadpool's Secret Secret Wars", exp: "secret_wars_2" },
+  { name: "Guardians of Knowhere", exp: "secret_wars_2" },
+  { name: "K'un-Lun", exp: "secret_wars_2" },
+  { name: "Monster Metropolis", exp: "secret_wars_2" },
+  { name: "Utopolis", exp: "secret_wars_2" },
+  { name: "X-Men '92", exp: "secret_wars_2" },
 ];
 
 const HENCHMEN = [
@@ -2507,6 +2608,10 @@ const HENCHMEN = [
   { name: "Ghost Racers", exp: "secret_wars" },
   { name: "M.O.D.O.K.S", exp: "secret_wars" },
   { name: "Thor Corps", exp: "secret_wars" },
+
+  { name: "Khonshu Guardians", exp: "secret_wars_2" },
+  { name: "Magma Men", exp: "secret_wars_2" },
+  { name: "Spider-Infected", exp: "secret_wars_2" },
 ];
 
 const HEROES = [
@@ -2821,6 +2926,23 @@ const HEROES = [
   { name: "Superior Iron Man", exp: "secret_wars", team: "Illuminati", gender: "male" },
   { name: "Thanos", exp: "secret_wars", team: "Cabal", gender: "male" },
   { name: "Ultimate Spider-Man", exp: "secret_wars", team: "Spider-Friends", gender: "male" },
+
+  { name: "Agent Venom", exp: "secret_wars_2", team: "Spider-Friends", gender: "male" },
+  { name: "Arkon the Magnificent", exp: "secret_wars_2", gender: "male" },
+  { name: "Beast", exp: "secret_wars_2", team: "Illuminati", gender: "male" },
+  { name: "Black Swan", exp: "secret_wars_2", team: "Cabal", gender: "female" },
+  { name: "The Captain and the Devil", exp: "secret_wars_2", team: "Avengers" },
+  { name: "Captain Britain", exp: "secret_wars_2", team: "Illuminati", gender: "male" },
+  { name: "Corvus Glaive", exp: "secret_wars_2", team: "Cabal", gender: "male" },
+  { name: "Dr. Punisher the Soldier Supreme", exp: "secret_wars_2", team: "Marvel Knights", gender: "male" },
+  { name: "Elsa Bloodstone", exp: "secret_wars_2", team: "S.H.I.E.L.D.", gender: "female" },
+  { name: "Phoenix Force Cyclops", exp: "secret_wars_2", team: "X-Men", gender: "male" },
+  { name: "Ruby Summers", exp: "secret_wars_2", team: "X-Men", gender: "female" },
+  { name: "Shang-Chi", exp: "secret_wars_2", team: "Marvel Knights", gender: "male" },
+  { name: "Silk", exp: "secret_wars_2", team: "Spider-Friends", gender: "female" },
+  { name: "Soulsword Colossus", exp: "secret_wars_2", team: "X-Men", gender: "male" },
+  { name: "Spider-Gwen", exp: "secret_wars_2", team: "Spider-Friends", gender: "female" },
+  { name: "Time-Travelling Jean Grey", exp: "secret_wars_2", team: "X-Men", gender: "female" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
