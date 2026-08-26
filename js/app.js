@@ -1605,8 +1605,8 @@
   // ---------- Rendering ----------
 
   const el = {
-    expansionList: document.getElementById("expansion-list"),
-    toggleAllExpansions: document.getElementById("toggle-all-expansions"),
+    openExpansions: document.getElementById("open-expansions"),
+    expansionsCount: document.getElementById("expansions-count"),
     cardPoolList: document.getElementById("card-pool-list"),
     teamThemeSection: document.getElementById("team-theme-section"),
     teamChips: document.getElementById("team-chips"),
@@ -1629,69 +1629,75 @@
     sheetList: document.getElementById("sheet-list"),
   };
 
-  function renderExpansions() {
-    el.expansionList.innerHTML = "";
-    const sortedExpansions = [...EXPANSIONS].sort((a, b) => a.name.localeCompare(b.name));
-    sortedExpansions.forEach((exp) => {
-      const id = `exp-${exp.id}`;
-      const li = document.createElement("li");
-      li.className = "ios-row";
-
-      const text = document.createElement("span");
-      text.className = "row-text";
-      if (exp.confidence === "light" || exp.confidence === "none") {
-        const main = document.createElement("span");
-        main.className = "row-text-main";
-        main.textContent = exp.name;
-        const sub = document.createElement("span");
-        sub.className = "row-text-sub";
-        sub.textContent = exp.confidence === "none" ? "No card data yet" : "Limited card data";
-        text.appendChild(main);
-        text.appendChild(sub);
-      } else {
-        text.textContent = exp.name;
-      }
-
-      const switchWrap = document.createElement("span");
-      switchWrap.className = "ios-switch";
-
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.id = id;
-      input.setAttribute("aria-label", exp.name);
-      input.checked = state.expansions.has(exp.id);
-      input.addEventListener("change", () => {
-        if (input.checked) state.expansions.add(exp.id);
-        else state.expansions.delete(exp.id);
-        pruneTeamFilter();
-        syncRequiredCards();
-        saveState();
-        renderWarnings();
-        renderToggleAllLabel();
-        renderCardPool();
-        renderTeamChips();
-        renderResults();
-      });
-
-      const track = document.createElement("span");
-      track.className = "track";
-      const thumb = document.createElement("span");
-      thumb.className = "thumb";
-
-      switchWrap.appendChild(input);
-      switchWrap.appendChild(track);
-      switchWrap.appendChild(thumb);
-
-      li.appendChild(text);
-      li.appendChild(switchWrap);
-      el.expansionList.appendChild(li);
-    });
-    renderToggleAllLabel();
+  /** The main-page "Manage Expansions" nav row just shows a live count
+   * (e.g. "12 of 40 on") — same idea as renderHistoryCount for "Past
+   * Setups" — since the actual toggle list now lives in its own sheet
+   * (see openExpansionsSheet/expansionRow below) rather than taking up
+   * space inline on the main page. */
+  function renderExpansionsCount() {
+    el.expansionsCount.textContent = `${state.expansions.size} of ${EXPANSIONS.length} on`;
   }
 
-  function renderToggleAllLabel() {
-    const allSelected = state.expansions.size === EXPANSIONS.length;
-    el.toggleAllExpansions.textContent = allSelected ? "Deselect All" : "Select All";
+  /** One toggle row for the "Expansions" sheet — same checkbox/switch
+   * markup and behavior the inline list used before it moved into its
+   * own sheet, just appended to el.sheetList instead of a fixed list on
+   * the main page, and refreshing the sheet itself (so the "Select All"/
+   * "Deselect All" action label and the main page's live count both stay
+   * in sync) rather than just the one row's own list. */
+  function expansionRow(exp) {
+    const id = `exp-${exp.id}`;
+    const li = document.createElement("li");
+    li.className = "ios-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    if (exp.confidence === "light" || exp.confidence === "none") {
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = exp.name;
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      sub.textContent = exp.confidence === "none" ? "No card data yet" : "Limited card data";
+      text.appendChild(main);
+      text.appendChild(sub);
+    } else {
+      text.textContent = exp.name;
+    }
+
+    const switchWrap = document.createElement("span");
+    switchWrap.className = "ios-switch";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.id = id;
+    input.setAttribute("aria-label", exp.name);
+    input.checked = state.expansions.has(exp.id);
+    input.addEventListener("change", () => {
+      if (input.checked) state.expansions.add(exp.id);
+      else state.expansions.delete(exp.id);
+      pruneTeamFilter();
+      syncRequiredCards();
+      saveState();
+      renderWarnings();
+      renderExpansionsCount();
+      renderCardPool();
+      renderTeamChips();
+      renderResults();
+      renderSheet();
+    });
+
+    const track = document.createElement("span");
+    track.className = "track";
+    const thumb = document.createElement("span");
+    thumb.className = "thumb";
+
+    switchWrap.appendChild(input);
+    switchWrap.appendChild(track);
+    switchWrap.appendChild(thumb);
+
+    li.appendChild(text);
+    li.appendChild(switchWrap);
+    return li;
   }
 
   /** Drop any selected team that's no longer available now that expansions
@@ -2373,6 +2379,10 @@
     openSheet({ mode: "history" });
   }
 
+  function openExpansionsSheet() {
+    openSheet({ mode: "expansions" });
+  }
+
   function renderSheet() {
     if (!sheetState) return;
     el.sheetList.innerHTML = "";
@@ -2429,6 +2439,16 @@
         return;
       }
       state.history.forEach((entry) => el.sheetList.appendChild(historyRow(entry)));
+    } else if (sheetState.mode === "expansions") {
+      el.sheetTitle.textContent = "Expansions";
+      el.sheetSearchWrap.classList.add("hidden");
+      el.sheetAction.classList.remove("hidden");
+      el.sheetAction.classList.remove("sheet-header-btn-accent");
+      const allSelected = state.expansions.size === EXPANSIONS.length;
+      el.sheetAction.textContent = allSelected ? "Deselect All" : "Select All";
+
+      const sortedExpansions = [...EXPANSIONS].sort((a, b) => a.name.localeCompare(b.name));
+      sortedExpansions.forEach((exp) => el.sheetList.appendChild(expansionRow(exp)));
     }
   }
 
@@ -2599,12 +2619,24 @@
         saveState();
         renderSheet();
         renderHistoryCount();
+      } else if (sheetState.mode === "expansions") {
+        const allSelected = state.expansions.size === EXPANSIONS.length;
+        state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
+        pruneTeamFilter();
+        syncRequiredCards();
+        saveState();
+        renderWarnings();
+        renderExpansionsCount();
+        renderCardPool();
+        renderTeamChips();
+        renderResults();
+        renderSheet();
       }
     });
   }
 
   function init() {
-    renderExpansions();
+    renderExpansionsCount();
     renderCardPool();
     renderTeamChips();
     renderPlayersSegmented();
@@ -2613,18 +2645,7 @@
 
     el.randomizeAll.addEventListener("click", randomizeAll);
 
-    el.toggleAllExpansions.addEventListener("click", () => {
-      const allSelected = state.expansions.size === EXPANSIONS.length;
-      state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
-      pruneTeamFilter();
-      syncRequiredCards();
-      saveState();
-      renderExpansions();
-      renderWarnings();
-      renderCardPool();
-      renderTeamChips();
-      renderResults();
-    });
+    el.openExpansions.addEventListener("click", openExpansionsSheet);
 
     el.clearTeamFilter.addEventListener("click", () => {
       state.teamFilter.clear();
