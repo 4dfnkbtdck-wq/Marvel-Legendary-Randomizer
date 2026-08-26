@@ -448,7 +448,19 @@ const MASTERMINDS = [
 //                  rerolling one Hero slot stays within that slot's Team
 //                  so the split holds. Falls back to a plain random Hero
 //                  Deck if fewer than `count` Teams currently qualify.
-//                  Pair with `heroCount: count * perTeam`), or `unveils`
+//                  Pair with `heroCount: count * perTeam`), or
+//                  `heroTeamCount` (`{ team, count }` — same idea as
+//                  `heroTeamSplit`, but for a Scheme whose split is
+//                  asymmetric: exactly `count` Heroes from one named
+//                  Team, the rest of `heroCount` from any Hero NOT on
+//                  that Team, e.g. House of M's "Hero Deck is 4 X-Men
+//                  Heroes and 2 non-X-Men Heroes." Unlike
+//                  `heroTeamSplit`, the Team here is fixed by the
+//                  Scheme itself rather than chosen randomly among
+//                  qualifying Teams. Falls back to a plain random Hero
+//                  Deck if the currently enabled pool can't supply
+//                  enough Heroes on both sides. Pair with
+//                  `heroCount: total`), or `unveils`
 //                  (a boolean — for a "Veiled Scheme" whose last Twist
 //                  Transforms it into one of several random "Unveiled
 //                  Scheme" cards that carry the actual Evil Wins
@@ -2028,9 +2040,15 @@ const SCHEMES = [
   {
     name: "House of M",
     exp: "revelations",
-    overrides: { twists: 8 },
+    overrides: {
+      twists: 8,
+      heroCount: 6,
+      heroTeamCount: { team: "X-Men", count: 4 },
+      extraHeroName: "Scarlet Witch",
+      extraHeroNote: "all 14 cards go in the Villain Deck",
+    },
     setupNote:
-      'Hero Deck is 4 X-Men Heroes and 2 non-X-Men Heroes. (Or substitute another team for all X-Men icons on both sides.) Add 14 Scarlet Witch Hero cards to the Villain Deck.\nSpecial Rules: Each Scarlet Witch in the city is a Villain with Attack equal to its cost +3. If you fight one, gain it as a Hero.\nThis Scheme Transforms into "No More Mutants" (once at least 2 Scarlet Witch cards are in the city): Special Rules: Each Scarlet Witch in the city is a Villain with Attack equal to its cost +4. If you fight one, gain it as a Hero.',
+      '(Or substitute another team for all X-Men icons on both sides.)\nSpecial Rules: Each Scarlet Witch in the city is a Villain with Attack equal to its cost +3. If you fight one, gain it as a Hero.\nThis Scheme Transforms into "No More Mutants" (once at least 2 Scarlet Witch cards are in the city): Special Rules: Each Scarlet Witch in the city is a Villain with Attack equal to its cost +4. If you fight one, gain it as a Hero.',
     twist:
       'KO all non-X-Men Heroes from the HQ. If there are at least 2 Scarlet Witch cards in the city, this Scheme Transforms. Otherwise, play another card from the Villain Deck.\n"No More Mutants" Twist (after Transforming): KO all X-Men Heroes from the HQ. Play another card from the Villain Deck.',
     evilWins:
