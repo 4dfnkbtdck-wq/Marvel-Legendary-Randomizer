@@ -40,6 +40,43 @@
     const total = (log.heroWins || 0) + (log.evilWins || 0);
     document.getElementById("games-logged").textContent = String(total);
     document.getElementById("hero-win-rate").textContent = formatPct(log.heroWins || 0, log.evilWins || 0);
+    document.getElementById("clear-stats-group").classList.toggle("hidden", total === 0);
+  }
+
+  /** Resets cardStats and gameLog to empty and un-logs every History
+   * entry's outcome (so a past setup doesn't sit there still marked
+   * "Heroes Won" once the stats it fed are gone) — same STORAGE_KEY
+   * app.js writes, so the main page picks up the reset next time it
+   * loads state. Irreversible, so the button confirms first. */
+  function clearAllStats() {
+    if (!confirm("Clear all Win/Loss stats? This can't be undone.")) return;
+    let data;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      data = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      data = null;
+    }
+    if (!data) return;
+
+    data.cardStats = {};
+    CATEGORIES.forEach((c) => (data.cardStats[c.key] = {}));
+    data.gameLog = { heroWins: 0, evilWins: 0 };
+    if (Array.isArray(data.history)) {
+      data.history.forEach((entry) => {
+        entry.outcome = null;
+        entry.loggedAt = null;
+      });
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      /* localStorage unavailable — nothing to persist */
+    }
+
+    renderOverview(data);
+    renderSections(data);
   }
 
   function cardRow(category, name, entry) {
@@ -118,6 +155,7 @@
     const data = loadData();
     renderOverview(data);
     renderSections(data);
+    document.getElementById("clear-stats").addEventListener("click", clearAllStats);
   }
 
   document.addEventListener("DOMContentLoaded", init);

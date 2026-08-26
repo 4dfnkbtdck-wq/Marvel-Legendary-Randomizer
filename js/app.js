@@ -2,7 +2,10 @@
   "use strict";
 
   const STORAGE_KEY = "legendary-randomizer/v2";
-  const HISTORY_LIMIT = 20;
+  // Only bounds how far back "Past Setups" can browse/restore — win/loss
+  // stats (state.cardStats/state.gameLog) live separately and don't
+  // shrink when an entry ages out here, so this can be generous.
+  const HISTORY_LIMIT = 100;
 
   const CATEGORIES = [
     { key: "mastermind", label: "Mastermind", pool: MASTERMINDS, countKey: null, fixedCount: 1 },
