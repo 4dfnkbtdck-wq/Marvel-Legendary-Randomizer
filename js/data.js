@@ -126,7 +126,7 @@ const EXPANSIONS = [
   { id: "core", name: "Core Set (2012)", confidence: "verified" },
   { id: "dark_city", name: "Dark City", confidence: "verified" },
   { id: "fantastic_four", name: "Fantastic Four", confidence: "verified" },
-  { id: "paint_town_red", name: "Paint the Town Red", confidence: "moderate" },
+  { id: "paint_town_red", name: "Paint the Town Red", confidence: "verified" },
   { id: "guardians", name: "Guardians of the Galaxy", confidence: "verified" },
   { id: "x_men", name: "X-Men", confidence: "moderate" },
   { id: "champions", name: "Champions", confidence: "verified" },
@@ -297,6 +297,9 @@ const MASTERMINDS = [
 
   { name: "Charles Xavier, Professor of Crime", exp: "noir", leads: [{ category: "villains", name: "X-Men Noir" }] },
   { name: "The Goblin, Underworld Boss", exp: "noir", leads: [{ category: "villains", name: "Goblin's Freak Show" }] },
+
+  { name: "Carnage", exp: "paint_town_red", leads: [{ category: "villains", name: "Maximum Carnage" }] },
+  { name: "Mysterio", exp: "paint_town_red", leads: [{ category: "villains", name: "Sinister Six" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -596,8 +599,6 @@ const SCHEMES = [
     twist: "Each Goon in the city escapes. Shuffle all Goons from players' Victory Piles into the Villain Deck.",
     evilWins: "When 5 Goons escape.",
   },
-
-  { name: "Web of Lies", exp: "paint_town_red" },
 
   { name: "The Dark Phoenix Saga", exp: "x_men" },
   { name: "Days of Future Past", exp: "x_men" },
@@ -1880,6 +1881,48 @@ const SCHEMES = [
       'This Scheme captures 3 Hidden Witnesses. If it already had any Hidden Witnesses, put those into the Escape Pile.',
     evilWins: "When 6 Bystanders are in the Escape Pile.",
   },
+
+  // The four Paint the Town Red Schemes below are transcribed directly
+  // from the physical cards, replacing the previous unverified/guessed
+  // "Web of Lies" stub with this expansion's real fourth Scheme, "Weave
+  // a Web of Lies" (which, like Noir's "Find the Split Personality
+  // Killer," has no printed "Evil Wins" heading — its win condition is
+  // folded into "Twist 7: Evil wins!" instead).
+  {
+    name: "The Clone Saga",
+    exp: "paint_town_red",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist: "Each player reveals two non-grey Heroes with the same card name or discards down to 3 cards.",
+    evilWins: "When 2 Villains with the same card name have escaped or the Villain Deck runs out.",
+  },
+  {
+    name: "Invade the Daily Bugle News HQ",
+    exp: "paint_town_red",
+    overrides: { twists: 8 },
+    setupNote:
+      "Add 6 extra Henchmen from a single Henchman Group to the Hero Deck.\nSpecial Rules: You can fight Villains in the HQ.",
+    twist: "KO a Hero from the HQ. Put the highest-Attack Villain from the city into that HQ space.",
+    evilWins: "When there are 5 Villains in the HQ.",
+  },
+  {
+    name: "Splice Humans with Spider DNA",
+    exp: "paint_town_red",
+    overrides: { twists: 8, requiredVillainGroup: "Sinister Six" },
+    setupNote: "Special Rules: Sinister Six Villains get +3 Attack. All Hero cards have Wall-Crawl.",
+    twist:
+      "Each player puts a Sinister Six Villain from their Victory Pile on top of the Villain Deck. No matter how many players did so, play a single card from the Villain Deck.",
+    evilWins: "When 6 Sinister Six Villains have escaped or the Villain Deck runs out.",
+  },
+  {
+    name: "Weave a Web of Lies",
+    exp: "paint_town_red",
+    overrides: { twists: 7 },
+    setupNote:
+      "Special Rules: Whenever you defeat a Villain, you may pay 1 Recruit. If you do, rescue a Bystander.\nYou can't fight the Mastermind unless you have a Bystander in your Victory Pile for each Twist next to the Mastermind.",
+    twist: "Stack this Twist next to the Mastermind.\nTwist 7: Evil wins!",
+    evilWins: "",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -1943,7 +1986,8 @@ const VILLAIN_GROUPS = [
   { name: "Heralds of Galactus", exp: "fantastic_four" },
   { name: "Subterranea", exp: "fantastic_four" },
 
-  { name: "Sinister Syndicate", exp: "paint_town_red" },
+  { name: "Maximum Carnage", exp: "paint_town_red" },
+  { name: "Sinister Six", exp: "paint_town_red" },
 
   { name: "Infinity Gems", exp: "guardians" },
   { name: "Kree Starforce", exp: "guardians" },
@@ -2156,11 +2200,11 @@ const HEROES = [
   { name: "Skadi", exp: "fear_itself", team: "HYDRA" },
   { name: "Skirn, Breaker of Men", exp: "fear_itself", team: "Foes of Asgard" },
 
-  { name: "Spider-Woman", exp: "paint_town_red" },
-  { name: "Silk", exp: "paint_town_red" },
-  { name: "Spider-Man 2099", exp: "paint_town_red" },
-  { name: "Scarlet Spider", exp: "paint_town_red" },
-  { name: "Agent Venom", exp: "paint_town_red" },
+  { name: "Black Cat", exp: "paint_town_red", team: "Spider-Friends" },
+  { name: "Moon Knight", exp: "paint_town_red", team: "Marvel Knights" },
+  { name: "Scarlet Spider", exp: "paint_town_red", team: "Spider-Friends" },
+  { name: "Spider-Woman", exp: "paint_town_red", team: "Spider-Friends" },
+  { name: "Symbiote Spider-Man", exp: "paint_town_red", team: "Spider-Friends" },
 
   { name: "Drax the Destroyer", exp: "guardians", team: "Guardians of the Galaxy" },
   { name: "Gamora", exp: "guardians", team: "Guardians of the Galaxy" },
