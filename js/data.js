@@ -150,7 +150,7 @@ const EXPANSIONS = [
   { id: "noir", name: "Noir", confidence: "verified" },
   { id: "realm_of_kings", name: "Realm of Kings", confidence: "verified" },
   { id: "shield", name: "S.H.I.E.L.D.", confidence: "verified" },
-  { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "light" },
+  { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "verified" },
   { id: "venom", name: "Venom", confidence: "light" },
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
   { id: "dimensions", name: "Dimensions", confidence: "verified" },
@@ -215,7 +215,8 @@ const MASTERMINDS = [
   { name: "Dormammu", exp: "dr_strange", leads: [{ category: "villains", name: "Lords of the Netherworld" }] },
   { name: "Nightmare", exp: "dr_strange", leads: [{ category: "villains", name: "Fear Lords" }] },
   { name: "Maestro", exp: "world_war_hulk" },
-  { name: "Vulture", exp: "spiderman_homecoming" },
+  { name: "Vulture", exp: "spiderman_homecoming", leads: [{ category: "villains", name: "Vulture Tech" }] },
+  { name: "Adrian Toomes", exp: "spiderman_homecoming", leads: [{ category: "villains", name: "Salvagers" }] },
   { name: "Annihilus", exp: "annihilation", leads: [{ category: "villains", name: "Annihilation Wave" }] },
   { name: "Kang the Conqueror", exp: "annihilation", leads: [{ category: "villains", name: "Timelines of Kang" }] },
   { name: "Uru-Enchanted Iron Man", exp: "fear_itself", leads: [{ category: "villains", name: "The Mighty" }] },
@@ -2358,6 +2359,54 @@ const SCHEMES = [
       'Twist 1: This Scheme ascends to become a new 9-Attack "God-Emperor" Mastermind worth 9VP. It has "Master Strike: Each player with exactly six cards in hand reveals a Hero or puts two cards from their hand on top of their deck."\nTwist 2-6: Stack this Twist next to the Scheme. The God-Emperor gets another +2 Attack.\nTwist 7: If the God-Emperor lives, it KOs all other Masterminds.\nTwist 8: Evil wins! (If any Mastermind still lives.)',
     evilWins: "",
   },
+
+  // The four Spider-Man Homecoming Schemes below are transcribed directly
+  // from the physical cards. "Scavenge Alien Weaponry"'s "Add an extra
+  // Henchmen Group of 10 cards as 'Smugglers'" is a generic reflavored
+  // extra deck (not a real named Henchman Group card), so it uses
+  // `extraHenchmenCount: 1` + `extraHenchmenGroupLabel: "Smugglers"` —
+  // same mechanic as Volume 1's "Sire Vampires at the Blood Bank." "Distract
+  // the Hero"'s "Use at least 1 [Hero Class] Hero" icon couldn't be
+  // identified with certainty from the card photo, and this app doesn't
+  // track Hero Class as data on Hero cards at all, so it stays reference
+  // text only in setupNote (flagged for verification against the physical
+  // card, same as "Collect an Interstellar Zoo"'s icon-order caveat).
+  {
+    name: "Distract the Hero",
+    exp: "spiderman_homecoming",
+    overrides: { twists: 8 },
+    setupNote:
+      "Use at least 1 Hero of the printed Hero Class (icon on the card wasn't legible enough to identify with confidence — verify against the physical card if the exact match matters).",
+    twist:
+      'If you get any Victory Points this turn, put this Twist on the bottom of the Villain Deck. Otherwise, stack this Twist next to the Scheme as a "Villainous Interruption."',
+    evilWins: "When there have been 5 Villainous Interruptions.",
+  },
+  {
+    name: "Explosion at the Washington Monument",
+    exp: "spiderman_homecoming",
+    overrides: { twists: 8 },
+    setupNote:
+      "Shuffle 18 Bystanders and 14 Wounds, then deal them evenly into eight decks. Put these decks in a row, as Floors of the Washington Monument.\nSpecial Rules: Whenever you fight a Villain, you may reveal any face-down card from any Floor. If it's a Bystander, rescue it. If it's a Wound, put it back face-up.",
+    twist: "KO the topmost Floor of the Washington Monument. You gain one of the Wounds KO'd this way.",
+    evilWins: "When 10 Bystanders are in the KO pile and/or Escape Pile, or all Floors are KO'd.",
+  },
+  {
+    name: "Ferry Disaster",
+    exp: "spiderman_homecoming",
+    overrides: { twists: 9 },
+    setupNote: 'Put the Bystander Stack above the Sewers as the "Ferry."',
+    twist:
+      "Twist 1-4: If there's a Villain in the city space below the Ferry, KO 2 Bystanders from the Ferry. Whether you KO'd or not, the Ferry moves one space left.\nTwist 5-8: Same effect, but it moves right.\nTwist 9: KO half the Bystanders from the Bystander deck, rounding up.",
+    evilWins: "When 7 Bystanders are in the KO pile and/or Escape Pile.",
+  },
+  {
+    name: "Scavenge Alien Weaponry",
+    exp: "spiderman_homecoming",
+    overrides: { twists: 7, extraHenchmenCount: 1, extraHenchmenGroupLabel: "Smugglers" },
+    setupNote: "Special Rules: Smugglers have Striker.",
+    twist: "Play two cards from the Villain Deck.",
+    evilWins: "When 3 Villains per player have escaped or the Villain Deck runs out.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2563,6 +2612,9 @@ const VILLAIN_GROUPS = [
   { name: "Monster Metropolis", exp: "secret_wars_2" },
   { name: "Utopolis", exp: "secret_wars_2" },
   { name: "X-Men '92", exp: "secret_wars_2" },
+
+  { name: "Salvagers", exp: "spiderman_homecoming" },
+  { name: "Vulture Tech", exp: "spiderman_homecoming" },
 ];
 
 const HENCHMEN = [
@@ -2806,7 +2858,11 @@ const HEROES = [
   { name: "Mockingbird", exp: "shield", team: "S.H.I.E.L.D.", gender: "female" },
   { name: "Quake", exp: "shield", team: "S.H.I.E.L.D.", gender: "female" },
 
-  { name: "Spider-Man (Homecoming)", exp: "spiderman_homecoming", gender: "male" },
+  { name: "Happy Hogan", exp: "spiderman_homecoming", gender: "male" },
+  { name: "High Tech Spider-Man", exp: "spiderman_homecoming", team: "Spider-Friends", gender: "male" },
+  { name: "Peter Parker, Homecoming", exp: "spiderman_homecoming", team: "Spider-Friends", gender: "male" },
+  { name: "Peter's Allies", exp: "spiderman_homecoming", team: "Spider-Friends" },
+  { name: "Tony Stark", exp: "spiderman_homecoming", team: "Avengers", gender: "male" },
 
   { name: "Toxin", exp: "venom", gender: "male" },
   { name: "Anti-Venom", exp: "venom", gender: "male" },
