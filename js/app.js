@@ -1609,8 +1609,8 @@
     expansionsCount: document.getElementById("expansions-count"),
     cardPoolList: document.getElementById("card-pool-list"),
     teamThemeSection: document.getElementById("team-theme-section"),
-    teamChips: document.getElementById("team-chips"),
-    clearTeamFilter: document.getElementById("clear-team-filter"),
+    openTeamTheme: document.getElementById("open-team-theme"),
+    teamThemeCount: document.getElementById("team-theme-count"),
     playersSegmented: document.getElementById("players-segmented"),
     randomizeAll: document.getElementById("randomize-all"),
     warnings: document.getElementById("warnings"),
@@ -1681,7 +1681,7 @@
       renderWarnings();
       renderExpansionsCount();
       renderCardPool();
-      renderTeamChips();
+      renderTeamThemeCount();
       renderResults();
       renderSheet();
     });
@@ -1702,7 +1702,7 @@
 
   /** Drop any selected team that's no longer available now that expansions
    * changed, so the hero pool doesn't silently zero out against a team
-   * filter the user can no longer see or clear from the chip row. */
+   * filter the user can no longer see or clear from the sheet. */
   function pruneTeamFilter() {
     const avail = new Set(availableTeams());
     state.teamFilter.forEach((t) => {
@@ -1710,28 +1710,59 @@
     });
   }
 
-  function renderTeamChips() {
+  /** The main-page "Team Filter" nav row just shows a live summary
+   * ("All Teams" or "N of M") — same idea as renderExpansionsCount —
+   * since the actual toggle list lives in its own sheet (see
+   * openTeamThemeSheet/teamRow below) rather than a chip row on the
+   * main page. */
+  function renderTeamThemeCount() {
     const teams = availableTeams();
     el.teamThemeSection.classList.toggle("hidden", teams.length === 0);
     if (!teams.length) return;
+    el.teamThemeCount.textContent = state.teamFilter.size ? `${state.teamFilter.size} of ${teams.length}` : "All Teams";
+  }
 
-    el.teamChips.innerHTML = "";
-    teams.forEach((team) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "team-chip";
-      if (state.teamFilter.has(team)) chip.classList.add("active");
-      chip.textContent = team;
-      chip.addEventListener("click", () => {
-        if (state.teamFilter.has(team)) state.teamFilter.delete(team);
-        else state.teamFilter.add(team);
-        saveState();
-        renderTeamChips();
-        renderWarnings();
-        renderCardPool();
-      });
-      el.teamChips.appendChild(chip);
+  /** One toggle row for the "Hero Team Theme" sheet — same switch markup
+   * as expansionRow, appended to el.sheetList. A team being checked adds
+   * it to state.teamFilter; with nothing checked, no restriction applies
+   * and every Hero is eligible regardless of Team. */
+  function teamRow(team) {
+    const li = document.createElement("li");
+    li.className = "ios-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    text.textContent = team;
+
+    const switchWrap = document.createElement("span");
+    switchWrap.className = "ios-switch";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.setAttribute("aria-label", team);
+    input.checked = state.teamFilter.has(team);
+    input.addEventListener("change", () => {
+      if (input.checked) state.teamFilter.add(team);
+      else state.teamFilter.delete(team);
+      saveState();
+      renderWarnings();
+      renderCardPool();
+      renderTeamThemeCount();
+      renderSheet();
     });
+
+    const track = document.createElement("span");
+    track.className = "track";
+    const thumb = document.createElement("span");
+    thumb.className = "thumb";
+
+    switchWrap.appendChild(input);
+    switchWrap.appendChild(track);
+    switchWrap.appendChild(thumb);
+
+    li.appendChild(text);
+    li.appendChild(switchWrap);
+    return li;
   }
 
   function renderCardPool() {
@@ -2383,6 +2414,10 @@
     openSheet({ mode: "expansions" });
   }
 
+  function openTeamThemeSheet() {
+    openSheet({ mode: "teamTheme" });
+  }
+
   function renderSheet() {
     if (!sheetState) return;
     el.sheetList.innerHTML = "";
@@ -2449,6 +2484,21 @@
 
       const sortedExpansions = [...EXPANSIONS].sort((a, b) => a.name.localeCompare(b.name));
       sortedExpansions.forEach((exp) => el.sheetList.appendChild(expansionRow(exp)));
+    } else if (sheetState.mode === "teamTheme") {
+      el.sheetTitle.textContent = "Hero Team Theme";
+      el.sheetSearchWrap.classList.add("hidden");
+      if (state.teamFilter.size) {
+        el.sheetAction.classList.remove("hidden");
+        el.sheetAction.classList.add("sheet-header-btn-accent");
+        el.sheetAction.textContent = "Clear Filter";
+      }
+
+      const teams = availableTeams();
+      if (!teams.length) {
+        el.sheetList.appendChild(emptyRow("No Heroes with a known Team in the current pool."));
+        return;
+      }
+      teams.forEach((team) => el.sheetList.appendChild(teamRow(team)));
     }
   }
 
@@ -2628,8 +2678,15 @@
         renderWarnings();
         renderExpansionsCount();
         renderCardPool();
-        renderTeamChips();
+        renderTeamThemeCount();
         renderResults();
+        renderSheet();
+      } else if (sheetState.mode === "teamTheme") {
+        state.teamFilter.clear();
+        saveState();
+        renderWarnings();
+        renderCardPool();
+        renderTeamThemeCount();
         renderSheet();
       }
     });
@@ -2638,7 +2695,7 @@
   function init() {
     renderExpansionsCount();
     renderCardPool();
-    renderTeamChips();
+    renderTeamThemeCount();
     renderPlayersSegmented();
     bindSheet();
     render();
@@ -2646,14 +2703,7 @@
     el.randomizeAll.addEventListener("click", randomizeAll);
 
     el.openExpansions.addEventListener("click", openExpansionsSheet);
-
-    el.clearTeamFilter.addEventListener("click", () => {
-      state.teamFilter.clear();
-      saveState();
-      renderTeamChips();
-      renderWarnings();
-      renderCardPool();
-    });
+    el.openTeamTheme.addEventListener("click", openTeamThemeSheet);
 
     el.playersSegmented.addEventListener("click", (e) => {
       const btn = e.target.closest("button");
