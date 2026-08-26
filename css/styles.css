@@ -324,6 +324,18 @@ body {
   cursor: not-allowed;
 }
 
+.outcome-btn.active-outcome.outcome-win,
+.round-btn.active-outcome.outcome-win {
+  background: var(--green);
+  color: #fff;
+}
+
+.outcome-btn.active-outcome.outcome-loss,
+.round-btn.active-outcome.outcome-loss {
+  background: var(--red);
+  color: #fff;
+}
+
 .action-group {
   margin-bottom: 1.5rem;
 }
@@ -429,6 +441,7 @@ body {
   background: none;
   font-family: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   color: var(--label);
 }
