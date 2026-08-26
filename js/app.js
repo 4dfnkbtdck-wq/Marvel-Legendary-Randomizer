@@ -812,6 +812,27 @@
    * missing, so a reroll of one slot (see rerollExtraGroupSlot) doesn't
    * reshuffle the others. Cleared/re-picked fresh when the Scheme itself
    * changes (see the schemeSignature check in syncSchemeNumbers). */
+  /** The candidate pool for an extra-group pick (see EXTRA_GROUP_CONFIG/
+   * syncExtraGroup below), narrowed further when the current Scheme
+   * requires it — currently just `extraMastermindRequiresVillainLead`
+   * (boolean), for a Scheme whose extra-Mastermind pick needs to actually
+   * lead a Villain Group (e.g. Venom's "Symbiotic Absorption," which
+   * derives an extra Villain Group from that Mastermind's own "Always
+   * Leads" — see extraVillainGroupFromExtraMastermind above). A
+   * Mastermind that only leads Henchmen, or leads nothing at all, has
+   * nothing to derive, so it's excluded from the pick entirely rather
+   * than landing on "No extra Villain Group available." A no-op for
+   * every other category or when the current Scheme doesn't set the
+   * override. */
+  function extraGroupPoolFor(categoryKey) {
+    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    if (categoryKey !== "mastermind") return pool;
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    if (!overrides.extraMastermindRequiresVillainLead) return pool;
+    return pool.filter((mm) => (mm.leads || []).some((l) => l.category === "villains"));
+  }
+
   function syncExtraGroup(categoryKey) {
     const config = EXTRA_GROUP_CONFIG[categoryKey];
     const scheme = currentSchemeData();
@@ -821,7 +842,7 @@
       state[config.stateKey] = [];
       return;
     }
-    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const pool = extraGroupPoolFor(categoryKey);
     const validNames = new Set(pool.map((c) => c.name));
     const mainNames = new Set((state.result[categoryKey] || []).map((c) => c.name));
     const kept = [];
@@ -850,7 +871,7 @@
     const group = state[config.stateKey] || [];
     const current = group[index];
     if (!current) return;
-    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const pool = extraGroupPoolFor(categoryKey);
     const mainNames = new Set((state.result[categoryKey] || []).map((c) => c.name));
     const exclude = group.filter((_, i) => i !== index).concat(Array.from(mainNames, (name) => ({ name }))).concat([current]);
     const [picked] = pickRandom(pool, 1, exclude);
