@@ -425,7 +425,13 @@ const MASTERMINDS = [
 //                  naming a Hero by a shared word rather than a Team or
 //                  exact card, e.g. Weapon X's "Condition Logan into
 //                  Weapon X": "include exactly 1 Hero with Wolverine or
-//                  Logan in its name"),
+//                  Logan in its name"), paired with
+//                  `requiredHeroNameContainsCount` (a number, defaults to
+//                  1) when a Scheme needs more than one such Hero at once,
+//                  e.g. World War Hulk's "Fall of the Hulks": "Use exactly
+//                  two Heroes with 'Hulk' in their Hero Names" —
+//                  `requiredHeroNameContains: ["Hulk"],
+//                  requiredHeroNameContainsCount: 2`,
 //                  `extraHero` (a boolean, optionally paired with
 //                  `extraHeroNote` — see syncExtraCard in app.js; for a
 //                  Scheme whose extra Hero contributes its OWN cards
@@ -2604,17 +2610,17 @@ const SCHEMES = [
   {
     name: "Cytoplasm Spike Invasion",
     exp: "world_war_hulk",
-    overrides: { twists: 10, requiredHenchmen: "Cytoplasm Spikes" },
-    setupNote: 'Shuffle together 20 Bystanders and 10 Cytoplasm Spike Henchmen as an "Infected Deck."',
+    overrides: { twists: 10 },
+    setupNote:
+      'Shuffle together 20 Bystanders and 10 Cytoplasm Spike Henchmen as an "Infected Deck" (separate from the normal Henchmen result — the app still randomizes the usual Henchmen groups for the Villain Deck as normal).',
     twist: "Reveal the top three cards of the Infected Deck. KO all Bystanders you revealed. All Spikes you revealed enter the city.",
     evilWins: "When the KO pile and Escape Pile combine to have 18 Bystanders and/or Spikes.",
   },
   {
     name: "Fall of the Hulks",
     exp: "world_war_hulk",
-    overrides: { twists: 10 },
-    setupNote:
-      '6 Wounds per player in Wound Stack.\nUse exactly two Heroes with "Hulk" in their Hero Names (not enforced by the app — pick manually).',
+    overrides: { twists: 10, requiredHeroNameContains: ["Hulk"], requiredHeroNameContainsCount: 2 },
+    setupNote: "6 Wounds per player in Wound Stack.",
     twist:
       "Twist 3-6: Cross-Dimensional Hulk Rampage (reference text — not otherwise explained on this card).\nTwist 7-10: Each player gains a Wound.",
     evilWins: "When the Wound Stack runs out.",
