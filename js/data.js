@@ -93,8 +93,8 @@
  * used by `weddingHeroes` below (Realm of Kings' "Ruin the Perfect
  * Wedding") to pick one of each. Left off for anything not meaningfully
  * a single gendered person — a team-as-one-card like "Ant Army" or
- * "Cloak & Dagger," or a non-gendered character like Ultron — those
- * Heroes just aren't eligible for that one pick.
+ * "Cloak & Dagger" or a group like "The Warriors Three" — those Heroes
+ * just aren't eligible for that one pick.
  *
  * A Villain Group entry can optionally carry `keywords`, an array of
  * printed-keyword strings (e.g. "Rise of the Living Dead"), for a Scheme
@@ -2419,7 +2419,6 @@ const HEROES = [
   // Legendary: Villains — these are Villain characters (the deck-building
   // pool players actually recruit from in this expansion), not Heroes
   // in-fiction; `team` here is each one's Villain Group affiliation.
-  // Ultron is left without a `gender` — not meaningfully gendered.
   { name: "Bullseye", exp: "villains", team: "Crime Syndicate", gender: "male" },
   { name: "Dr. Octopus", exp: "villains", team: "Sinister Six", gender: "male" },
   { name: "Electro", exp: "villains", team: "Sinister Six", gender: "male" },
@@ -2433,7 +2432,7 @@ const HEROES = [
   { name: "Mysterio", exp: "villains", team: "Sinister Six", gender: "male" },
   { name: "Mystique", exp: "villains", team: "Brotherhood", gender: "female" },
   { name: "Sabretooth", exp: "villains", team: "Brotherhood", gender: "male" },
-  { name: "Ultron", exp: "villains" },
+  { name: "Ultron", exp: "villains", gender: "male" },
   { name: "Venom", exp: "villains", team: "Sinister Six", gender: "male" },
 
   { name: "Black Widow", exp: "first_ten_years", team: "Avengers", gender: "female" },
