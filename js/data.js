@@ -155,7 +155,7 @@ const EXPANSIONS = [
   { id: "world_war_hulk", name: "World War Hulk", confidence: "verified" },
   { id: "dimensions", name: "Dimensions", confidence: "verified" },
   { id: "revelations", name: "Revelations", confidence: "verified" },
-  { id: "villains", name: "Legendary: Villains", confidence: "verified" },
+  { id: "villains", name: "Villains", confidence: "verified" },
   { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
   { id: "what_if", name: "Marvel Studios: What If...?", confidence: "verified" },
   { id: "core_2nd", name: "Core Set (2nd Edition)", confidence: "verified" },
