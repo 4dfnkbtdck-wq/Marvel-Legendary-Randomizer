@@ -168,6 +168,7 @@ const EXPANSIONS = [
   { id: "infinity_saga", name: "Marvel Studios Infinity Saga", confidence: "verified" },
   { id: "midnight_sons", name: "Midnight Sons", confidence: "verified" },
   { id: "secret_wars_2", name: "Secret Wars: Volume 2", confidence: "verified" },
+  { id: "weapon_x", name: "Weapon X", confidence: "light" },
 ];
 
 const MASTERMINDS = [
@@ -328,6 +329,13 @@ const MASTERMINDS = [
 
   { name: "Hybrid", exp: "venom", leads: [{ category: "villains", name: "Life Foundation" }] },
   { name: "Poison Thanos", exp: "venom", leads: [{ category: "villains", name: "Poisons" }] },
+
+  // "Always leads" pairings aren't confirmed from a primary source yet —
+  // left off rather than guessed (see world_war_hulk's Maestro above for
+  // the same treatment).
+  { name: "Omega Red", exp: "weapon_x" },
+  { name: "Romulus", exp: "weapon_x" },
+  { name: "Sabretooth", exp: "weapon_x" },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -2492,6 +2500,14 @@ const SCHEMES = [
       "Twist 1-4: Shuffle one of the Drained Mastermind's Tactics into the main Mastermind's Tactics.\nTwist 6, 8, 10: The Mastermind uses this Twist to copy the Master Strike ability of the Drained Mastermind.\nTwist 11: Evil Wins!",
     evilWins: "",
   },
+
+  // Weapon X: names confirmed, but Twist/Setup/Evil Wins text isn't
+  // transcribed from a primary source yet, so `overrides`/`twist`/
+  // `evilWins`/`setupNote` are left off rather than guessed (falls back
+  // to the default 5-Twist Scheme).
+  { name: "Condition Logan into Weapon X", exp: "weapon_x" },
+  { name: "Go After Heroes' Loved Ones", exp: "weapon_x" },
+  { name: "Wipe Heroes' Memories", exp: "weapon_x" },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2702,6 +2718,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Life Foundation", exp: "venom" },
   { name: "Poisons", exp: "venom" },
+
+  { name: "Berserkers", exp: "weapon_x" },
+  { name: "Weapon Plus", exp: "weapon_x" },
 ];
 
 const HENCHMEN = [
@@ -3099,6 +3118,11 @@ const HEROES = [
   { name: "Soulsword Colossus", exp: "secret_wars_2", team: "X-Men", gender: "male" },
   { name: "Spider-Gwen", exp: "secret_wars_2", team: "Spider-Friends", gender: "female" },
   { name: "Time-Travelling Jean Grey", exp: "secret_wars_2", team: "X-Men", gender: "female" },
+
+  { name: "Fantomex", exp: "weapon_x", gender: "male" },
+  { name: "Marrow", exp: "weapon_x", gender: "female" },
+  { name: "Weapon H", exp: "weapon_x", gender: "male" },
+  { name: "Weapon X", exp: "weapon_x", gender: "male" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
