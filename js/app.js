@@ -15,6 +15,16 @@
   const CATEGORY_BY_KEY = {};
   CATEGORIES.forEach((c) => (CATEGORY_BY_KEY[c.key] = c));
 
+  /** Fresh per-card win/loss tally, one bucket per category, keyed by
+   * card name (same identity convention as state.exclusions). Lives
+   * outside state.history so it keeps accumulating across the 20-entry
+   * History cap and survives "Clear All" — see setEntryOutcome below. */
+  function emptyCardStats() {
+    const stats = {};
+    CATEGORIES.forEach((c) => (stats[c.key] = {}));
+    return stats;
+  }
+
   let state = loadState();
 
   function defaultState() {
@@ -24,6 +34,9 @@
       exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
       teamFilter: new Set(),
       history: [],
+      cardStats: emptyCardStats(),
+      gameLog: { heroWins: 0, evilWins: 0 },
+      currentHistoryId: null,
       result: {},
       locks: {},
       keywordChoices: {},
@@ -49,12 +62,27 @@
       CATEGORIES.forEach((c) => {
         exclusions[c.key] = new Set((parsed.exclusions && parsed.exclusions[c.key]) || []);
       });
+      const cardStats = emptyCardStats();
+      CATEGORIES.forEach((c) => {
+        const saved = (parsed.cardStats && parsed.cardStats[c.key]) || {};
+        Object.keys(saved).forEach((name) => {
+          const entry = saved[name];
+          if (!entry || typeof entry !== "object") return;
+          cardStats[c.key][name] = { wins: Number(entry.wins) || 0, losses: Number(entry.losses) || 0 };
+        });
+      });
       return {
         expansions: new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions),
         options: { ...defaults.options, ...(parsed.options || {}) },
         exclusions,
         teamFilter: new Set(parsed.teamFilter || []),
         history: Array.isArray(parsed.history) ? parsed.history : [],
+        cardStats,
+        gameLog: {
+          heroWins: Number(parsed.gameLog && parsed.gameLog.heroWins) || 0,
+          evilWins: Number(parsed.gameLog && parsed.gameLog.evilWins) || 0,
+        },
+        currentHistoryId: null,
         result: {},
         locks: {},
         keywordChoices: {},
@@ -85,6 +113,8 @@
           exclusions,
           teamFilter: Array.from(state.teamFilter),
           history: state.history,
+          cardStats: state.cardStats,
+          gameLog: state.gameLog,
         })
       );
     } catch (e) {
@@ -1571,9 +1601,12 @@
       timestamp: Date.now(),
       players: state.options.players,
       result: snapshot,
+      outcome: null,
+      loggedAt: null,
     };
     state.history.unshift(entry);
     if (state.history.length > HISTORY_LIMIT) state.history.length = HISTORY_LIMIT;
+    state.currentHistoryId = entry.id;
     saveState();
   }
 
@@ -1582,6 +1615,7 @@
       state.result[c.key] = (entry.result[c.key] || []).map((item) => ({ ...item }));
       state.locks[c.key] = state.result[c.key].map(() => false);
     });
+    state.currentHistoryId = entry.id;
     // A saved "Past Setup" is a raw snapshot — resync/reconcile it the
     // same way any other Mastermind/Scheme change would be, so stale
     // extra-group state (or a duplicate that was only fixed in a later
@@ -1593,8 +1627,77 @@
   }
 
   function deleteHistoryEntry(id) {
+    const entry = state.history.find((h) => h.id === id);
+    if (entry && entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
+    if (state.currentHistoryId === id) state.currentHistoryId = null;
     state.history = state.history.filter((h) => h.id !== id);
     saveState();
+  }
+
+  function currentHistoryEntry() {
+    return state.history.find((h) => h.id === state.currentHistoryId) || null;
+  }
+
+  /** Which stat bucket ("wins"/"losses") a category's cards land in for
+   * a given outcome — a "win" (Heroes beat the villain side) credits
+   * every Hero with a win and every Mastermind/Scheme/Villain
+   * Group/Henchman in that setup with a loss, and a "loss" (evil wins)
+   * does the reverse. */
+  function statSide(categoryKey, outcome) {
+    const heroSide = categoryKey === "heroes";
+    if (outcome === "win") return heroSide ? "wins" : "losses";
+    return heroSide ? "losses" : "wins";
+  }
+
+  function adjustCardStat(categoryKey, name, side, delta) {
+    const bucket = state.cardStats[categoryKey];
+    const current = bucket[name] || { wins: 0, losses: 0 };
+    current[side] = Math.max(0, current[side] + delta);
+    bucket[name] = current;
+  }
+
+  /** Adds (delta 1) or removes (delta -1) one history entry's contribution
+   * to state.cardStats (every card in its snapshot, scored per statSide
+   * above) and to state.gameLog's lifetime win/loss tally — the latter
+   * kept separate from state.history because History is capped at
+   * HISTORY_LIMIT entries and can be cleared, but the stats it fed
+   * shouldn't shrink just because the audit trail did. Used both to
+   * apply a freshly-logged outcome and to reverse a previously-logged
+   * one (editing, clearing, or deleting the entry). */
+  function applyEntryOutcome(entry, outcome, delta) {
+    CATEGORIES.forEach((c) => {
+      (entry.result[c.key] || []).forEach((item) => {
+        adjustCardStat(c.key, item.name, statSide(c.key, outcome), delta);
+      });
+    });
+    const bucket = outcome === "win" ? "heroWins" : "evilWins";
+    state.gameLog[bucket] = Math.max(0, (state.gameLog[bucket] || 0) + delta);
+  }
+
+  /** Logs or edits a history entry's win/loss outcome, keeping
+   * state.cardStats in sync: reverses whatever it previously
+   * contributed (if anything), then applies the new outcome. Pass
+   * outcome: null to clear a mislogged result. `resyncFromLive`
+   * re-snapshots entry.result from the current live state.result
+   * first — used when logging the setup you just finished playing, in
+   * case a card or two got rerolled after it was first generated. */
+  function setEntryOutcome(entry, outcome, { resyncFromLive = false } = {}) {
+    if (entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
+    if (resyncFromLive) {
+      CATEGORIES.forEach((c) => (entry.result[c.key] = (state.result[c.key] || []).map((item) => ({ ...item }))));
+    }
+    entry.outcome = outcome || null;
+    entry.loggedAt = outcome ? Date.now() : null;
+    if (outcome) applyEntryOutcome(entry, outcome, 1);
+    saveState();
+  }
+
+  /** Toggles an outcome on/off: clicking the already-logged result again
+   * clears it, otherwise (re-)logs the tapped outcome. Shared by the
+   * results-screen buttons (current setup, resyncing from live state)
+   * and the History sheet's per-row buttons (past setups, as saved). */
+  function toggleEntryOutcome(entry, outcome, opts) {
+    setEntryOutcome(entry, entry.outcome === outcome ? null : outcome, opts);
   }
 
   function formatTimestamp(ts) {
@@ -1617,6 +1720,12 @@
     results: document.getElementById("results"),
     copyGroup: document.getElementById("copy-group"),
     copyBtn: document.getElementById("copy-setup"),
+    outcomeGroup: document.getElementById("outcome-group"),
+    logWinBtn: document.getElementById("log-win"),
+    logLossBtn: document.getElementById("log-loss"),
+    outcomeStatus: document.getElementById("outcome-status"),
+    excludeGroup: document.getElementById("exclude-group"),
+    excludeBtn: document.getElementById("exclude-setup"),
     openHistory: document.getElementById("open-history"),
     historyCount: document.getElementById("history-count"),
     sheetOverlay: document.getElementById("sheet-overlay"),
@@ -1965,10 +2074,14 @@
       empty.textContent = "Pick your expansions above, then tap Randomize Setup to build a game.";
       el.results.appendChild(empty);
       el.copyGroup.classList.add("hidden");
+      el.outcomeGroup.classList.add("hidden");
+      el.excludeGroup.classList.add("hidden");
       return;
     }
 
     el.copyGroup.classList.remove("hidden");
+    el.excludeGroup.classList.remove("hidden");
+    renderOutcomeStatus();
 
     CATEGORIES.forEach((category) => {
       const items = state.result[category.key] || [];
@@ -2027,6 +2140,49 @@
       if (EXTRA_GROUP_CONFIG[category.key]) el.results.appendChild(extraGroupSection(category.key));
       if (category.key === "heroes") el.results.appendChild(weddingHeroesSection());
     });
+  }
+
+  /** Keeps the "Log Result" buttons (see index.html #outcome-group) in
+   * sync with the currently displayed setup's logged outcome, if any —
+   * see currentHistoryEntry/setEntryOutcome above. Hidden whenever there's
+   * no result on screen, or the current result's history entry was
+   * deleted out from under it. */
+  function renderOutcomeStatus() {
+    const entry = currentHistoryEntry();
+    el.outcomeGroup.classList.toggle("hidden", !entry);
+    if (!entry) return;
+    el.logWinBtn.classList.toggle("active-outcome", entry.outcome === "win");
+    el.logLossBtn.classList.toggle("active-outcome", entry.outcome === "loss");
+    el.outcomeStatus.textContent = entry.outcome
+      ? `Logged as ${entry.outcome === "win" ? "a Heroes win" : "an Evil win"} — feeds the Win/Loss Stats page. Tap again to clear.`
+      : "Once the game's over, log who won — it feeds the per-card Win/Loss Stats page.";
+  }
+
+  /** Every card currently in play for this setup — the 5 counted
+   * categories plus any active extra groups (derived Villain Group,
+   * extra Heroes/Henchmen/Mastermind groups, Wedding Heroes) — as
+   * {categoryKey, name} pairs, for the "Exclude This Setup's Cards"
+   * button below. */
+  function allCurrentSetupCards() {
+    const cards = [];
+    CATEGORIES.forEach((c) => (state.result[c.key] || []).forEach((item) => cards.push({ categoryKey: c.key, name: item.name })));
+    if (state.extraVillainGroup) cards.push({ categoryKey: "villains", name: state.extraVillainGroup.name });
+    (state.extraHeroGroup || []).forEach((c) => cards.push({ categoryKey: "heroes", name: c.name }));
+    (state.extraHenchmenGroup || []).forEach((c) => cards.push({ categoryKey: "henchmen", name: c.name }));
+    (state.extraMastermindGroup || []).forEach((c) => cards.push({ categoryKey: "mastermind", name: c.name }));
+    (state.weddingHeroes || []).forEach((c) => c && cards.push({ categoryKey: "heroes", name: c.name }));
+    return cards;
+  }
+
+  function excludeCurrentSetup() {
+    const cards = allCurrentSetupCards();
+    if (!cards.length) return;
+    cards.forEach(({ categoryKey, name }) => state.exclusions[categoryKey].add(name));
+    syncRequiredCards();
+    saveState();
+    renderWarnings();
+    renderCardPool();
+    renderResults();
   }
 
   /** Shown right under a category's own section (Heroes, Henchmen, ...)
@@ -2603,12 +2759,37 @@
     main.textContent = mastermind ? mastermind.name : "Setup";
     const sub = document.createElement("span");
     sub.className = "row-text-sub";
-    sub.textContent = `${formatTimestamp(entry.timestamp)} · ${heroCount} heroes${entry.players ? ` · ${entry.players}p` : ""}`;
+    const outcomeLabel = entry.outcome === "win" ? " · Heroes Won" : entry.outcome === "loss" ? " · Evil Won" : "";
+    sub.textContent = `${formatTimestamp(entry.timestamp)} · ${heroCount} heroes${entry.players ? ` · ${entry.players}p` : ""}${outcomeLabel}`;
     text.appendChild(main);
     text.appendChild(sub);
 
     const actions = document.createElement("div");
     actions.className = "result-row-actions";
+
+    const winBtn = document.createElement("button");
+    winBtn.type = "button";
+    winBtn.className = "round-btn";
+    if (entry.outcome === "win") winBtn.classList.add("active-outcome", "outcome-win");
+    winBtn.textContent = "🏆";
+    winBtn.title = entry.outcome === "win" ? "Logged as a Heroes win — tap to clear" : "Log as a Heroes win";
+    winBtn.addEventListener("click", () => {
+      toggleEntryOutcome(entry, "win");
+      renderSheet();
+      if (state.currentHistoryId === entry.id) renderOutcomeStatus();
+    });
+
+    const lossBtn = document.createElement("button");
+    lossBtn.type = "button";
+    lossBtn.className = "round-btn";
+    if (entry.outcome === "loss") lossBtn.classList.add("active-outcome", "outcome-loss");
+    lossBtn.textContent = "💀";
+    lossBtn.title = entry.outcome === "loss" ? "Logged as an Evil win — tap to clear" : "Log as an Evil win";
+    lossBtn.addEventListener("click", () => {
+      toggleEntryOutcome(entry, "loss");
+      renderSheet();
+      if (state.currentHistoryId === entry.id) renderOutcomeStatus();
+    });
 
     const restoreBtn = document.createElement("button");
     restoreBtn.type = "button";
@@ -2629,8 +2810,11 @@
       deleteHistoryEntry(entry.id);
       renderSheet();
       renderHistoryCount();
+      renderOutcomeStatus();
     });
 
+    actions.appendChild(winBtn);
+    actions.appendChild(lossBtn);
     actions.appendChild(restoreBtn);
     actions.appendChild(deleteBtn);
 
@@ -2665,10 +2849,15 @@
         renderResults();
         renderSheet();
       } else if (sheetState.mode === "history") {
+        state.history.forEach((entry) => {
+          if (entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
+        });
         state.history = [];
+        state.currentHistoryId = null;
         saveState();
         renderSheet();
         renderHistoryCount();
+        renderOutcomeStatus();
       } else if (sheetState.mode === "expansions") {
         const allSelected = state.expansions.size === EXPANSIONS.length;
         state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
@@ -2723,6 +2912,27 @@
         el.copyBtn.textContent = "Copy failed";
       }
       setTimeout(() => (el.copyBtn.textContent = original), 1500);
+    });
+
+    el.logWinBtn.addEventListener("click", () => {
+      const entry = currentHistoryEntry();
+      if (!entry) return;
+      toggleEntryOutcome(entry, "win", { resyncFromLive: true });
+      renderOutcomeStatus();
+    });
+
+    el.logLossBtn.addEventListener("click", () => {
+      const entry = currentHistoryEntry();
+      if (!entry) return;
+      toggleEntryOutcome(entry, "loss", { resyncFromLive: true });
+      renderOutcomeStatus();
+    });
+
+    el.excludeBtn.addEventListener("click", () => {
+      excludeCurrentSetup();
+      const original = el.excludeBtn.textContent;
+      el.excludeBtn.textContent = "✅ Excluded!";
+      setTimeout(() => (el.excludeBtn.textContent = original), 1500);
     });
   }
 
