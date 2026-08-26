@@ -436,6 +436,36 @@
     return resolveFromCandidates(cacheKey, candidates);
   }
 
+  /** Same idea as resolveNameMatchRequirement, but for a Scheme's "include
+   * exactly N [category] cards whose name contains one of these words"
+   * requirement (e.g. World War Hulk's "Fall of the Hulks": "Use exactly
+   * two Heroes with 'Hulk' in their Hero Names") — picks `count` distinct
+   * matching cards instead of just one, cached together (pipe-joined) under
+   * a single keywordChoices entry so the same set survives re-renders, and
+   * only tops up whichever slots are no longer valid (excluded, expansion
+   * turned off) rather than reshuffling the whole set. Returns fewer than
+   * `count` names if the matching pool is too small — callers just force in
+   * however many are actually available. */
+  function resolveNameMatchRequirementCount(categoryKey, nameContains, count) {
+    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const needles = nameContains.map((s) => s.toLowerCase());
+    const candidates = pool.filter((c) => needles.some((n) => c.name.toLowerCase().includes(n)));
+    const cacheKey = `scheme:${categoryKey}:multi:${needles.join("|")}`;
+    const cachedNames = (state.keywordChoices[cacheKey] || "").split("|").filter(Boolean);
+    const validCached = cachedNames.filter((name) => candidates.some((c) => c.name === name));
+    if (validCached.length >= count) {
+      const kept = validCached.slice(0, count);
+      state.keywordChoices[cacheKey] = kept.join("|");
+      return kept;
+    }
+    const excludeNames = new Set(validCached);
+    const remaining = candidates.filter((c) => !excludeNames.has(c.name));
+    const picked = pickRandom(remaining, count - validCached.length, []);
+    const result = validCached.concat(picked.map((c) => c.name));
+    state.keywordChoices[cacheKey] = result.join("|");
+    return result;
+  }
+
   /** Resolves a Scheme's "include at least one Hero from [Team]"
    * requirement (e.g. Deadpool's "Everybody Hates Deadpool": "use at
    * least 1 Mercs For Money Hero," printed as the team's icon rather
@@ -514,8 +544,14 @@
       if (name) names.push(name);
     }
     if (categoryKey === "heroes" && overrides.requiredHeroNameContains) {
-      const name = resolveNameMatchRequirement("heroes", overrides.requiredHeroNameContains);
-      if (name) names.push(name);
+      if (overrides.requiredHeroNameContainsCount > 1) {
+        resolveNameMatchRequirementCount("heroes", overrides.requiredHeroNameContains, overrides.requiredHeroNameContainsCount).forEach(
+          (name) => names.push(name)
+        );
+      } else {
+        const name = resolveNameMatchRequirement("heroes", overrides.requiredHeroNameContains);
+        if (name) names.push(name);
+      }
     }
     return names;
   }
@@ -1377,7 +1413,15 @@
     if (categoryKey === "heroes" && overrides.requiredHeroTeam && resolveTeamRequirement(overrides.requiredHeroTeam) === item.name) {
       return `required by ${scheme.name}`;
     }
-    if (
+    if (categoryKey === "heroes" && overrides.requiredHeroNameContains && overrides.requiredHeroNameContainsCount > 1) {
+      if (
+        resolveNameMatchRequirementCount("heroes", overrides.requiredHeroNameContains, overrides.requiredHeroNameContainsCount).includes(
+          item.name
+        )
+      ) {
+        return `required by ${scheme.name}`;
+      }
+    } else if (
       categoryKey === "heroes" &&
       overrides.requiredHeroNameContains &&
       resolveNameMatchRequirement("heroes", overrides.requiredHeroNameContains) === item.name
