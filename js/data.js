@@ -154,7 +154,7 @@ const EXPANSIONS = [
   { id: "venom", name: "Venom", confidence: "light" },
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
   { id: "dimensions", name: "Dimensions", confidence: "verified" },
-  { id: "revelations", name: "Revelations", confidence: "none" },
+  { id: "revelations", name: "Revelations", confidence: "verified" },
   { id: "villains", name: "Legendary: Villains", confidence: "verified" },
   { id: "first_ten_years", name: "Marvel Studios: The First Ten Years", confidence: "verified" },
   { id: "what_if", name: "Marvel Studios: What If...?", confidence: "verified" },
@@ -308,6 +308,10 @@ const MASTERMINDS = [
 
   { name: "Emperor Vulcan of the Shi'ar", exp: "realm_of_kings", leads: [{ category: "villains", name: "Shi'ar Imperial Elite" }] },
   { name: "Maximus the Mad", exp: "realm_of_kings", leads: [{ category: "villains", name: "Inhuman Rebellion" }] },
+
+  { name: "Grim Reaper", exp: "revelations", leads: [{ category: "villains", name: "Lethal Legion" }] },
+  { name: "The Hood", exp: "revelations", leads: [{ category: "villains", name: "Hood's Gang" }] },
+  { name: "Mandarin", exp: "revelations", leads: [{ category: "henchmen", name: "Mandarin's Rings" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1996,6 +2000,63 @@ const SCHEMES = [
       'Twist 1-8: Stack this Twist next to the Scheme as a "Battlefront." This turn, you may pay 1 Recruit per Battlefront to supply the war:\n- If you pay: You gain the Throne\'s Favor. You may KO one of your cards.\n- If you don\'t pay by the end of turn: Right after you draw a new hand, stack a card from the S.H.I.E.L.D. Officer Stack next to the Scheme as a "Victorious General." The Mastermind gains the Throne\'s Favor. If they already have it, you gain a Wound.\nTwist 9-11: Same effect, but with two Victorious Generals.',
     evilWins: "When there are 6 Victorious Generals.",
   },
+
+  // The four Revelations Schemes below are each a two-sided card,
+  // transcribed directly from both faces: a front Scheme that
+  // Transforms — on a specific Twist condition — into a fixed,
+  // specific companion Scheme printed on its back (a different pairing
+  // per card, always the same back for that front — not a random pick
+  // among several, unlike Messiah Complex's Veiled/Unveiled Schemes via
+  // `unveils` above). The app has no mechanism to swap the active
+  // Scheme mid-game (same limitation noted for Ritual Sacrifice to
+  // Summon Chthon's Mastermind-transform), so each entry below only
+  // carries `overrides` for its own front-side Setup; the back side's
+  // full Special Rules/Twist/Evil Wins text is folded into `setupNote`/
+  // `twist` as reference text, and `evilWins` points to the back's
+  // actual win condition the way Chthon's entry does.
+  {
+    name: "Earthquake Drains the Ocean",
+    exp: "revelations",
+    overrides: { twists: 11, villainCountDelta: 1 },
+    setupNote:
+      'There are two extra "Low Tide" city spaces on the left side of the city, so the city has 7 spaces total.\nThis Scheme Transforms into "Tsunami Crushes the Coast": Special Rules: The Low Tide, Bridge, and Streets city spaces no longer exist. The city has 3 spaces total. Put this Scheme on the Streets to mark the edge of the city. Villains in destroyed city spaces escape, starting from the left.',
+    twist:
+      'The tide rushes in. This Scheme Transforms.\n"Tsunami Crushes the Coast" Twist (after Transforming): The tide rushes out. This Scheme Transforms again, then play another card from the Villain Deck.',
+    evilWins:
+      '"Tsunami Crushes the Coast" wins when 3 Villains per player have escaped or the Villain Deck runs out (see Special Rules above).',
+  },
+  {
+    name: "House of M",
+    exp: "revelations",
+    overrides: { twists: 8 },
+    setupNote:
+      'Hero Deck is 4 X-Men Heroes and 2 non-X-Men Heroes. (Or substitute another team for all X-Men icons on both sides.) Add 14 Scarlet Witch Hero cards to the Villain Deck.\nSpecial Rules: Each Scarlet Witch in the city is a Villain with Attack equal to its cost +3. If you fight one, gain it as a Hero.\nThis Scheme Transforms into "No More Mutants" (once at least 2 Scarlet Witch cards are in the city): Special Rules: Each Scarlet Witch in the city is a Villain with Attack equal to its cost +4. If you fight one, gain it as a Hero.',
+    twist:
+      'KO all non-X-Men Heroes from the HQ. If there are at least 2 Scarlet Witch cards in the city, this Scheme Transforms. Otherwise, play another card from the Villain Deck.\n"No More Mutants" Twist (after Transforming): KO all X-Men Heroes from the HQ. Play another card from the Villain Deck.',
+    evilWins:
+      '"No More Mutants" wins when the number of non-grey Heroes in the KO pile is ten plus double the number of players (see Special Rules above).',
+  },
+  {
+    name: "The Korvac Saga",
+    exp: "revelations",
+    overrides: { twists: 8 },
+    setupNote:
+      'This Scheme Transforms into "Korvac Revealed": Special Rules: This Scheme counts as a 19-Attack "Korvac" Villain worth 9VP. If you defeat Korvac, KO the Mastermind and all its Tactics.',
+    twist:
+      'Each player must discard down to four cards or KO a Bystander from their Victory Pile to "search for the Korvac Entity." This Scheme Transforms.\n"Korvac Revealed" Twist 2,4,6 (after Transforming): Each player discards an Avengers Hero or gains a Wound. This Scheme Transforms.\n"Korvac Revealed" Twist 8: Evil wins!',
+    evilWins: '"Korvac Revealed" wins on its Twist 8 (see Twist above).',
+  },
+  {
+    name: "Secret Hydra Corruption",
+    exp: "revelations",
+    overrides: { twistsByPlayers: { 1: 7, 2: 9, 3: 9, 4: 11, 5: 11 } },
+    setupNote:
+      '30 Officers in the S.H.I.E.L.D. Officer stack.\nSpecial Rules: Officers stacked next to this Scheme are "Hydra Sympathizers." You may pay 3 Recruit to have the player of your choice gain one as a Hero.\nThis Scheme Transforms into "Open Hydra Revolution": Special Rules: Officers next to this Scheme are 3-Attack "HYDRA Traitor" Villains. When you fight one, return it to the Officer Stack and KO one of your Heroes.',
+    twist:
+      'For each Twist in the KO pile (including this one), put a card from the S.H.I.E.L.D. Officer stack next to this Scheme. Then this Scheme Transforms.\n"Open Hydra Revolution" Twist (after Transforming): For each Twist in the KO pile (including this one), put a card from the S.H.I.E.L.D. Officer stack next to this Scheme. Then, if Evil hasn\'t won yet, this Scheme Transforms.',
+    evilWins:
+      '"Open Hydra Revolution" wins when there are 15 Officers next to this Scheme or the S.H.I.E.L.D. Officer stack runs out (see Special Rules above).',
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2175,6 +2236,11 @@ const VILLAIN_GROUPS = [
 
   { name: "Inhuman Rebellion", exp: "realm_of_kings" },
   { name: "Shi'ar Imperial Elite", exp: "realm_of_kings" },
+
+  { name: "Army of Evil", exp: "revelations" },
+  { name: "Dark Avengers", exp: "revelations" },
+  { name: "Hood's Gang", exp: "revelations" },
+  { name: "Lethal Legion", exp: "revelations" },
 ];
 
 const HENCHMEN = [
@@ -2223,6 +2289,9 @@ const HENCHMEN = [
   { name: "Quantumnauts", exp: "ant_man_wasp" },
   { name: "Quantum Hound", exp: "ant_man_wasp" },
   { name: "Tardigrade", exp: "ant_man_wasp" },
+
+  { name: "HYDRA Base", exp: "revelations" },
+  { name: "Mandarin's Rings", exp: "revelations" },
 ];
 
 const HEROES = [
@@ -2512,6 +2581,16 @@ const HEROES = [
   { name: "Morbius", exp: "midnight_sons", team: "Marvel Knights", gender: "male" },
   { name: "Werewolf By Night", exp: "midnight_sons", team: "Marvel Knights", gender: "male" },
   { name: "Wong, Master of the Mystic Arts", exp: "midnight_sons", team: "Marvel Knights", gender: "male" },
+
+  { name: "Captain Marvel, Agent of S.H.I.E.L.D.", exp: "revelations", team: "S.H.I.E.L.D.", gender: "female" },
+  { name: "Darkhawk", exp: "revelations", team: "Avengers", gender: "male" },
+  { name: "Hellcat", exp: "revelations", team: "Avengers", gender: "female" },
+  { name: "Photon", exp: "revelations", team: "Avengers", gender: "female" },
+  { name: "Quicksilver", exp: "revelations", team: "Avengers", gender: "male" },
+  { name: "Ronin", exp: "revelations", team: "Avengers", gender: "male" },
+  { name: "Scarlet Witch", exp: "revelations", team: "Avengers", gender: "female" },
+  { name: "Speed", exp: "revelations", team: "Avengers", gender: "male" },
+  { name: "War Machine", exp: "revelations", team: "Avengers", gender: "male" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
