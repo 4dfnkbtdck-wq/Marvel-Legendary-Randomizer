@@ -294,14 +294,7 @@
     randomizeCategory(CATEGORY_BY_KEY.villains, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.henchmen, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.heroes, { keepLocked: true });
-    reconcileHeroTeamSplit();
-    reconcileHeroTeamCount();
-    reconcileExtraHeroName();
-    reconcileExtraVillainGroupName();
-    reconcileExtraVillainGroupFromExtraMastermind();
-    reconcileVillainGroupOneOf();
-    syncRequiredCards();
-    reconcileExtraGroupNames();
+    resyncAndReconcile();
     saveToHistory();
     render();
   }
@@ -324,18 +317,7 @@
     }
     if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
-      syncSchemeNumbers();
-      syncHeroTeamSplit();
-      syncHeroTeamCount();
-      reconcileCountedCategories();
-      reconcileHeroTeamSplit();
-      reconcileHeroTeamCount();
-      reconcileExtraHeroName();
-      reconcileExtraVillainGroupName();
-      reconcileExtraVillainGroupFromExtraMastermind();
-      reconcileVillainGroupOneOf();
-      syncRequiredCards();
-      reconcileExtraGroupNames();
+      resyncAndReconcile();
     }
     render();
   }
@@ -356,18 +338,7 @@
     locks[index] = true;
     state.locks[categoryKey] = locks;
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
-      syncSchemeNumbers();
-      syncHeroTeamSplit();
-      syncHeroTeamCount();
-      reconcileCountedCategories();
-      reconcileHeroTeamSplit();
-      reconcileHeroTeamCount();
-      reconcileExtraHeroName();
-      reconcileExtraVillainGroupName();
-      reconcileExtraVillainGroupFromExtraMastermind();
-      reconcileVillainGroupOneOf();
-      syncRequiredCards();
-      reconcileExtraGroupNames();
+      resyncAndReconcile();
     }
     render();
   }
@@ -1302,6 +1273,42 @@
     });
   }
 
+  /** Runs the full "make everything consistent" sequence any time the
+   * current Mastermind, Scheme, or player count may have just changed (or
+   * a whole snapshot of `state.result` was just dropped in from outside —
+   * see restoreHistoryEntry) — recomputes derived numbers (Scheme
+   * overrides, Hero Team Split/Count), tops up/trims counted categories
+   * to match, evicts anything that's become stale or duplicated (Team
+   * Split/Count picks, a named extra Hero/Villain Group, an "either X or
+   * Y" requirement, an extra-group member — see the individual reconcile*
+   * functions above for what each covers), then re-derives required cards
+   * and extra groups for whatever's current now. Every call site that
+   * used to inline this same sequence by hand called it in this exact
+   * order; kept as one function specifically so a future addition (like
+   * reconcileExtraGroupNames itself) only has to be wired in once instead
+   * of copy-pasted across every site — which is exactly how the
+   * Cytoplasm Spikes duplicate bug happened: reconcileExtraGroupNames was
+   * added correctly, but restoreHistoryEntry's own copy of this sequence
+   * didn't exist at all, so restoring an old "Past Setup" saved before
+   * that fix (or before this function existed) could bring a duplicate
+   * right back. Idempotent to call more than once in a row or from a
+   * context where some of it doesn't strictly apply — every piece here
+   * either no-ops or safely recomputes the same answer. */
+  function resyncAndReconcile() {
+    syncSchemeNumbers();
+    syncHeroTeamSplit();
+    syncHeroTeamCount();
+    reconcileCountedCategories();
+    reconcileHeroTeamSplit();
+    reconcileHeroTeamCount();
+    reconcileExtraHeroName();
+    reconcileExtraVillainGroupName();
+    reconcileExtraVillainGroupFromExtraMastermind();
+    reconcileVillainGroupOneOf();
+    syncRequiredCards();
+    reconcileExtraGroupNames();
+  }
+
   function clampOption(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
@@ -1560,6 +1567,13 @@
       state.result[c.key] = (entry.result[c.key] || []).map((item) => ({ ...item }));
       state.locks[c.key] = state.result[c.key].map(() => false);
     });
+    // A saved "Past Setup" is a raw snapshot — resync/reconcile it the
+    // same way any other Mastermind/Scheme change would be, so stale
+    // extra-group state (or a duplicate that was only fixed in a later
+    // version of the app) doesn't come back to life on restore. See
+    // resyncAndReconcile's own doc comment for why this call was missing
+    // in the first place.
+    resyncAndReconcile();
     render();
   }
 
@@ -1743,18 +1757,7 @@
     const preset = PLAYER_COUNT_TABLE[n];
     if (!preset) return;
     state.options.players = n;
-    syncSchemeNumbers(); // sets heroCount/villainCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
-    syncHeroTeamSplit();
-    syncHeroTeamCount();
-    reconcileCountedCategories();
-    reconcileHeroTeamSplit();
-    reconcileHeroTeamCount();
-    reconcileExtraHeroName();
-    reconcileExtraVillainGroupName();
-    reconcileExtraVillainGroupFromExtraMastermind();
-    reconcileVillainGroupOneOf();
-    syncRequiredCards();
-    reconcileExtraGroupNames();
+    resyncAndReconcile(); // sets heroCount/villainCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
     renderPlayersSegmented();
     renderWarnings();
     renderResults();
@@ -1931,20 +1934,7 @@
       rerollSection.textContent = "Reroll All";
       rerollSection.addEventListener("click", () => {
         randomizeCategory(category, { keepLocked: true });
-        if (category.key === "mastermind" || category.key === "scheme") {
-          syncSchemeNumbers();
-          syncHeroTeamSplit();
-          syncHeroTeamCount();
-          reconcileCountedCategories();
-        }
-        reconcileHeroTeamSplit();
-        reconcileHeroTeamCount();
-        reconcileExtraHeroName();
-        reconcileExtraVillainGroupName();
-        reconcileExtraVillainGroupFromExtraMastermind();
-        reconcileVillainGroupOneOf();
-        syncRequiredCards();
-        reconcileExtraGroupNames();
+        resyncAndReconcile();
         render();
       });
       header.appendChild(span);
