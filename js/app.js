@@ -1635,7 +1635,7 @@
    * (see openExpansionsSheet/expansionRow below) rather than taking up
    * space inline on the main page. */
   function renderExpansionsCount() {
-    el.expansionsCount.textContent = `${state.expansions.size} of ${EXPANSIONS.length} on`;
+    el.expansionsCount.textContent = `${state.expansions.size} of ${EXPANSIONS.length}`;
   }
 
   /** One toggle row for the "Expansions" sheet — same checkbox/switch
