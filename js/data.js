@@ -2095,10 +2095,13 @@ const SCHEMES = [
   // "Include either the 'Hydra Elite' or 'A.I.M., Hydra Offshoot' Villain
   // Group, but not both" Setup line. "Secret Empire of Betrayal"'s "randomly
   // pick 5 cards costing 5 or less from an additional Hero to form a Dark
-  // Loyalty deck" mechanic is deliberately left unmodeled (reference text
-  // only in setupNote/twist/evilWins) — it's a distinct deck destination
-  // from the existing `extraHero`/`extraHeroName` mechanic's Villain-Deck-
-  // bound UI, so reusing that would misrepresent this card.
+  // Loyalty deck" uses `extraHeroCount: 1` + `extraHeroGroupLabel` rather
+  // than `extraHero`/`extraHeroName` — those are hardcoded to a "Villain
+  // Deck" destination, which would misrepresent this card's distinct Dark
+  // Loyalty deck; `extraHeroCount`'s own section, titled by
+  // `extraHeroGroupLabel`, has no such assumption. The "5 cards costing 5
+  // or less" detail itself stays reference text in setupNote (nothing
+  // tracks a Hero's own card costs).
   {
     name: "Hail Hydra",
     exp: "shield",
@@ -2133,7 +2136,7 @@ const SCHEMES = [
   {
     name: "Secret Empire of Betrayal",
     exp: "shield",
-    overrides: { twists: 11 },
+    overrides: { twists: 11, extraHeroCount: 1, extraHeroGroupLabel: "Additional Hero — Dark Loyalty Deck" },
     setupNote:
       'Randomly pick 5 cards that cost 5 or less from an additional Hero. Shuffle them to form a "Dark Loyalty" deck.',
     twist:
