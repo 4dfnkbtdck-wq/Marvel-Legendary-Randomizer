@@ -146,12 +146,24 @@
    * currentExtraVillainGroupName above) to an exclude list for a Villain
    * Groups draw, so it never gets pulled into the normal Villain Groups
    * lineup on top of already being set aside on its own — mirrors
-   * heroDrawExclusions above. Pass the category's own key; a no-op for
-   * every other category. */
+   * heroDrawExclusions above. Also excludes whichever names a
+   * `requiredVillainGroupOneOf` requirement (see resolveOneOfRequirement
+   * below) did NOT pick, so "either X or Y, but not both" actually keeps
+   * the other one out rather than just forcing one in. Pass the
+   * category's own key; a no-op for every other category. */
   function villainDrawExclusions(categoryKey, base) {
     if (categoryKey !== "villains") return base;
+    let result = base;
     const extraName = currentExtraVillainGroupName();
-    return extraName ? base.concat([{ name: extraName }]) : base;
+    if (extraName) result = result.concat([{ name: extraName }]);
+    const scheme = currentSchemeData();
+    const oneOf = scheme && scheme.overrides && scheme.overrides.requiredVillainGroupOneOf;
+    if (oneOf) {
+      const chosen = resolveOneOfRequirement("villains", oneOf);
+      const others = oneOf.filter((n) => n !== chosen);
+      result = result.concat(others.map((name) => ({ name })));
+    }
+    return result;
   }
 
   /** A category can carry a whole separate "extra group" of its own random
@@ -232,6 +244,7 @@
     reconcileHeroTeamCount();
     reconcileExtraHeroName();
     reconcileExtraVillainGroupName();
+    reconcileVillainGroupOneOf();
     syncRequiredCards();
     saveToHistory();
     render();
@@ -263,6 +276,7 @@
       reconcileHeroTeamCount();
       reconcileExtraHeroName();
       reconcileExtraVillainGroupName();
+      reconcileVillainGroupOneOf();
       syncRequiredCards();
     }
     render();
@@ -292,6 +306,7 @@
       reconcileHeroTeamCount();
       reconcileExtraHeroName();
       reconcileExtraVillainGroupName();
+      reconcileVillainGroupOneOf();
       syncRequiredCards();
     }
     render();
@@ -394,6 +409,34 @@
     return resolveFromCandidates(`scheme:heroes:team:${team}`, candidates);
   }
 
+  /** Resolves a Scheme's "include exactly one of these named [category]
+   * cards, but not the others" requirement (e.g. S.H.I.E.L.D. vs. Hydra
+   * War's "Include either the 'Hydra Elite' or 'A.I.M., Hydra Offshoot'
+   * Villain Group, but not both") to a concrete card name, the same
+   * random-pick-with-cache way as resolveKeywordRequirement — just
+   * matched against an exact-name list instead of a `keywords` tag. The
+   * names NOT picked are excluded from that category's normal random
+   * draw entirely — see villainDrawExclusions below — so this doesn't
+   * just force one in, it also keeps the others out. If the current
+   * Mastermind's own "always leads" already names one of these same
+   * cards (e.g. HYDRA Super-Adaptoid always leading "A.I.M., HYDRA
+   * Offshoot" while the Scheme separately requires "either HYDRA Elite
+   * or A.I.M., HYDRA Offshoot, but not both"), that forced name wins
+   * instead of an independent random pick — otherwise the Mastermind
+   * could force in one option while this resolved to the other,
+   * landing both in play at once and breaking the "not both" rule. */
+  function resolveOneOfRequirement(categoryKey, names) {
+    const mmData = currentMastermindData();
+    const forced =
+      mmData && mmData.leads
+        ? mmData.leads.find((req) => req.category === categoryKey && req.name && names.includes(req.name))
+        : null;
+    if (forced) return forced.name;
+    const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+    const candidates = pool.filter((c) => names.includes(c.name));
+    return resolveFromCandidates(`scheme:${categoryKey}:oneOf:${names.join("|")}`, candidates);
+  }
+
   /** Every card name that MUST be in play for this category right now,
    * from the current Mastermind's "always leads" (its `leads` array — one
    * Mastermind can require more than one card, e.g. a Henchmen group AND
@@ -419,6 +462,10 @@
     if (categoryKey === "villains" && overrides.requiredVillainGroups) names.push(...overrides.requiredVillainGroups);
     if (categoryKey === "villains" && overrides.requiredVillainGroupKeyword) {
       const name = resolveKeywordRequirement("villains", overrides.requiredVillainGroupKeyword);
+      if (name) names.push(name);
+    }
+    if (categoryKey === "villains" && overrides.requiredVillainGroupOneOf) {
+      const name = resolveOneOfRequirement("villains", overrides.requiredVillainGroupOneOf);
       if (name) names.push(name);
     }
     if (categoryKey === "henchmen" && overrides.requiredHenchmen) names.push(overrides.requiredHenchmen);
@@ -1013,6 +1060,31 @@
     }
   }
 
+  /** Evicts a leftover copy of whichever `requiredVillainGroupOneOf` name
+   * was NOT picked (see resolveOneOfRequirement/villainDrawExclusions
+   * above) from the main Villain Groups result, if it's there and
+   * unlocked, replacing it with a fresh pick — same idea as
+   * reconcileExtraVillainGroupName above: villainDrawExclusions only
+   * keeps it out of *new* picks, not a copy already sitting in the
+   * result from before this Scheme was selected. No-op if the current
+   * Scheme has no such requirement. */
+  function reconcileVillainGroupOneOf() {
+    const scheme = currentSchemeData();
+    const oneOf = scheme && scheme.overrides && scheme.overrides.requiredVillainGroupOneOf;
+    if (!oneOf) return;
+    const chosen = resolveOneOfRequirement("villains", oneOf);
+    const items = state.result.villains || [];
+    const locks = state.locks.villains || [];
+    const idx = items.findIndex((v) => oneOf.includes(v.name) && v.name !== chosen);
+    if (idx === -1 || locks[idx]) return;
+    const pool = poolFor(CATEGORY_BY_KEY.villains);
+    const [fresh] = pickRandom(pool, 1, villainDrawExclusions("villains", items));
+    if (fresh) {
+      items[idx] = fresh;
+      state.result.villains = items;
+    }
+  }
+
   function clampOption(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
@@ -1446,6 +1518,7 @@
     reconcileHeroTeamCount();
     reconcileExtraHeroName();
     reconcileExtraVillainGroupName();
+    reconcileVillainGroupOneOf();
     syncRequiredCards();
     renderPlayersSegmented();
     renderWarnings();
@@ -1633,6 +1706,7 @@
         reconcileHeroTeamCount();
         reconcileExtraHeroName();
         reconcileExtraVillainGroupName();
+        reconcileVillainGroupOneOf();
         syncRequiredCards();
         render();
       });
