@@ -141,7 +141,7 @@ const EXPANSIONS = [
   { id: "asgard", name: "Heroes of Asgard", confidence: "verified" },
   { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "verified" },
   { id: "new_mutants", name: "New Mutants", confidence: "verified" },
-  { id: "noir", name: "Noir", confidence: "light" },
+  { id: "noir", name: "Noir", confidence: "verified" },
   { id: "realm_of_kings", name: "Realm of Kings", confidence: "light" },
   { id: "shield", name: "S.H.I.E.L.D.", confidence: "light" },
   { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "light" },
@@ -294,6 +294,9 @@ const MASTERMINDS = [
 
   { name: "Belasco, Demon Lord of Limbo", exp: "new_mutants", leads: [{ category: "villains", name: "Demons of Limbo" }] },
   { name: "Emma Frost, The White Queen", exp: "new_mutants", leads: [{ category: "villains", name: "Hellions" }] },
+
+  { name: "Charles Xavier, Professor of Crime", exp: "noir", leads: [{ category: "villains", name: "X-Men Noir" }] },
+  { name: "The Goblin, Underworld Boss", exp: "noir", leads: [{ category: "villains", name: "Goblin's Freak Show" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1833,6 +1836,50 @@ const SCHEMES = [
       'You face a "Sanity Test": Either keep this Twist in front of you as a "Psychotic Break", or discard a card and pass this Twist to the player on your left and that player faces a Sanity Test.',
     evilWins: "When a player has 3 Psychotic Breaks.",
   },
+
+  // The four Noir Schemes below are transcribed directly from the
+  // physical cards. "Find the Split Personality Killer" has no printed
+  // "Evil Wins" heading at all — its win/lose condition is folded
+  // entirely into Twist 6's text instead, so `evilWins` is left empty
+  // here rather than invented.
+  {
+    name: "Find the Split Personality Killer",
+    exp: "noir",
+    overrides: { twists: 8 },
+    setupNote:
+      'Special Rules: Whenever you defeat a Villain, you may pay 1 Recruit extra to Investigate the Murder Suspects for a Bystander and rescue it.',
+    twist:
+      'Twist 1-5: Shuffle 3 Bystanders from the Bystander Stack and the top card of the Hero Deck face down next to this Scheme as a deck of "Murder Suspects."\nTwist 6: Each player writes down their guess for which Hero Name is the Split Personality Killer. Reveal the entire Murder Suspects Deck. The Hero Name with the most cards in the Murder Suspects Deck (or tied for most) is the Split Personality Killer. Each player who guessed right wins. All other players lose.',
+    evilWins: "",
+  },
+  {
+    name: "Five Families of Crime",
+    exp: "noir",
+    overrides: { twists: 8, villainCountDelta: 2 },
+    setupNote:
+      "Split the Villain Deck into 5 shuffled decks, one above each city space.\nSpecial Rules: Each Villain Deck uses its own city of one city space. Each turn, you choose which Villain Deck plays a card.",
+    twist: "Play two cards from a Villain Deck.",
+    evilWins: "When 8 Villains escape or all Villain Decks run out.",
+  },
+  {
+    name: "Hidden Heart of Darkness",
+    exp: "noir",
+    overrides: { twists: 8 },
+    setupNote:
+      "Shuffle the Mastermind Tactics into the Villain Deck as Villains.\nSpecial Rules: If there are no Tactics in the city, you can win the game by fighting the Mastermind card.",
+    twist:
+      "Each player shuffles a Tactic from their Victory Pile into the Villain Deck. Any player who did so draws two cards. Then Investigate the Villain Deck for a Tactic and that Tactic enters the city. Reveal all the cards you Investigated.",
+    evilWins: "When 2 Tactics escape.",
+  },
+  {
+    name: "Silence the Witnesses",
+    exp: "noir",
+    overrides: { twists: 6 },
+    setupNote: "",
+    twist:
+      'This Scheme captures 3 Hidden Witnesses. If it already had any Hidden Witnesses, put those into the Escape Pile.',
+    evilWins: "When 6 Bystanders are in the Escape Pile.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2005,6 +2052,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Demons of Limbo", exp: "new_mutants" },
   { name: "Hellions", exp: "new_mutants" },
+
+  { name: "Goblin's Freak Show", exp: "noir" },
+  { name: "X-Men Noir", exp: "noir" },
 ];
 
 const HENCHMEN = [
@@ -2220,7 +2270,11 @@ const HEROES = [
   { name: "Warlock", exp: "new_mutants", team: "X-Men" },
   { name: "Wolfsbane", exp: "new_mutants", team: "X-Men" },
 
-  { name: "Spider-Man Noir", exp: "noir" },
+  { name: "Angel Noir", exp: "noir", team: "X-Men" },
+  { name: "Daredevil Noir", exp: "noir", team: "Marvel Knights" },
+  { name: "Iron Man Noir", exp: "noir", team: "Avengers" },
+  { name: "Luke Cage Noir", exp: "noir", team: "Marvel Knights" },
+  { name: "Spider-Man Noir", exp: "noir", team: "Spider-Friends" },
 
   { name: "Black Bolt", exp: "realm_of_kings" },
   { name: "Medusa", exp: "realm_of_kings" },
