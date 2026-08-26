@@ -149,7 +149,7 @@ const EXPANSIONS = [
   { id: "new_mutants", name: "New Mutants", confidence: "verified" },
   { id: "noir", name: "Noir", confidence: "verified" },
   { id: "realm_of_kings", name: "Realm of Kings", confidence: "verified" },
-  { id: "shield", name: "S.H.I.E.L.D.", confidence: "light" },
+  { id: "shield", name: "S.H.I.E.L.D.", confidence: "verified" },
   { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "light" },
   { id: "venom", name: "Venom", confidence: "light" },
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
@@ -312,6 +312,9 @@ const MASTERMINDS = [
   { name: "Grim Reaper", exp: "revelations", leads: [{ category: "villains", name: "Lethal Legion" }] },
   { name: "The Hood", exp: "revelations", leads: [{ category: "villains", name: "Hood's Gang" }] },
   { name: "Mandarin", exp: "revelations", leads: [{ category: "henchmen", name: "Mandarin's Rings" }] },
+
+  { name: "HYDRA High Council", exp: "shield", leads: [{ category: "villains", name: "HYDRA Elite" }] },
+  { name: "HYDRA Super-Adaptoid", exp: "shield", leads: [{ category: "villains", name: "A.I.M., HYDRA Offshoot" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -373,7 +376,17 @@ const MASTERMINDS = [
 //                  cross-expansion cases elsewhere in this file),
 //                  `requiredVillainGroupKeyword` (same, but resolved to
 //                  whichever available Villain Group(s) carry that
-//                  keyword — see VILLAIN_GROUPS' `keywords` above), or
+//                  keyword — see VILLAIN_GROUPS' `keywords` above),
+//                  `requiredVillainGroupOneOf` (an array of exact
+//                  names, for a Scheme that requires exactly ONE of
+//                  several named Villain Groups — randomly chosen and
+//                  stuck with, same as `requiredVillainGroupKeyword` —
+//                  and keeps the others OUT of the normal draw
+//                  entirely, e.g. S.H.I.E.L.D. vs. Hydra War's
+//                  "Include either the 'Hydra Elite' or 'A.I.M., Hydra
+//                  Offshoot' Villain Group, but not both." This is
+//                  different from `requiredVillainGroups` above, which
+//                  requires ALL of its named groups simultaneously), or
 //                  `requiredHeroTeam` (same idea, but resolved to
 //                  whichever available Hero(es) carry that `team` — for
 //                  Setup text that names a Team rather than a specific
@@ -2075,6 +2088,58 @@ const SCHEMES = [
     evilWins:
       '"Open Hydra Revolution" wins when there are 15 Officers next to this Scheme or the S.H.I.E.L.D. Officer stack runs out (see Special Rules above).',
   },
+
+  // The four S.H.I.E.L.D. Schemes below are transcribed directly from the
+  // physical cards. "S.H.I.E.L.D. vs. Hydra War" uses the new
+  // `requiredVillainGroupOneOf` override (see its doc comment above) for its
+  // "Include either the 'Hydra Elite' or 'A.I.M., Hydra Offshoot' Villain
+  // Group, but not both" Setup line. "Secret Empire of Betrayal"'s "randomly
+  // pick 5 cards costing 5 or less from an additional Hero to form a Dark
+  // Loyalty deck" mechanic is deliberately left unmodeled (reference text
+  // only in setupNote/twist/evilWins) — it's a distinct deck destination
+  // from the existing `extraHero`/`extraHeroName` mechanic's Villain-Deck-
+  // bound UI, so reusing that would misrepresent this card.
+  {
+    name: "Hail Hydra",
+    exp: "shield",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      'Twist 1-9: Choose one:\n- Say "I\'d never abandon S.H.I.E.L.D.", and you can\'t fight this turn.\n- Or whisper "Hail Hydra", you can\'t recruit this turn, and a Villain captures a Bystander.\nTwist 10: Evil Wins!',
+    evilWins: "",
+  },
+  {
+    name: "Hydra Helicarriers Hunt Heroes",
+    exp: "shield",
+    overrides: { twists: 8, heroCountDelta: 1 },
+    setupNote: "",
+    twist:
+      "Stack this Twist next to the Scheme. Then for each Twist stacked there, choose a different Hero Class, to a maximum of 5. KO each Hero from the HQ that has any of those Hero Classes.",
+    evilWins: "When there are 18 non-grey Heroes in the KO pile.",
+  },
+  {
+    name: "S.H.I.E.L.D. vs. Hydra War",
+    exp: "shield",
+    overrides: {
+      twists: 7,
+      requiredVillainGroupOneOf: ["HYDRA Elite", "A.I.M., HYDRA Offshoot"],
+    },
+    setupNote:
+      "Include either the \"HYDRA Elite\" or \"A.I.M., HYDRA Offshoot\" Villain Group, but not both.",
+    twist:
+      'Each player puts a card from the S.H.I.E.L.D. Officer Stack face up next to the Scheme as a 3-Attack "Double Agent" Villain. If any Double Agents were already there, put one into the Escape Pile and put the rest on the bottom of the S.H.I.E.L.D. Officer Stack. You can fight any Double Agent next to the Scheme to gain it or send it Undercover.',
+    evilWins: "When the Hydra Level is 11.",
+  },
+  {
+    name: "Secret Empire of Betrayal",
+    exp: "shield",
+    overrides: { twists: 11 },
+    setupNote:
+      'Randomly pick 5 cards that cost 5 or less from an additional Hero. Shuffle them to form a "Dark Loyalty" deck.',
+    twist:
+      'Shuffle this Twist into the Dark Loyalty deck as a "Vicious Betrayal." Then reveal the top card of that deck. If it\'s a Hero, gain it. If it\'s a Vicious Betrayal, put it next to the Scheme and each other player gains a Wound.',
+    evilWins: "When there are 6 Vicious Betrayals next to the Scheme.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2259,6 +2324,9 @@ const VILLAIN_GROUPS = [
   { name: "Dark Avengers", exp: "revelations" },
   { name: "Hood's Gang", exp: "revelations" },
   { name: "Lethal Legion", exp: "revelations" },
+
+  { name: "A.I.M., HYDRA Offshoot", exp: "shield" },
+  { name: "HYDRA Elite", exp: "shield" },
 ];
 
 const HENCHMEN = [
@@ -2489,10 +2557,10 @@ const HEROES = [
   { name: "Karnak", exp: "realm_of_kings", team: "Inhumans", gender: "male" },
   { name: "Medusa", exp: "realm_of_kings", team: "Inhumans", gender: "female" },
 
-  { name: "Maria Hill", exp: "shield", gender: "female" },
-  { name: "Phil Coulson", exp: "shield", gender: "male" },
-  { name: "Mockingbird", exp: "shield", gender: "female" },
-  { name: "Quake", exp: "shield", gender: "female" },
+  { name: "Agent Phil Coulson", exp: "shield", team: "S.H.I.E.L.D.", gender: "male" },
+  { name: "Deathlok", exp: "shield", team: "S.H.I.E.L.D.", gender: "male" },
+  { name: "Mockingbird", exp: "shield", team: "S.H.I.E.L.D.", gender: "female" },
+  { name: "Quake", exp: "shield", team: "S.H.I.E.L.D.", gender: "female" },
 
   { name: "Spider-Man (Homecoming)", exp: "spiderman_homecoming", gender: "male" },
 
