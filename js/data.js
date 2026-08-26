@@ -142,7 +142,7 @@ const EXPANSIONS = [
   { id: "into_the_cosmos", name: "Into the Cosmos", confidence: "verified" },
   { id: "new_mutants", name: "New Mutants", confidence: "verified" },
   { id: "noir", name: "Noir", confidence: "verified" },
-  { id: "realm_of_kings", name: "Realm of Kings", confidence: "light" },
+  { id: "realm_of_kings", name: "Realm of Kings", confidence: "verified" },
   { id: "shield", name: "S.H.I.E.L.D.", confidence: "light" },
   { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "light" },
   { id: "venom", name: "Venom", confidence: "light" },
@@ -209,7 +209,6 @@ const MASTERMINDS = [
   { name: "Nightmare", exp: "dr_strange", leads: [{ category: "villains", name: "Fear Lords" }] },
   { name: "Maestro", exp: "world_war_hulk" },
   { name: "Vulture", exp: "spiderman_homecoming" },
-  { name: "Vulcan", exp: "realm_of_kings" },
   { name: "Annihilus", exp: "annihilation", leads: [{ category: "villains", name: "Annihilation Wave" }] },
   { name: "Kang the Conqueror", exp: "annihilation", leads: [{ category: "villains", name: "Timelines of Kang" }] },
   { name: "Uru-Enchanted Iron Man", exp: "fear_itself", leads: [{ category: "villains", name: "The Mighty" }] },
@@ -300,6 +299,9 @@ const MASTERMINDS = [
 
   { name: "Carnage", exp: "paint_town_red", leads: [{ category: "villains", name: "Maximum Carnage" }] },
   { name: "Mysterio", exp: "paint_town_red", leads: [{ category: "villains", name: "Sinister Six" }] },
+
+  { name: "Emperor Vulcan of the Shi'ar", exp: "realm_of_kings", leads: [{ category: "villains", name: "Shi'ar Imperial Elite" }] },
+  { name: "Maximus the Mad", exp: "realm_of_kings", leads: [{ category: "villains", name: "Inhuman Rebellion" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -1923,6 +1925,59 @@ const SCHEMES = [
     twist: "Stack this Twist next to the Mastermind.\nTwist 7: Evil wins!",
     evilWins: "",
   },
+
+  // The four Realm of Kings Schemes below are transcribed directly from
+  // the physical cards, replacing the previous unverified/guessed
+  // stub data. "Ruin the Perfect Wedding"'s two set-aside "Wedding
+  // Hero" full-deck stacks, "Tornado of Terrigen Mists"'s city-space
+  // movement tracking, and "War of Kings"'s stacked "Battlefront"/
+  // "Victorious General" escalation are all left as reference-only
+  // setup/twist text — none of them fit any existing `overrides`
+  // mechanic (they aren't a normal Hero Deck/Villain Deck/Henchman
+  // count change), same as other one-off Scheme mechanics elsewhere in
+  // this file.
+  {
+    name: "Ruin the Perfect Wedding",
+    exp: "realm_of_kings",
+    overrides: { twists: 11 },
+    setupNote:
+      'Set aside two extra Heroes to get married. Prepare each Wedding Hero into a separate 14-card stack, ordered by cost with the lowest cost on top.',
+    twist:
+      'Twist 1: Put one Wedding Hero Stack above the rightmost city space "at the altar." Gain its top card.\nTwist 2: Put the other Wedding Hero Stack above the Mastermind space "at the door." Gain its top card.\nTwist 3-7: Gain the top card of either Wedding Hero Stack. Then KO two cards from the top of each Wedding Hero Stack that has a Villain or Mastermind in the space immediately below it. Then the leftmost Hero Stack "walks down the aisle," moving one space to the right.\nTwist 8-11: KO two cards from the top of each Wedding Hero Stack.',
+    evilWins: "When either Wedding Hero Stack is KO'd.",
+  },
+  {
+    name: "Devolve with Xerogen Crystals",
+    exp: "realm_of_kings",
+    overrides: {
+      twistsByPlayers: { 1: 4, 2: 5, 3: 6, 4: 7, 5: 8 },
+      extraHenchmenCount: 1,
+      extraHenchmenGroupLabel: "Xerogen Experiments",
+    },
+    setupNote: 'Twists equal to the number of players plus 3.\nSpecial Rules: All Xerogen Experiments also have Abomination.',
+    twist:
+      "Choose a Hero in the HQ that doesn't have a printed Attack of 2 or more. Put it on the bottom of the Hero Deck. Then play two cards from the Villain Deck.",
+    evilWins: "When there are 3 Villains per player in the Escape Pile or the Villain Deck runs out.",
+  },
+  {
+    name: "Tornado of Terrigen Mists",
+    exp: "realm_of_kings",
+    overrides: { twists: 10 },
+    setupNote:
+      "Each player puts a small object above the Sewers to represent themself.\nSpecial Rules: You can't fight Villains outside of the city space where you are. (You can still recruit from all HQ spaces and fight the Mastermind.) During your turn, you can spend 1 Attack any number of times to move yourself one space left or right.",
+    twist:
+      'Twist 1: Put this Tornado Scheme card above the Sewers.\nTwist 2-5: Each player in the Tornado space gains a Wound. Then move this Tornado card and each Villain simultaneously one space to the left. (A Villain on the Bridge escapes.)\nTwist 6-9: Same effect, but move them all to the right, if possible. (A Villain in the Sewers doesn\'t move.)\nTwist 10: Evil Wins!',
+    evilWins: "",
+  },
+  {
+    name: "War of Kings",
+    exp: "realm_of_kings",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      'Twist 1-8: Stack this Twist next to the Scheme as a "Battlefront." This turn, you may pay 1 Recruit per Battlefront to supply the war:\n- If you pay: You gain the Throne\'s Favor. You may KO one of your cards.\n- If you don\'t pay by the end of turn: Right after you draw a new hand, stack a card from the S.H.I.E.L.D. Officer Stack next to the Scheme as a "Victorious General." The Mastermind gains the Throne\'s Favor. If they already have it, you gain a Wound.\nTwist 9-11: Same effect, but with two Victorious Generals.',
+    evilWins: "When there are 6 Victorious Generals.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2099,6 +2154,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Goblin's Freak Show", exp: "noir" },
   { name: "X-Men Noir", exp: "noir" },
+
+  { name: "Inhuman Rebellion", exp: "realm_of_kings" },
+  { name: "Shi'ar Imperial Elite", exp: "realm_of_kings" },
 ];
 
 const HENCHMEN = [
@@ -2320,8 +2378,11 @@ const HEROES = [
   { name: "Luke Cage Noir", exp: "noir", team: "Marvel Knights" },
   { name: "Spider-Man Noir", exp: "noir", team: "Spider-Friends" },
 
-  { name: "Black Bolt", exp: "realm_of_kings" },
-  { name: "Medusa", exp: "realm_of_kings" },
+  { name: "Black Bolt", exp: "realm_of_kings", team: "Inhumans" },
+  { name: "Crystal", exp: "realm_of_kings", team: "Inhumans" },
+  { name: "Gorgon", exp: "realm_of_kings", team: "Inhumans" },
+  { name: "Karnak", exp: "realm_of_kings", team: "Inhumans" },
+  { name: "Medusa", exp: "realm_of_kings", team: "Inhumans" },
 
   { name: "Maria Hill", exp: "shield" },
   { name: "Phil Coulson", exp: "shield" },
