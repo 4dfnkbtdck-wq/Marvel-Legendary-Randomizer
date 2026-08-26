@@ -134,7 +134,7 @@ const EXPANSIONS = [
   { id: "fantastic_four", name: "Fantastic Four", confidence: "verified" },
   { id: "paint_town_red", name: "Paint the Town Red", confidence: "verified" },
   { id: "guardians", name: "Guardians of the Galaxy", confidence: "verified" },
-  { id: "x_men", name: "X-Men", confidence: "moderate" },
+  { id: "x_men", name: "X-Men", confidence: "verified" },
   { id: "champions", name: "Champions", confidence: "verified" },
   { id: "civil_war", name: "Civil War", confidence: "verified" },
   { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "verified" },
@@ -207,8 +207,19 @@ const MASTERMINDS = [
   { name: "Exodus", exp: "messiah_complex", leads: [{ category: "villains", name: "Acolytes" }] },
   { name: "Lady Deathstrike", exp: "messiah_complex", leads: [{ category: "villains", name: "Reavers" }] },
 
-  { name: "Dark Phoenix", exp: "x_men" },
-  { name: "Onslaught", exp: "x_men" },
+  { name: "Arcade", exp: "x_men", leads: [{ category: "villains", name: "Murderworld" }] },
+  { name: "Dark Phoenix", exp: "x_men", leads: [{ category: "villains", name: "Hellfire Club" }] },
+  {
+    name: "Deathbird",
+    exp: "x_men",
+    leads: [
+      { category: "villains", name: "Shi'ar Imperial Guard" },
+      { category: "henchmen", nameContains: ["Shi'ar"] },
+    ],
+  },
+  { name: "Mojo", exp: "x_men", leads: [{ category: "villains", name: "Mojoverse" }] },
+  { name: "Onslaught", exp: "x_men", leads: [{ category: "villains", name: "Dark Descendants" }] },
+  { name: "Shadow King", exp: "x_men", leads: [{ category: "villains", name: "Shadow-X" }] },
 
   { name: "Morgan Le Fay", exp: "ant_man", leads: [{ category: "villains", name: "Queen's Vengeance" }] },
   { name: "Ultron", exp: "ant_man", leads: [{ category: "villains", name: "Ultron's Legacy" }] },
@@ -732,9 +743,79 @@ const SCHEMES = [
     evilWins: "When 5 Goons escape.",
   },
 
-  { name: "The Dark Phoenix Saga", exp: "x_men" },
-  { name: "Days of Future Past", exp: "x_men" },
-  { name: "Fall of the Mutants", exp: "x_men" },
+  // The eight X-Men Schemes below are transcribed directly from the
+  // physical cards.
+  {
+    name: "Mutant-Hunting Super Sentinels",
+    exp: "x_men",
+    overrides: { twists: 9, extraHenchmenNames: ["Sentinel"], extraHenchmenGroupLabel: "Sentinels" },
+    setupNote:
+      'Include 10 Sentinels as extra Henchmen (Core Set\'s "Sentinel" group, shown above) — or, if that Henchman Group isn\'t available, substitute another one manually.',
+    twist:
+      'Stack this Twist next to the Scheme as a "Sentinel Upgrade." Shuffle all Sentinels from players\' Victory Piles into the Villain Deck. Play another card from the Villain Deck.\nSpecial Rules: All Sentinels get +1 Attack for each Sentinel Upgrade next to the Scheme.',
+    evilWins: "When 3 Sentinels have escaped.",
+  },
+  {
+    name: "Nuclear Armageddon",
+    exp: "x_men",
+    overrides: { twists: 5 },
+    setupNote: "",
+    twist: "Destroy the city space closest to the Mastermind. Any Villain there escapes. Put this Twist there.",
+    evilWins: "When the city is destroyed.",
+  },
+  {
+    name: "Televised Deathtraps of Mojoworld",
+    exp: "x_men",
+    overrides: { twists: 11 },
+    setupNote: "6 Wounds per player in Wound Stack.",
+    twist:
+      'Stack this Twist next to the Scheme as a "Deathtrap." This turn you may pay 1 Attack for each Deathtrap stacked there. If you don\'t, each player gains a Wound.',
+    evilWins: "When the Wound Stack or Villain Deck runs out.",
+  },
+  {
+    name: "X-Men Danger Room Goes Berserk",
+    exp: "x_men",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      'Trap! By End of Turn: You may pay 2 Recruit. If you do, shuffle this Twist back into the Villain Deck, then play a card from the Villain Deck. Or Suffer: Stack this Twist next to the Scheme as an "Airborne Neurotoxin."',
+    evilWins: "When there are 5 Airborne Neurotoxins.",
+  },
+  {
+    name: "Alien Brood Encounters",
+    exp: "x_men",
+    overrides: { twists: 8, bystanders: 0, extraHenchmenNames: ["The Brood"] },
+    setupNote: "No Bystanders in Villain Deck.",
+    twist:
+      'Special Rules: Cards are played from the Villain Deck face-down. You may spend 1 Attack to "scan" a face-down card in the city, turning it face-up and doing any Ambush effect, Twist, Trap, or Master Strike. If a face-down card would escape, scan it, and then it escapes if it\'s a Villain.\nThe player on your right gains this Twist as a "Brood Infection." When drawn, they KO it and gain 2 Wounds.',
+    evilWins: "When 3 Villains per player have escaped.",
+  },
+  {
+    name: "Anti-Mutant Hatred",
+    exp: "x_men",
+    overrides: { twists: 11 },
+    setupNote: "Wound Stack has 30 Wounds.",
+    twist:
+      'Put this Twist into your discard pile as an "Angry Mob."\nSpecial Rules: At the start of your turn, for each Angry Mob in your hand, the player on your right gains a Wound and gains that Angry Mob.',
+    evilWins: "When the Wound Stack or Villain Deck runs out.",
+  },
+  {
+    name: "The Dark Phoenix Saga",
+    exp: "x_men",
+    overrides: { twists: 10, requiredVillainGroup: "Hellfire Club", extraHeroName: "Jean Grey", extraHeroNote: "14 Jean Grey cards go in the Villain Deck" },
+    setupNote: "",
+    twist:
+      "Special Rules: Jean Grey cards in the Villain Deck are Villains with attack equal to their cost, \"Ambush: Play another Villain card\" and \"Fight: Gain this as a Hero.\"\nShuffle all Jean Grey cards from the KO pile and from all players' hands and discard piles into the Villain Deck.",
+    evilWins: "When 5 Jean Grey cards have escaped.",
+  },
+  {
+    name: "Horror of Horrors",
+    exp: "x_men",
+    overrides: { twists: 6 },
+    setupNote: "",
+    twist: "Twist 1-5: Play a random Horror.\nTwist 6: Evil wins!",
+    evilWins: "",
+  },
 
   // The four Champions schemes below are transcribed directly from the
   // physical cards.
@@ -2729,8 +2810,13 @@ const VILLAIN_GROUPS = [
   { name: "Purifiers", exp: "messiah_complex" },
   { name: "Reavers", exp: "messiah_complex" },
 
-  { name: "Reavers", exp: "x_men" },
-  { name: "Marauders", exp: "x_men" },
+  { name: "Dark Descendants", exp: "x_men" },
+  { name: "Hellfire Club", exp: "x_men" },
+  { name: "Mojoverse", exp: "x_men" },
+  { name: "Murderworld", exp: "x_men" },
+  { name: "Shadow-X", exp: "x_men" },
+  { name: "Shi'ar Imperial Guard", exp: "x_men" },
+  { name: "Sisterhood of Mutants", exp: "x_men" },
 
   { name: "Queen's Vengeance", exp: "ant_man" },
   { name: "Ultron's Legacy", exp: "ant_man" },
@@ -2879,7 +2965,11 @@ const HENCHMEN = [
   { name: "Maggia Goons", exp: "dark_city" },
   { name: "Phalanx", exp: "dark_city" },
 
-  { name: "Prime Sentinels", exp: "x_men" },
+  { name: "The Brood", exp: "x_men" },
+  { name: "Hellfire Cult", exp: "x_men" },
+  { name: "Sapien League", exp: "x_men" },
+  { name: "Shi'ar Death Commandos", exp: "x_men" },
+  { name: "Shi'ar Patrol Craft", exp: "x_men" },
 
   // Legendary: Villains — these are the good guys' Adversary squads.
   { name: "Asgardian Warrior", exp: "villains" },
@@ -2996,17 +3086,24 @@ const HEROES = [
   { name: "Rocket Raccoon", exp: "guardians", team: "Guardians of the Galaxy", gender: "male" },
   { name: "Star-Lord", exp: "guardians", team: "Guardians of the Galaxy", gender: "male" },
 
-  { name: "Magik", exp: "x_men", gender: "female" },
-  { name: "Cannonball", exp: "x_men", gender: "male" },
-  { name: "Sunspot", exp: "x_men", gender: "male" },
-  { name: "Warpath", exp: "x_men", gender: "male" },
-  { name: "Boom-Boom", exp: "x_men", gender: "female" },
-  { name: "Havok", exp: "x_men", gender: "male" },
-  { name: "Polaris", exp: "x_men", gender: "female" },
-  { name: "Multiple Man", exp: "x_men", gender: "male" },
-  { name: "Domino", exp: "x_men", gender: "female" },
-  { name: "Forge", exp: "x_men", gender: "male" },
-  { name: "Iceman", exp: "x_men", gender: "male" },
+  // "Aurora & Northstar" is a mixed-gender duo card — left untagged for
+  // gender rather than guessed (see the Falcon & Winter Soldier /
+  // Rocket & Groot precedent above/below for the same treatment).
+  { name: "Aurora & Northstar", exp: "x_men", team: "X-Men" },
+  { name: "Banshee", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Beast", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Cannonball", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Colossus & Wolverine", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Dazzler", exp: "x_men", team: "X-Men", gender: "female" },
+  { name: "Havok", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Jubilee", exp: "x_men", team: "X-Men", gender: "female" },
+  { name: "Kitty Pryde", exp: "x_men", team: "X-Men", gender: "female" },
+  { name: "Legion", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Longshot", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Phoenix", exp: "x_men", team: "X-Men", gender: "female" },
+  { name: "Polaris", exp: "x_men", team: "X-Men", gender: "female" },
+  { name: "Psylocke", exp: "x_men", team: "X-Men", gender: "female" },
+  { name: "X-23", exp: "x_men", team: "X-Men", gender: "female" },
 
   { name: "Gwenpool", exp: "champions", team: "Champions", keywords: ["Size-Changing"], gender: "female" },
   { name: "Ms. Marvel", exp: "champions", team: "Champions", keywords: ["Size-Changing"], gender: "female" },
