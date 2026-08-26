@@ -168,7 +168,7 @@ const EXPANSIONS = [
   { id: "infinity_saga", name: "Marvel Studios Infinity Saga", confidence: "verified" },
   { id: "midnight_sons", name: "Midnight Sons", confidence: "verified" },
   { id: "secret_wars_2", name: "Secret Wars: Volume 2", confidence: "verified" },
-  { id: "weapon_x", name: "Weapon X", confidence: "light" },
+  { id: "weapon_x", name: "Weapon X", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
@@ -330,12 +330,12 @@ const MASTERMINDS = [
   { name: "Hybrid", exp: "venom", leads: [{ category: "villains", name: "Life Foundation" }] },
   { name: "Poison Thanos", exp: "venom", leads: [{ category: "villains", name: "Poisons" }] },
 
-  // "Always leads" pairings aren't confirmed from a primary source yet —
-  // left off rather than guessed (see world_war_hulk's Maestro above for
-  // the same treatment).
+  // Omega Red "leads any Villain Group" — not a specific named card, so
+  // there's nothing to force-include; `leads` stays empty (see Hank Pym,
+  // Yellowjacket above for the same case).
   { name: "Omega Red", exp: "weapon_x" },
-  { name: "Romulus", exp: "weapon_x" },
-  { name: "Sabretooth", exp: "weapon_x" },
+  { name: "Romulus", exp: "weapon_x", leads: [{ category: "villains", name: "Weapon Plus" }] },
+  { name: "Sabretooth", exp: "weapon_x", leads: [{ category: "villains", name: "Berserkers" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -413,7 +413,14 @@ const MASTERMINDS = [
 //                  Setup text that names a Team rather than a specific
 //                  Hero, e.g. Deadpool's "Everybody Hates Deadpool": "use
 //                  at least 1 Mercs For Money Hero," printed as the
-//                  team's icon rather than a card name),
+//                  team's icon rather than a card name), or
+//                  `requiredHeroNameContains` (an array of name
+//                  substrings, case-insensitive, OR'd together — same
+//                  idea as a Mastermind's `nameContains`, for Setup text
+//                  naming a Hero by a shared word rather than a Team or
+//                  exact card, e.g. Weapon X's "Condition Logan into
+//                  Weapon X": "include exactly 1 Hero with Wolverine or
+//                  Logan in its name"),
 //                  `extraHero` (a boolean, optionally paired with
 //                  `extraHeroNote` — see syncExtraCard in app.js; for a
 //                  Scheme whose extra Hero contributes its OWN cards
@@ -2501,13 +2508,36 @@ const SCHEMES = [
     evilWins: "",
   },
 
-  // Weapon X: names confirmed, but Twist/Setup/Evil Wins text isn't
-  // transcribed from a primary source yet, so `overrides`/`twist`/
-  // `evilWins`/`setupNote` are left off rather than guessed (falls back
-  // to the default 5-Twist Scheme).
-  { name: "Condition Logan into Weapon X", exp: "weapon_x" },
-  { name: "Go After Heroes' Loved Ones", exp: "weapon_x" },
-  { name: "Wipe Heroes' Memories", exp: "weapon_x" },
+  // The three Weapon X Schemes below are transcribed directly from the
+  // physical cards.
+  {
+    name: "Condition Logan into Weapon X",
+    exp: "weapon_x",
+    overrides: { twists: 8, requiredHeroNameContains: ["Wolverine", "Logan"] },
+    setupNote: "",
+    twist:
+      'Twist 1, 3, 5 ("Induce Violent Rage"): If you don\'t defeat an Enemy worth 2 VP or more this turn, then after you draw a new hand at the end of this turn, each player discards down to four cards.\nTwist 2, 4, 6 ("Test the Subject\'s Healing Factor"): Each player discards a Strength or Instinct Hero (icons shown; unconfirmed which two Hero Classes — verify against the physical card) or gains a Wound.\nTwist 7 ("Unleash Weapon X"): For each Wolverine and/or Logan Hero in the HQ, each player gains a Wound.\nTwist 8: Evil Wins!',
+    evilWins: "",
+  },
+  {
+    name: "Go After Heroes' Loved Ones",
+    exp: "weapon_x",
+    overrides: { heroCountDelta: 1, twistsByPlayers: { 1: 8, 2: 10, 3: 10, 4: 10, 5: 11 } },
+    setupNote:
+      'Don\'t use multiple Heroes that have the same Hero Name.\nSet aside a lowest-cost card for each Hero Name in play, face up, with 2 face-up Bystanders under it as "Loved Ones" (not modeled — track by hand).',
+    twist:
+      'Twist 1-6: KO the Hero in the rightmost HQ space. KO one of that Hero Name\'s Loved Ones. Each player discards a card of that Hero Name. If you discard a card this way during your turn, you Berserk. If that Hero Name has no more Loved Ones, that Hero is "Lost in Grief": KO all of that Hero Name from the HQ and Hero Deck, then shuffle it.\nTwist 7-11: Do that Twist effect twice.',
+    evilWins: "When the Hero Deck runs out.",
+  },
+  {
+    name: "Wipe Heroes' Memories",
+    exp: "weapon_x",
+    overrides: { twistsByPlayers: { 1: 5, 2: 6, 3: 7, 4: 8, 5: 9 } },
+    setupNote: "Special Rules: Face down cards in your Victory Pile count as not being there at all until you count their VP at game end.",
+    twist:
+      'You "forget your past": If you have any face up Villains or Tactics in your Victory Pile, put one of them on the bottom of your Victory Pile face down, then shuffle this Twist back into the Villain Deck, then play a card from the Villain Deck. If you didn\'t have any face up Villains or Tactics, then instead stack this Twist next to the Scheme as a "Total Memory Wipe."',
+    evilWins: "When there are 4 Total Memory Wipes.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
