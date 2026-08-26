@@ -2267,12 +2267,18 @@ const SCHEMES = [
   // Hero's full 14 cards (`extraHero`/`extraHeroNote`, same idea as Volume
   // 1's "Master of Tyrants" precedent for a "not the normal Villain/Hero
   // Deck" destination). "The Fountain of Eternal Life" scales its Twists
-  // down to 4 at 1 player only (`twistsByPlayers`). "Enthrone the Barons
-  // of Battleworld" and "The God-Emperor of Battleworld" both describe a
-  // Villain/this Scheme ascending into a brand-new in-game Mastermind —
-  // left as reference text only, since the app has no mechanism for
-  // minting a Mastermind mid-game the way it does for a Scheme
-  // Transforming into a fixed companion Scheme (see Revelations).
+  // down to 4 at 1 player only (`twistsByPlayers`). "Secret Wars" DOES
+  // randomize its "Add another random Mastermind... with one Tactic"
+  // Twists 1-3 (`extraMastermindCount: 3` — same EXTRA_GROUP_CONFIG
+  // mechanic built for Volume 1's "Master of Tyrants"), shown up front as
+  // their own section rather than revealed one Twist at a time, since this
+  // app randomizes a full setup rather than playing out individual Twists.
+  // "Enthrone the Barons of Battleworld" and "The God-Emperor of
+  // Battleworld" both describe a Villain/this Scheme ascending into a
+  // brand-new in-game Mastermind — left as reference text only, since the
+  // app has no mechanism for minting a Mastermind mid-game the way it does
+  // for a Scheme Transforming into a fixed companion Scheme (see
+  // Revelations).
   {
     name: "The Mark of Khonshu",
     exp: "secret_wars_2",
@@ -2299,7 +2305,11 @@ const SCHEMES = [
   {
     name: "Secret Wars",
     exp: "secret_wars_2",
-    overrides: { twists: 8 },
+    overrides: {
+      twists: 8,
+      extraMastermindCount: 3,
+      extraMastermindGroupLabel: "Additional Masterminds (one Tactic each, added over Twists 1-3)",
+    },
     setupNote: "",
     twist: "Twists 1-3: Add another random Mastermind to the game with one Tactic.\nTwist 8: Evil wins!",
     evilWins: "",
