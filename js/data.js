@@ -451,7 +451,19 @@ const MASTERMINDS = [
 //                  above instead, not this. A Mastermind can carry the
 //                  same idea but randomized rather than named — see
 //                  `extraVillainGroup` in the Mastermind doc comment
-//                  above), or
+//                  above), or `extraVillainGroupFromExtraMastermind` (a
+//                  boolean — same "set aside, not part of the main
+//                  lineup" idea again, but DERIVED from whichever
+//                  Mastermind is currently the `extraMastermindCount`
+//                  pick (see below), reading that Mastermind's own
+//                  `leads` entry for the villains category, e.g. Venom's
+//                  "Symbiotic Absorption": "Add [the Drained
+//                  Mastermind's] 'Always Leads' Villains as an extra
+//                  Villain Group." Pair with `extraMastermindCount: 1`
+//                  and `extraVillainGroupNote` too. Tied to that
+//                  Mastermind pick — rerolling it re-derives the Villain
+//                  Group automatically, so this one has no reroll button
+//                  of its own, unlike the two variants above), or
 //                  `extraHeroCount` (a number, optionally paired with
 //                  `extraHeroGroupLabel`) for a Scheme that draws a
 //                  whole second, separate group of random Heroes on top
@@ -2412,11 +2424,13 @@ const SCHEMES = [
   // physical cards. "Symbiotic Absorption"'s "Set aside a second 'Drained'
   // Mastermind" step reuses `extraMastermindCount: 1` (same mechanic as
   // Secret Wars' "Master of Tyrants"/"Secret Wars"), shown in its own
-  // section; deriving an extra Villain Group from that Mastermind's own
-  // "Always Leads" and shuffling/copying its Tactics and Master Strike
-  // stay reference text only, since the app has no mechanism to derive a
-  // Villain Group from a randomly-picked Mastermind or to track Tactic
-  // cards at all.
+  // section, AND "Add its 'Always Leads' Villains as an extra Villain
+  // Group" is also modeled — `extraVillainGroupFromExtraMastermind: true`
+  // reads that Drained Mastermind's own `leads` entry and shows it as its
+  // own set-aside Villain Group, tied to (and rerolling only via) whichever
+  // Mastermind is currently the Drained pick. Shuffling/copying the
+  // Drained Mastermind's Tactics and Master Strike stay reference text
+  // only, since the app doesn't track Tactic cards at all.
   {
     name: "Invasion of the Venom Symbiotes",
     exp: "venom",
@@ -2447,9 +2461,15 @@ const SCHEMES = [
   {
     name: "Symbiotic Absorption",
     exp: "venom",
-    overrides: { twists: 11, extraMastermindCount: 1, extraMastermindGroupLabel: "Drained Mastermind (see Setup)" },
+    overrides: {
+      twists: 11,
+      extraMastermindCount: 1,
+      extraMastermindGroupLabel: "Drained Mastermind (see Setup)",
+      extraVillainGroupFromExtraMastermind: true,
+      extraVillainGroupNote: 'the Drained Mastermind\'s "Always Leads" Villains',
+    },
     setupNote:
-      'Set aside the Drained Mastermind shown above and its 4 Tactics, out of play. Add its "Always Leads" Villains as an extra Villain Group.\nSpecial Rules: If Tactics or Master Strikes mention the Drained Mastermind, use the main Mastermind instead.',
+      'Set aside the Drained Mastermind shown above and its 4 Tactics, out of play. Its "Always Leads" Villains are shown above as an extra Villain Group.\nSpecial Rules: If Tactics or Master Strikes mention the Drained Mastermind, use the main Mastermind instead.',
     twist:
       "Twist 1-4: Shuffle one of the Drained Mastermind's Tactics into the main Mastermind's Tactics.\nTwist 6, 8, 10: The Mastermind uses this Twist to copy the Master Strike ability of the Drained Mastermind.\nTwist 11: Evil Wins!",
     evilWins: "",

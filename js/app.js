@@ -144,20 +144,53 @@
     return (scheme && scheme.overrides && scheme.overrides.extraVillainGroupName) || null;
   }
 
+  /** A Scheme's `extraVillainGroupFromExtraMastermind` (see data.js)
+   * derives an extra Villain Group from whichever Mastermind is
+   * currently the extra-group pick in `state.extraMastermindGroup[0]`
+   * (see `extraMastermindCount`) — reads that Mastermind's own `leads`
+   * entry for the villains category, e.g. Venom's "Symbiotic Absorption"
+   * adding the Drained Mastermind's "Always Leads" Villains. That `leads`
+   * entry can be an exact `name` (most Masterminds) or, for a Mastermind
+   * that "leads any Villain Group with [word] in the name" (e.g. Doctor
+   * Octopus's Sinister Six variants), a `nameContains` list — resolved
+   * the same random-pick-with-cache way resolveNameMatchRequirement
+   * already resolves it for the *main* Mastermind, reused here for
+   * whichever Mastermind is Drained instead. Null when the current
+   * Scheme has no such requirement, no Drained Mastermind is currently
+   * picked, that Mastermind doesn't lead a Villain Group in this
+   * database, or (for the `nameContains` case) nothing currently
+   * available matches. Same idea as currentExtraVillainGroupName above,
+   * just derived rather than named outright. */
+  function currentExtraVillainGroupFromExtraMastermindName() {
+    const scheme = currentSchemeData();
+    if (!(scheme && scheme.overrides && scheme.overrides.extraVillainGroupFromExtraMastermind)) return null;
+    const drained = (state.extraMastermindGroup || [])[0];
+    const leadsVillain = drained && drained.leads && drained.leads.find((l) => l.category === "villains");
+    if (!leadsVillain) return null;
+    if (leadsVillain.name) return leadsVillain.name;
+    if (leadsVillain.nameContains) return resolveNameMatchRequirement("villains", leadsVillain.nameContains);
+    return null;
+  }
+
   /** Adds the current `extraVillainGroupName` Villain Group (if any — see
-   * currentExtraVillainGroupName above) to an exclude list for a Villain
-   * Groups draw, so it never gets pulled into the normal Villain Groups
-   * lineup on top of already being set aside on its own — mirrors
-   * heroDrawExclusions above. Also excludes whichever names a
-   * `requiredVillainGroupOneOf` requirement (see resolveOneOfRequirement
-   * below) did NOT pick, so "either X or Y, but not both" actually keeps
-   * the other one out rather than just forcing one in. Pass the
-   * category's own key; a no-op for every other category. */
+   * currentExtraVillainGroupName above) and the current
+   * `extraVillainGroupFromExtraMastermind` derived Villain Group (if any
+   * — see currentExtraVillainGroupFromExtraMastermindName above) to an
+   * exclude list for a Villain Groups draw, so neither gets pulled into
+   * the normal Villain Groups lineup on top of already being set aside
+   * on its own — mirrors heroDrawExclusions above. Also excludes
+   * whichever names a `requiredVillainGroupOneOf` requirement (see
+   * resolveOneOfRequirement below) did NOT pick, so "either X or Y, but
+   * not both" actually keeps the other one out rather than just forcing
+   * one in. Pass the category's own key; a no-op for every other
+   * category. */
   function villainDrawExclusions(categoryKey, base) {
     if (categoryKey !== "villains") return base;
     let result = base;
     const extraName = currentExtraVillainGroupName();
     if (extraName) result = result.concat([{ name: extraName }]);
+    const drainedExtraName = currentExtraVillainGroupFromExtraMastermindName();
+    if (drainedExtraName) result = result.concat([{ name: drainedExtraName }]);
     const scheme = currentSchemeData();
     const oneOf = scheme && scheme.overrides && scheme.overrides.requiredVillainGroupOneOf;
     if (oneOf) {
@@ -247,6 +280,7 @@
     reconcileHeroTeamCount();
     reconcileExtraHeroName();
     reconcileExtraVillainGroupName();
+    reconcileExtraVillainGroupFromExtraMastermind();
     reconcileVillainGroupOneOf();
     syncRequiredCards();
     saveToHistory();
@@ -279,6 +313,7 @@
       reconcileHeroTeamCount();
       reconcileExtraHeroName();
       reconcileExtraVillainGroupName();
+      reconcileExtraVillainGroupFromExtraMastermind();
       reconcileVillainGroupOneOf();
       syncRequiredCards();
     }
@@ -309,6 +344,7 @@
       reconcileHeroTeamCount();
       reconcileExtraHeroName();
       reconcileExtraVillainGroupName();
+      reconcileExtraVillainGroupFromExtraMastermind();
       reconcileVillainGroupOneOf();
       syncRequiredCards();
     }
@@ -568,10 +604,10 @@
       requiredCardNames(categoryKey).forEach((name) => forceIncludeSignature(categoryKey, name));
     });
     syncExtraCard();
+    syncExtraGroup("mastermind");
     syncExtraVillainGroup();
     syncExtraGroup("heroes");
     syncExtraGroup("henchmen");
-    syncExtraGroup("mastermind");
     syncWeddingHeroes();
     syncUnveiledScheme();
   }
@@ -695,25 +731,41 @@
   /** A Villain Group beyond the normal Villain Groups lineup, set aside
    * on its own rather than mixed into the main pool or its count — same
    * idea as a Scheme's `extraHero`/`extraHeroName` above, just for a
-   * Villain Group. Two sources, checked in this order: a Scheme's
+   * Villain Group. Three sources, checked in this order: a Scheme's
    * `overrides.extraVillainGroupName` names one specific Villain Group
    * (e.g. "Siphon Energy from the Quantum Realm" setting aside the
-   * Quantum Realm group itself), or a Mastermind's `extraVillainGroup`
-   * (boolean) picks one at random (e.g. Kang, Quantum Conqueror's "set
-   * aside the villains from an extra Villain Group as Timeline
-   * Variants" — see data.js for both). Kept in state.extraVillainGroup
-   * (not one of the counted result categories, so it doesn't affect the
-   * Villain Groups stepper or count toward it) and left alone once
-   * picked, only clearing/re-picking when the Scheme or Mastermind
-   * itself changes (see the schemeSignature check in syncSchemeNumbers
-   * and the mmSignature check in syncRequiredCards) or the current pick
-   * is no longer valid. */
+   * Quantum Realm group itself); a Scheme's `overrides.
+   * extraVillainGroupFromExtraMastermind` (boolean) derives it from
+   * whichever Mastermind is currently sitting in `state.
+   * extraMastermindGroup[0]` (see `extraMastermindCount` — e.g. Venom's
+   * "Symbiotic Absorption": "Add [the Drained Mastermind's] 'Always
+   * Leads' Villains as an extra Villain Group" — reads that Mastermind's
+   * own `leads` entry for the villains category, the same way a
+   * Mastermind's own `leads` forces a card in requiredCardNames below);
+   * or a Mastermind's own `extraVillainGroup` (boolean) picks one at
+   * random (e.g. Kang, Quantum Conqueror's "set aside the villains from
+   * an extra Villain Group as Timeline Variants" — see data.js for all
+   * three). Kept in state.extraVillainGroup (not one of the counted
+   * result categories, so it doesn't affect the Villain Groups stepper
+   * or count toward it) and left alone once picked, only clearing/re-
+   * picking when the Scheme or Mastermind itself changes (see the
+   * schemeSignature check in syncSchemeNumbers and the mmSignature check
+   * in syncRequiredCards) or the current pick is no longer valid. Must
+   * run after syncExtraGroup("mastermind") — see the call order in
+   * syncRequiredCards — so the Drained Mastermind case has something to
+   * read from. */
   function syncExtraVillainGroup() {
     const scheme = currentSchemeData();
     const schemeOverrides = (scheme && scheme.overrides) || {};
     if (schemeOverrides.extraVillainGroupName) {
       const pool = poolFor(CATEGORY_BY_KEY.villains);
       state.extraVillainGroup = pool.find((c) => c.name === schemeOverrides.extraVillainGroupName) || null;
+      return;
+    }
+    if (schemeOverrides.extraVillainGroupFromExtraMastermind) {
+      const drainedName = currentExtraVillainGroupFromExtraMastermindName();
+      const pool = poolFor(CATEGORY_BY_KEY.villains);
+      state.extraVillainGroup = (drainedName && pool.find((c) => c.name === drainedName)) || null;
       return;
     }
     const mmData = currentMastermindData();
@@ -804,6 +856,15 @@
     const [picked] = pickRandom(pool, 1, exclude);
     if (picked) group[index] = picked;
     state[config.stateKey] = group;
+    if (categoryKey === "mastermind") {
+      // A Drained Mastermind reroll can change what
+      // extraVillainGroupFromExtraMastermind derives (see
+      // syncExtraVillainGroup) — re-derive it and evict any stale copy
+      // of the new pick from the main Villain Groups result now, rather
+      // than waiting for the next Scheme/Mastermind/player-count sync.
+      syncExtraVillainGroup();
+      reconcileExtraVillainGroupFromExtraMastermind();
+    }
     saveState();
     renderResults();
   }
@@ -1056,6 +1117,29 @@
    * Groups result or the current Scheme may have just changed. */
   function reconcileExtraVillainGroupName() {
     const extraName = currentExtraVillainGroupName();
+    if (!extraName) return;
+    const items = state.result.villains || [];
+    const locks = state.locks.villains || [];
+    const idx = items.findIndex((v) => v.name === extraName);
+    if (idx === -1 || locks[idx]) return;
+    const pool = poolFor(CATEGORY_BY_KEY.villains);
+    const [fresh] = pickRandom(pool, 1, villainDrawExclusions("villains", items));
+    if (fresh) {
+      items[idx] = fresh;
+      state.result.villains = items;
+    }
+  }
+
+  /** Evicts the current `extraVillainGroupFromExtraMastermind` derived
+   * Villain Group (if any — see currentExtraVillainGroupFromExtraMastermindName
+   * above) from the main Villain Groups result, if it's there and
+   * unlocked, replacing it with a fresh pick — same idea as
+   * reconcileExtraVillainGroupName above, just for the Drained-Mastermind-
+   * derived case. Call this alongside reconcileExtraVillainGroupName any
+   * time the Villain Groups result, the current Scheme, or the current
+   * Drained Mastermind pick may have just changed. */
+  function reconcileExtraVillainGroupFromExtraMastermind() {
+    const extraName = currentExtraVillainGroupFromExtraMastermindName();
     if (!extraName) return;
     const items = state.result.villains || [];
     const locks = state.locks.villains || [];
@@ -1528,6 +1612,7 @@
     reconcileHeroTeamCount();
     reconcileExtraHeroName();
     reconcileExtraVillainGroupName();
+    reconcileExtraVillainGroupFromExtraMastermind();
     reconcileVillainGroupOneOf();
     syncRequiredCards();
     renderPlayersSegmented();
@@ -1716,6 +1801,7 @@
         reconcileHeroTeamCount();
         reconcileExtraHeroName();
         reconcileExtraVillainGroupName();
+        reconcileExtraVillainGroupFromExtraMastermind();
         reconcileVillainGroupOneOf();
         syncRequiredCards();
         render();
@@ -1935,10 +2021,12 @@
 
     const mmData = currentMastermindData();
     const schemeExtraVGName = scheme && scheme.overrides && scheme.overrides.extraVillainGroupName;
+    const schemeExtraVGFromDrained = scheme && scheme.overrides && scheme.overrides.extraVillainGroupFromExtraMastermind;
     const mmHasExtraVG = !!(mmData && mmData.extraVillainGroup);
-    if (schemeExtraVGName || mmHasExtraVG) {
+    if (schemeExtraVGName || schemeExtraVGFromDrained || mmHasExtraVG) {
       const isVGNamed = !!schemeExtraVGName;
-      const vgNote = isVGNamed ? scheme.overrides.extraVillainGroupNote : mmData.extraVillainGroupNote;
+      const isVGFromDrained = !!schemeExtraVGFromDrained;
+      const vgNote = isVGNamed || isVGFromDrained ? scheme.overrides.extraVillainGroupNote : mmData.extraVillainGroupNote;
       const extraVGRow = document.createElement("li");
       extraVGRow.className = "ios-row";
 
@@ -1960,6 +2048,9 @@
       rerollBtn.textContent = "🔁";
       if (isVGNamed) {
         rerollBtn.title = "Fixed by this Scheme";
+        rerollBtn.disabled = true;
+      } else if (isVGFromDrained) {
+        rerollBtn.title = "Follows the Drained Mastermind above — reroll that instead";
         rerollBtn.disabled = true;
       } else {
         rerollBtn.title = "Reroll the extra Villain Group";
