@@ -31,6 +31,7 @@
       extraVillainGroup: null,
       extraHeroGroup: [],
       extraHenchmenGroup: [],
+      weddingHeroes: [],
       heroTeamSplit: null,
       unveiledScheme: null,
     };
@@ -59,6 +60,7 @@
         extraVillainGroup: null,
         extraHeroGroup: [],
         extraHenchmenGroup: [],
+        weddingHeroes: [],
         heroTeamSplit: null,
         unveiledScheme: null,
       };
@@ -507,6 +509,7 @@
     syncExtraVillainGroup();
     syncExtraGroup("heroes");
     syncExtraGroup("henchmen");
+    syncWeddingHeroes();
     syncUnveiledScheme();
   }
 
@@ -572,6 +575,56 @@
     const candidates = pool.filter((c) => !mainNames.has(c.name));
     const [picked] = pickRandom(candidates, 1, state.extraCard ? [state.extraCard] : []);
     if (picked) state.extraCard = picked;
+    saveState();
+    renderResults();
+  }
+
+  /** A Scheme's `weddingHeroes` (see data.js) sets aside two extra Heroes
+   * as a gendered pair — one Hero tagged `gender: "male"`, one tagged
+   * `gender: "female"` (see the Hero doc comment in data.js) — kept in
+   * state.weddingHeroes as a fixed-slot 2-element array (index 0 male,
+   * index 1 female) so each slot's reroll button stays constrained to
+   * its own gender. Heroes with no `gender` tag are simply never
+   * eligible. Same "extra card, not part of the main Hero Deck" idea as
+   * extraCard above, just two constrained picks instead of one. */
+  function syncWeddingHeroes() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    if (!overrides.weddingHeroes) {
+      state.weddingHeroes = [];
+      return;
+    }
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
+    const prior = state.weddingHeroes || [];
+    const genders = ["male", "female"];
+    const kept = genders.map((gender, i) => {
+      const current = prior[i];
+      const stillValid = current && current.gender === gender && !mainNames.has(current.name) && pool.some((c) => c.name === current.name);
+      return stillValid ? current : null;
+    });
+    genders.forEach((gender, i) => {
+      if (kept[i]) return;
+      const otherName = kept[1 - i] ? kept[1 - i].name : null;
+      const candidates = pool.filter((c) => c.gender === gender && !mainNames.has(c.name) && c.name !== otherName);
+      const [picked] = pickRandom(candidates, 1, []);
+      kept[i] = picked || null;
+    });
+    state.weddingHeroes = kept;
+  }
+
+  function rerollWeddingHero(index) {
+    const group = state.weddingHeroes || [];
+    const current = group[index];
+    if (!current) return;
+    const gender = index === 0 ? "male" : "female";
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const mainNames = new Set((state.result.heroes || []).map((h) => h.name));
+    const otherName = group[1 - index] ? group[1 - index].name : null;
+    const candidates = pool.filter((c) => c.gender === gender && !mainNames.has(c.name) && c.name !== otherName);
+    const [picked] = pickRandom(candidates, 1, [current]);
+    if (picked) group[index] = picked;
+    state.weddingHeroes = group;
     saveState();
     renderResults();
   }
@@ -899,6 +952,7 @@
       state.extraVillainGroup = null;
       state.extraHeroGroup = [];
       state.extraHenchmenGroup = [];
+      state.weddingHeroes = [];
       state.heroTeamSplit = null;
       state.unveiledScheme = null;
       lastSchemeSignature = schemeSignature;
@@ -1519,6 +1573,7 @@
 
       if (category.key === "scheme") el.results.appendChild(villainDeckSection(items[0]));
       if (EXTRA_GROUP_CONFIG[category.key]) el.results.appendChild(extraGroupSection(category.key));
+      if (category.key === "heroes") el.results.appendChild(weddingHeroesSection());
     });
   }
 
@@ -1573,6 +1628,60 @@
       rerollBtn.textContent = "🔁";
       rerollBtn.title = "Reroll just this one";
       rerollBtn.addEventListener("click", () => rerollExtraGroupSlot(categoryKey, index));
+
+      li.appendChild(text);
+      li.appendChild(rerollBtn);
+      list.appendChild(li);
+    });
+    section.appendChild(list);
+
+    return section;
+  }
+
+  /** Renders the "Wedding Heroes" section for a Scheme's `weddingHeroes`
+   * (see data.js/syncWeddingHeroes) — one male-tagged Hero, one
+   * female-tagged Hero, each independently rerollable within its own
+   * gender. */
+  function weddingHeroesSection() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    if (!overrides.weddingHeroes) return document.createDocumentFragment();
+
+    const category = CATEGORY_BY_KEY.heroes;
+    const section = document.createElement("section");
+    section.className = "ios-group";
+
+    const header = document.createElement("div");
+    header.className = "group-header";
+    const headerSpan = document.createElement("span");
+    headerSpan.textContent = "Wedding Heroes";
+    header.appendChild(headerSpan);
+    section.appendChild(header);
+
+    const list = document.createElement("ul");
+    list.className = "ios-list";
+    (state.weddingHeroes || []).forEach((card, index) => {
+      if (!card) return;
+      const li = document.createElement("li");
+      li.className = "ios-row";
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      const main = document.createElement("span");
+      main.className = "row-text-main";
+      main.textContent = card.name;
+      const sub = document.createElement("span");
+      sub.className = "row-text-sub";
+      sub.textContent = poolRowSubText(category, card);
+      text.appendChild(main);
+      text.appendChild(sub);
+
+      const rerollBtn = document.createElement("button");
+      rerollBtn.type = "button";
+      rerollBtn.className = "round-btn";
+      rerollBtn.textContent = "🔁";
+      rerollBtn.title = "Reroll just this one";
+      rerollBtn.addEventListener("click", () => rerollWeddingHero(index));
 
       li.appendChild(text);
       li.appendChild(rerollBtn);
@@ -1783,6 +1892,10 @@
       lines.push(`${label}:`);
       group.forEach((c) => lines.push(`  - ${c.name} (${c.exp})`));
     });
+    if (state.weddingHeroes && state.weddingHeroes.some(Boolean)) {
+      lines.push("Wedding Heroes:");
+      state.weddingHeroes.forEach((c) => c && lines.push(`  - ${c.name} (${c.exp})`));
+    }
     if (state.unveiledScheme) lines.push(`Unveiled Scheme: ${state.unveiledScheme.name}`);
     const scheme = currentSchemeData();
     if (scheme && scheme.twist) lines.push("", "On a Twist:", `  ${scheme.twist.split("\n").join("\n  ")}`);
