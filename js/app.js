@@ -1631,7 +1631,8 @@
 
   function renderExpansions() {
     el.expansionList.innerHTML = "";
-    EXPANSIONS.forEach((exp) => {
+    const sortedExpansions = [...EXPANSIONS].sort((a, b) => a.name.localeCompare(b.name));
+    sortedExpansions.forEach((exp) => {
       const id = `exp-${exp.id}`;
       const li = document.createElement("li");
       li.className = "ios-row";
