@@ -513,6 +513,10 @@
       const name = resolveTeamRequirement(overrides.requiredHeroTeam);
       if (name) names.push(name);
     }
+    if (categoryKey === "heroes" && overrides.requiredHeroNameContains) {
+      const name = resolveNameMatchRequirement("heroes", overrides.requiredHeroNameContains);
+      if (name) names.push(name);
+    }
     return names;
   }
 
@@ -1371,6 +1375,13 @@
       return `required by ${scheme.name}`;
     }
     if (categoryKey === "heroes" && overrides.requiredHeroTeam && resolveTeamRequirement(overrides.requiredHeroTeam) === item.name) {
+      return `required by ${scheme.name}`;
+    }
+    if (
+      categoryKey === "heroes" &&
+      overrides.requiredHeroNameContains &&
+      resolveNameMatchRequirement("heroes", overrides.requiredHeroNameContains) === item.name
+    ) {
       return `required by ${scheme.name}`;
     }
     return null;
