@@ -129,7 +129,7 @@
  */
 
 const EXPANSIONS = [
-  { id: "core", name: "Core Set (2012)", confidence: "verified" },
+  { id: "core", name: "Core Set (1st Edition)", confidence: "verified" },
   { id: "dark_city", name: "Dark City", confidence: "verified" },
   { id: "fantastic_four", name: "Fantastic Four", confidence: "verified" },
   { id: "paint_town_red", name: "Paint the Town Red", confidence: "verified" },
@@ -163,9 +163,9 @@ const EXPANSIONS = [
   { id: "black_panther", name: "Black Panther", confidence: "verified" },
   { id: "black_widow", name: "Black Widow", confidence: "verified" },
   { id: "messiah_complex", name: "Messiah Complex", confidence: "verified" },
-  { id: "ant_man_wasp", name: "Marvel Studios Ant-Man and the Wasp", confidence: "verified" },
-  { id: "guardians_movie", name: "Marvel Studios Guardians of the Galaxy", confidence: "verified" },
-  { id: "infinity_saga", name: "Marvel Studios Infinity Saga", confidence: "verified" },
+  { id: "ant_man_wasp", name: "Marvel Studios: Ant-Man and the Wasp", confidence: "verified" },
+  { id: "guardians_movie", name: "Marvel Studios: Guardians of the Galaxy", confidence: "verified" },
+  { id: "infinity_saga", name: "Marvel Studios: Infinity Saga", confidence: "verified" },
   { id: "midnight_sons", name: "Midnight Sons", confidence: "verified" },
   { id: "secret_wars_2", name: "Secret Wars: Volume 2", confidence: "verified" },
   { id: "weapon_x", name: "Weapon X", confidence: "verified" },
@@ -354,7 +354,7 @@ const MASTERMINDS = [
   { name: "Sabretooth", exp: "weapon_x", leads: [{ category: "villains", name: "Berserkers" }] },
 ];
 
-// The eight Core Set (2012) schemes below are transcribed directly from
+// The eight Core Set (1st Edition) schemes below are transcribed directly from
 // the physical cards — unlike the rest of this file, treat these as
 // verified. Each carries:
 //   overrides    — mechanical deck-construction changes the app actually
