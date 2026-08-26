@@ -301,6 +301,7 @@
     reconcileExtraVillainGroupFromExtraMastermind();
     reconcileVillainGroupOneOf();
     syncRequiredCards();
+    reconcileExtraGroupNames();
     saveToHistory();
     render();
   }
@@ -334,6 +335,7 @@
       reconcileExtraVillainGroupFromExtraMastermind();
       reconcileVillainGroupOneOf();
       syncRequiredCards();
+      reconcileExtraGroupNames();
     }
     render();
   }
@@ -365,6 +367,7 @@
       reconcileExtraVillainGroupFromExtraMastermind();
       reconcileVillainGroupOneOf();
       syncRequiredCards();
+      reconcileExtraGroupNames();
     }
     render();
   }
@@ -1263,6 +1266,42 @@
     }
   }
 
+  /** Evicts a leftover copy of any current extra-group member (see
+   * EXTRA_GROUP_CONFIG/syncExtraGroup above — Master of Tyrants' Lurking
+   * Masterminds, Sire Vampires' Vampire Neonates, Cytoplasm Spike
+   * Invasion's named Cytoplasm Spikes, etc.) from that same category's
+   * own main result, if it's there and unlocked, replacing it with a
+   * fresh pick. Same idea as reconcileExtraVillainGroupName above:
+   * extraGroupDrawExclusions only keeps an extra-group member out of
+   * *new* picks going forward — it doesn't fix a copy already sitting in
+   * the main result from before the Scheme (or a reroll) put that same
+   * card into the extra group, e.g. the main Henchmen draw already
+   * having "Cytoplasm Spikes" in it from a previous Scheme, and then
+   * switching to Cytoplasm Spike Invasion without this would show it
+   * duplicated in both the normal Henchmen section and its own callout.
+   * Call this alongside the other reconcile* functions any time a
+   * category's main result or the current Scheme may have just changed. */
+  function reconcileExtraGroupNames() {
+    Object.keys(EXTRA_GROUP_CONFIG).forEach((categoryKey) => {
+      const config = EXTRA_GROUP_CONFIG[categoryKey];
+      const extraNames = new Set((state[config.stateKey] || []).map((c) => c.name));
+      if (!extraNames.size) return;
+      const items = state.result[categoryKey] || [];
+      const locks = state.locks[categoryKey] || [];
+      const pool = poolFor(CATEGORY_BY_KEY[categoryKey]);
+      items.forEach((item, idx) => {
+        if (!item || !extraNames.has(item.name) || locks[idx]) return;
+        const exclude = extraGroupDrawExclusions(
+          categoryKey,
+          villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, items))
+        );
+        const [fresh] = pickRandom(pool, 1, exclude);
+        if (fresh) items[idx] = fresh;
+      });
+      state.result[categoryKey] = items;
+    });
+  }
+
   function clampOption(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
@@ -1715,6 +1754,7 @@
     reconcileExtraVillainGroupFromExtraMastermind();
     reconcileVillainGroupOneOf();
     syncRequiredCards();
+    reconcileExtraGroupNames();
     renderPlayersSegmented();
     renderWarnings();
     renderResults();
@@ -1904,6 +1944,7 @@
         reconcileExtraVillainGroupFromExtraMastermind();
         reconcileVillainGroupOneOf();
         syncRequiredCards();
+        reconcileExtraGroupNames();
         render();
       });
       header.appendChild(span);
