@@ -33,6 +33,7 @@
       extraHenchmenGroup: [],
       weddingHeroes: [],
       heroTeamSplit: null,
+      heroTeamCount: null,
       unveiledScheme: null,
     };
   }
@@ -62,6 +63,7 @@
         extraHenchmenGroup: [],
         weddingHeroes: [],
         heroTeamSplit: null,
+        heroTeamCount: null,
         unveiledScheme: null,
       };
     } catch (e) {
@@ -222,10 +224,12 @@
     randomizeCategory(CATEGORY_BY_KEY.scheme, { keepLocked: true });
     syncSchemeNumbers();
     syncHeroTeamSplit();
+    syncHeroTeamCount();
     randomizeCategory(CATEGORY_BY_KEY.villains, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.henchmen, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.heroes, { keepLocked: true });
     reconcileHeroTeamSplit();
+    reconcileHeroTeamCount();
     reconcileExtraHeroName();
     reconcileExtraVillainGroupName();
     syncRequiredCards();
@@ -240,6 +244,10 @@
     if (categoryKey === "heroes" && state.heroTeamSplit && existing[index]) {
       pool = pool.filter((c) => c.team === existing[index].team);
     }
+    if (categoryKey === "heroes" && state.heroTeamCount && existing[index]) {
+      const inTeam = existing[index].team === state.heroTeamCount.team;
+      pool = pool.filter((c) => (c.team === state.heroTeamCount.team) === inTeam);
+    }
     const [picked] = pickRandom(pool, 1, extraGroupDrawExclusions(categoryKey, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, existing))));
     if (picked) {
       existing[index] = picked;
@@ -249,8 +257,10 @@
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
       syncSchemeNumbers();
       syncHeroTeamSplit();
+      syncHeroTeamCount();
       reconcileCountedCategories();
       reconcileHeroTeamSplit();
+      reconcileHeroTeamCount();
       reconcileExtraHeroName();
       reconcileExtraVillainGroupName();
       syncRequiredCards();
@@ -276,8 +286,10 @@
     if (categoryKey === "mastermind" || categoryKey === "scheme") {
       syncSchemeNumbers();
       syncHeroTeamSplit();
+      syncHeroTeamCount();
       reconcileCountedCategories();
       reconcileHeroTeamSplit();
+      reconcileHeroTeamCount();
       reconcileExtraHeroName();
       reconcileExtraVillainGroupName();
       syncRequiredCards();
@@ -872,6 +884,87 @@
     }
   }
 
+  /** Validates a `heroTeamCount` Scheme's requirement (see data.js) —
+   * exactly `count` Heroes from one named Team, the rest of `heroCount`
+   * from any Hero NOT on that Team (e.g. House of M's "4 X-Men Heroes
+   * and 2 non-X-Men Heroes"). Unlike heroTeamSplit above, the Team here
+   * is fixed by the Scheme itself rather than randomly chosen, so this
+   * only needs to check the requirement is currently satisfiable — sets
+   * state.heroTeamCount to null (meaning "not enforced, Heroes
+   * randomize normally") both when the Scheme has no such requirement
+   * and when the currently enabled pool can't supply enough Heroes on
+   * one or both sides (e.g. no X-Men expansions switched on). */
+  function syncHeroTeamCount() {
+    const scheme = currentSchemeData();
+    const overrides = (scheme && scheme.overrides) || {};
+    const spec = overrides.heroTeamCount;
+    if (!spec) {
+      state.heroTeamCount = null;
+      return;
+    }
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const teamCount = pool.filter((c) => c.team === spec.team).length;
+    const otherCount = pool.length - teamCount;
+    const otherWanted = (state.options.heroCount || 0) - spec.count;
+    if (teamCount < spec.count || otherCount < otherWanted) {
+      state.heroTeamCount = null;
+      return;
+    }
+    state.heroTeamCount = { team: spec.team, count: spec.count };
+  }
+
+  /** Forces the current Heroes result back into a `heroTeamCount`
+   * Scheme's required shape (see syncHeroTeamCount above) — same idea as
+   * reconcileHeroTeamSplit above, just two buckets (the named Team, and
+   * everything else) instead of several named Teams. No-op if no
+   * requirement is active. Never evicts a locked slot. */
+  function reconcileHeroTeamCount() {
+    const spec = state.heroTeamCount;
+    if (!spec) return;
+
+    const pool = poolFor(CATEGORY_BY_KEY.heroes);
+    const items = state.result.heroes || [];
+    const locks = state.locks.heroes || [];
+    const bucketOf = (item) => (item.team === spec.team ? "team" : "other");
+    const wanted = { team: spec.count, other: (state.options.heroCount || items.length) - spec.count };
+    const keepCount = { team: 0, other: 0 };
+
+    items.forEach((item, i) => {
+      if (locks[i]) keepCount[bucketOf(item)]++;
+    });
+
+    const keptIndexes = new Set();
+    items.forEach((item, i) => {
+      if (locks[i]) {
+        keptIndexes.add(i);
+        return;
+      }
+      const bucket = bucketOf(item);
+      if (keepCount[bucket] < wanted[bucket]) {
+        keepCount[bucket]++;
+        keptIndexes.add(i);
+      }
+    });
+
+    const kept = items.filter((_, i) => keptIndexes.has(i));
+    const keptLocks = locks.filter((_, i) => keptIndexes.has(i));
+
+    const fresh = [];
+    ["team", "other"].forEach((bucket) => {
+      const remaining = wanted[bucket] - keepCount[bucket];
+      if (remaining <= 0) return;
+      const candidates = pool.filter((c) => bucketOf(c) === bucket);
+      fresh.push(...pickRandom(candidates, remaining, kept.concat(fresh)));
+    });
+
+    state.result.heroes = kept.concat(fresh);
+    state.locks.heroes = keptLocks.concat(fresh.map(() => false));
+    const heroesCategory = CATEGORY_BY_KEY.heroes;
+    if (state.result.heroes.length > state.options.heroCount) {
+      state.options.heroCount = clampOption(state.result.heroes.length, heroesCategory.min, heroesCategory.max);
+    }
+  }
+
   /** Evicts the current `extraHeroName` Hero (if any — see
    * currentExtraHeroName above) from the main Heroes result, if it's
    * there and unlocked, replacing it with a fresh pick. heroDrawExclusions
@@ -954,6 +1047,7 @@
       state.extraHenchmenGroup = [];
       state.weddingHeroes = [];
       state.heroTeamSplit = null;
+      state.heroTeamCount = null;
       state.unveiledScheme = null;
       lastSchemeSignature = schemeSignature;
     }
@@ -1346,8 +1440,10 @@
     state.options.players = n;
     syncSchemeNumbers(); // sets heroCount/villainCount/henchmenCount/bystanders/twists: this player count's base, plus the active Scheme's overrides on top
     syncHeroTeamSplit();
+    syncHeroTeamCount();
     reconcileCountedCategories();
     reconcileHeroTeamSplit();
+    reconcileHeroTeamCount();
     reconcileExtraHeroName();
     reconcileExtraVillainGroupName();
     syncRequiredCards();
@@ -1530,9 +1626,11 @@
         if (category.key === "mastermind" || category.key === "scheme") {
           syncSchemeNumbers();
           syncHeroTeamSplit();
+          syncHeroTeamCount();
           reconcileCountedCategories();
         }
         reconcileHeroTeamSplit();
+        reconcileHeroTeamCount();
         reconcileExtraHeroName();
         reconcileExtraVillainGroupName();
         syncRequiredCards();
