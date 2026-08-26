@@ -463,7 +463,10 @@ const MASTERMINDS = [
 //                  and `extraVillainGroupNote` too. Tied to that
 //                  Mastermind pick — rerolling it re-derives the Villain
 //                  Group automatically, so this one has no reroll button
-//                  of its own, unlike the two variants above), or
+//                  of its own, unlike the two variants above. Pair with
+//                  `extraMastermindRequiresVillainLead: true` (below) so
+//                  the pick is never a Mastermind with nothing to
+//                  derive from in the first place), or
 //                  `extraHeroCount` (a number, optionally paired with
 //                  `extraHeroGroupLabel`) for a Scheme that draws a
 //                  whole second, separate group of random Heroes on top
@@ -484,7 +487,15 @@ const MASTERMINDS = [
 //                  "Extra Mastermind." Automatically excludes whichever
 //                  Mastermind is actually leading the game, the same way
 //                  the Heroes/Henchmen versions never duplicate their own
-//                  main result), or
+//                  main result. Pair with
+//                  `extraMastermindRequiresVillainLead: true` for a
+//                  Scheme that also needs that Mastermind to lead a
+//                  Villain Group — see `extraVillainGroupFromExtraMastermind`
+//                  above, e.g. Venom's "Symbiotic Absorption": a
+//                  Mastermind that only leads Henchmen, or leads
+//                  nothing, is excluded from the pick entirely rather
+//                  than landing on a Drained Mastermind with no Villains
+//                  to derive), or
 //                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
 //                  must be `perTeam` Heroes from each of `count` distinct
 //                  Teams, e.g. Civil War's "Avengers vs. X-Men": 3 Heroes
@@ -2428,8 +2439,14 @@ const SCHEMES = [
   // Group" is also modeled — `extraVillainGroupFromExtraMastermind: true`
   // reads that Drained Mastermind's own `leads` entry and shows it as its
   // own set-aside Villain Group, tied to (and rerolling only via) whichever
-  // Mastermind is currently the Drained pick. Shuffling/copying the
-  // Drained Mastermind's Tactics and Master Strike stay reference text
+  // Mastermind is currently the Drained pick. `extraMastermindRequiresVillainLead:
+  // true` keeps the Drained pick itself limited to Masterminds that
+  // actually lead a Villain Group in the first place — a Mastermind whose
+  // "Always Leads" is a Henchman Group (e.g. Mandarin, Spider-Queen) or
+  // that leads nothing at all is excluded from the draw entirely, rather
+  // than landing on a Drained Mastermind with no Villains to derive.
+  // Shuffling/copying the Drained Mastermind's Tactics and Master Strike
+  // stay reference text
   // only, since the app doesn't track Tactic cards at all.
   {
     name: "Invasion of the Venom Symbiotes",
@@ -2465,6 +2482,7 @@ const SCHEMES = [
       twists: 11,
       extraMastermindCount: 1,
       extraMastermindGroupLabel: "Drained Mastermind (see Setup)",
+      extraMastermindRequiresVillainLead: true,
       extraVillainGroupFromExtraMastermind: true,
       extraVillainGroupNote: 'the Drained Mastermind\'s "Always Leads" Villains',
     },
