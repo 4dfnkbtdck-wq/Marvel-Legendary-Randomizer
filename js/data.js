@@ -377,6 +377,20 @@ const MASTERMINDS = [
 //                  (falls back to "Extra Henchmen"); same "extra group"
 //                  idea as `extraHeroCount`/`extraHeroGroupLabel` below,
 //                  just for Henchmen — see EXTRA_GROUP_CONFIG in app.js),
+//                  or — instead of a random count — `extraHenchmenNames`
+//                  (an array of exact names) for a Scheme that names a
+//                  SPECIFIC Henchman Group to set aside this way rather
+//                  than picking one at random, e.g. World War Hulk's
+//                  "Cytoplasm Spike Invasion": "Shuffle together 20
+//                  Bystanders and 10 Cytoplasm Spike Henchmen as an
+//                  'Infected Deck'" — `extraHenchmenNames: ["Cytoplasm
+//                  Spikes"]`. Automatically excluded from the normal
+//                  Henchmen draw (same exclusion `extraGroupDrawExclusions`
+//                  already gives every extra-group pick, named or random)
+//                  and shows a disabled "Fixed by this Scheme" reroll
+//                  button instead of a working one. Same idea exists for
+//                  Heroes (`extraHeroNames`) and Masterminds
+//                  (`extraMastermindNames`), though nothing uses those yet),
 //                  `heroCount` /
 //                  `heroCountByPlayers` (flat overrides) /
 //                  `heroCountDelta` (added to the base, e.g. "add an
@@ -2610,9 +2624,8 @@ const SCHEMES = [
   {
     name: "Cytoplasm Spike Invasion",
     exp: "world_war_hulk",
-    overrides: { twists: 10 },
-    setupNote:
-      'Shuffle together 20 Bystanders and 10 Cytoplasm Spike Henchmen as an "Infected Deck" (separate from the normal Henchmen result — the app still randomizes the usual Henchmen groups for the Villain Deck as normal).',
+    overrides: { twists: 10, extraHenchmenNames: ["Cytoplasm Spikes"], extraHenchmenGroupLabel: "Cytoplasm Spikes (Infected Deck)" },
+    setupNote: 'Shuffle together 20 Bystanders and the Cytoplasm Spikes shown above as an "Infected Deck."',
     twist: "Reveal the top three cards of the Infected Deck. KO all Bystanders you revealed. All Spikes you revealed enter the city.",
     evilWins: "When the KO pile and Escape Pile combine to have 18 Bystanders and/or Spikes.",
   },

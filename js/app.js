@@ -205,13 +205,31 @@
    * cards, distinct from its normal counted result — e.g. Heroes' "Past
    * Hero Deck" (The Time Heist) or Henchmen's "Vampire Neonates" (Sire
    * Vampires at the Blood Bank). Each entry here names the Scheme
-   * `overrides` fields that drive it (a count, an optional display label)
-   * and the `state` key its picks are cached under — see syncExtraGroup/
-   * rerollExtraGroupSlot/extraGroupSection below. */
+   * `overrides` fields that drive it (a count, an optional display label,
+   * or — instead of a count — an explicit `namesKey` array for a Scheme
+   * that names specific card(s) rather than picking randomly, e.g. World
+   * War Hulk's "Cytoplasm Spike Invasion": "Shuffle together ... 10
+   * Cytoplasm Spike Henchmen as an 'Infected Deck'" calls for that exact
+   * Henchmen group set aside on its own, not a random extra Henchmen pick
+   * — `extraHenchmenNames: ["Cytoplasm Spikes"]`) and the `state` key its
+   * picks are cached under — see syncExtraGroup/rerollExtraGroupSlot/
+   * extraGroupSection below. A named entry's reroll button is disabled
+   * ("Fixed by this Scheme"), same treatment as extraHeroName/
+   * extraVillainGroupName elsewhere. */
   const EXTRA_GROUP_CONFIG = {
-    heroes: { countKey: "extraHeroCount", labelKey: "extraHeroGroupLabel", stateKey: "extraHeroGroup" },
-    henchmen: { countKey: "extraHenchmenCount", labelKey: "extraHenchmenGroupLabel", stateKey: "extraHenchmenGroup" },
-    mastermind: { countKey: "extraMastermindCount", labelKey: "extraMastermindGroupLabel", stateKey: "extraMastermindGroup" },
+    heroes: { countKey: "extraHeroCount", labelKey: "extraHeroGroupLabel", namesKey: "extraHeroNames", stateKey: "extraHeroGroup" },
+    henchmen: {
+      countKey: "extraHenchmenCount",
+      labelKey: "extraHenchmenGroupLabel",
+      namesKey: "extraHenchmenNames",
+      stateKey: "extraHenchmenGroup",
+    },
+    mastermind: {
+      countKey: "extraMastermindCount",
+      labelKey: "extraMastermindGroupLabel",
+      namesKey: "extraMastermindNames",
+      stateKey: "extraMastermindGroup",
+    },
   };
 
   /** Adds the current extra-group members (if any — see EXTRA_GROUP_CONFIG/
@@ -877,6 +895,12 @@
     const config = EXTRA_GROUP_CONFIG[categoryKey];
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
+    const names = overrides[config.namesKey];
+    if (names && names.length) {
+      const pool = extraGroupPoolFor(categoryKey);
+      state[config.stateKey] = names.map((name) => pool.find((c) => c.name === name)).filter(Boolean);
+      return;
+    }
     const n = overrides[config.countKey] || 0;
     if (!n) {
       state[config.stateKey] = [];
@@ -1936,7 +1960,8 @@
     const config = EXTRA_GROUP_CONFIG[categoryKey];
     const scheme = currentSchemeData();
     const overrides = (scheme && scheme.overrides) || {};
-    if (!overrides[config.countKey]) return document.createDocumentFragment();
+    const isNamed = !!(overrides[config.namesKey] && overrides[config.namesKey].length);
+    if (!isNamed && !overrides[config.countKey]) return document.createDocumentFragment();
 
     const category = CATEGORY_BY_KEY[categoryKey];
     const section = document.createElement("section");
@@ -1970,8 +1995,13 @@
       rerollBtn.type = "button";
       rerollBtn.className = "round-btn";
       rerollBtn.textContent = "🔁";
-      rerollBtn.title = "Reroll just this one";
-      rerollBtn.addEventListener("click", () => rerollExtraGroupSlot(categoryKey, index));
+      if (isNamed) {
+        rerollBtn.title = "Fixed by this Scheme";
+        rerollBtn.disabled = true;
+      } else {
+        rerollBtn.title = "Reroll just this one";
+        rerollBtn.addEventListener("click", () => rerollExtraGroupSlot(categoryKey, index));
+      }
 
       li.appendChild(text);
       li.appendChild(rerollBtn);
