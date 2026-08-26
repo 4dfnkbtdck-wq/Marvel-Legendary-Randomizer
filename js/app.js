@@ -211,23 +211,38 @@
    * War Hulk's "Cytoplasm Spike Invasion": "Shuffle together ... 10
    * Cytoplasm Spike Henchmen as an 'Infected Deck'" calls for that exact
    * Henchmen group set aside on its own, not a random extra Henchmen pick
-   * — `extraHenchmenNames: ["Cytoplasm Spikes"]`) and the `state` key its
-   * picks are cached under — see syncExtraGroup/rerollExtraGroupSlot/
+   * — `extraHenchmenNames: ["Cytoplasm Spikes"]`), and an optional
+   * `noteKey` for a short explanation appended to each card's own
+   * sub-text ("Expansion · Team · note" — same "· note" treatment as the
+   * single-card extraHeroName/extraVillainGroupName rows elsewhere), so
+   * the group reads as clearly "extra"/set-aside rather than just another
+   * plain category, e.g. `extraHenchmenGroupNote: "Shuffled into a
+   * separate 'Infected Deck' with 20 Bystanders — not part of the normal
+   * Henchmen result"`. The `state` key its picks are cached under is
+   * named separately — see syncExtraGroup/rerollExtraGroupSlot/
    * extraGroupSection below. A named entry's reroll button is disabled
    * ("Fixed by this Scheme"), same treatment as extraHeroName/
    * extraVillainGroupName elsewhere. */
   const EXTRA_GROUP_CONFIG = {
-    heroes: { countKey: "extraHeroCount", labelKey: "extraHeroGroupLabel", namesKey: "extraHeroNames", stateKey: "extraHeroGroup" },
+    heroes: {
+      countKey: "extraHeroCount",
+      labelKey: "extraHeroGroupLabel",
+      namesKey: "extraHeroNames",
+      noteKey: "extraHeroGroupNote",
+      stateKey: "extraHeroGroup",
+    },
     henchmen: {
       countKey: "extraHenchmenCount",
       labelKey: "extraHenchmenGroupLabel",
       namesKey: "extraHenchmenNames",
+      noteKey: "extraHenchmenGroupNote",
       stateKey: "extraHenchmenGroup",
     },
     mastermind: {
       countKey: "extraMastermindCount",
       labelKey: "extraMastermindGroupLabel",
       namesKey: "extraMastermindNames",
+      noteKey: "extraMastermindGroupNote",
       stateKey: "extraMastermindGroup",
     },
   };
@@ -2005,6 +2020,8 @@
     header.appendChild(headerSpan);
     section.appendChild(header);
 
+    const note = overrides[config.noteKey];
+
     const list = document.createElement("ul");
     list.className = "ios-list";
     (state[config.stateKey] || []).forEach((card, index) => {
@@ -2018,7 +2035,7 @@
       main.textContent = card.name;
       const sub = document.createElement("span");
       sub.className = "row-text-sub";
-      sub.textContent = poolRowSubText(category, card);
+      sub.textContent = poolRowSubText(category, card) + (note ? " · " + note : "");
       text.appendChild(main);
       text.appendChild(sub);
 
@@ -2301,6 +2318,7 @@
       const label = extraGroupOverrides[config.labelKey] || `Extra ${CATEGORY_BY_KEY[categoryKey].label}`;
       lines.push(`${label}:`);
       group.forEach((c) => lines.push(`  - ${c.name} (${c.exp})`));
+      if (extraGroupOverrides[config.noteKey]) lines.push(`  (${extraGroupOverrides[config.noteKey]})`);
     });
     if (state.weddingHeroes && state.weddingHeroes.some(Boolean)) {
       lines.push("Wedding Heroes:");

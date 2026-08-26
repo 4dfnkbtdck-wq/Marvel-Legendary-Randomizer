@@ -748,7 +748,12 @@ const SCHEMES = [
   {
     name: "Mutant-Hunting Super Sentinels",
     exp: "x_men",
-    overrides: { twists: 9, extraHenchmenNames: ["Sentinel"], extraHenchmenGroupLabel: "Sentinels" },
+    overrides: {
+      twists: 9,
+      extraHenchmenNames: ["Sentinel"],
+      extraHenchmenGroupLabel: "Sentinels",
+      extraHenchmenGroupNote: "10 Sentinels, set aside as extra Henchmen — or substitute another Henchman Group if unavailable",
+    },
     setupNote:
       'Include 10 Sentinels as extra Henchmen (Core Set\'s "Sentinel" group, shown above) — or, if that Henchman Group isn\'t available, substitute another one manually.',
     twist:
@@ -784,7 +789,12 @@ const SCHEMES = [
   {
     name: "Alien Brood Encounters",
     exp: "x_men",
-    overrides: { twists: 8, bystanders: 0, extraHenchmenNames: ["The Brood"] },
+    overrides: {
+      twists: 8,
+      bystanders: 0,
+      extraHenchmenNames: ["The Brood"],
+      extraHenchmenGroupNote: "10 Brood, set aside as extra Henchmen",
+    },
     setupNote: "No Bystanders in Villain Deck.",
     twist:
       'Special Rules: Cards are played from the Villain Deck face-down. You may spend 1 Attack to "scan" a face-down card in the city, turning it face-up and doing any Ambush effect, Twist, Trap, or Master Strike. If a face-down card would escape, scan it, and then it escapes if it\'s a Villain.\nThe player on your right gains this Twist as a "Brood Infection." When drawn, they KO it and gain 2 Wounds.',
@@ -1925,7 +1935,13 @@ const SCHEMES = [
   {
     name: "The Time Heist",
     exp: "infinity_saga",
-    overrides: { twists: 11, heroCount: 4, extraHeroCount: 4, extraHeroGroupLabel: "Past Hero Deck" },
+    overrides: {
+      twists: 11,
+      heroCount: 4,
+      extraHeroCount: 4,
+      extraHeroGroupLabel: "Past Hero Deck",
+      extraHeroGroupNote: 'Fills the alternate "Past HQ" — not part of the normal Hero Deck',
+    },
     setupNote:
       'Use 4 Heroes in the Hero Deck, plus 4 other Heroes to make a "Past Hero Deck." Above the board, make room for an alternate city called "The Past." It has the normal 5 spaces, from Sewers to Bridge. The Past has its own "Past HQ" filled by the "Past Hero Deck." To start, play as if "The Past" city, HQ, and Hero Deck don\'t exist.',
     twist:
@@ -1998,7 +2014,12 @@ const SCHEMES = [
   {
     name: "Sire Vampires at the Blood Bank",
     exp: "midnight_sons",
-    overrides: { twists: 10, extraHenchmenCount: 1, extraHenchmenGroupLabel: "Vampire Neonates" },
+    overrides: {
+      twists: 10,
+      extraHenchmenCount: 1,
+      extraHenchmenGroupLabel: "Vampire Neonates",
+      extraHenchmenGroupNote: '10 cards, set aside above the "Blood Bank" city space',
+    },
     setupNote:
       'Add an extra Henchman Group of 10 cards as "Vampire Neonates." Put this Scheme above the Bank to mark it as the "Blood Bank."\nSpecial Rules: All "Vampire Neonates" also have Blood Frenzy. While in the Blood Bank, they instead have double Blood Frenzy.',
     twist:
@@ -2112,7 +2133,12 @@ const SCHEMES = [
   {
     name: "Invade the Daily Bugle News HQ",
     exp: "paint_town_red",
-    overrides: { twists: 8, extraHenchmenCount: 1, extraHenchmenGroupLabel: "Henchmen Added to Hero Deck" },
+    overrides: {
+      twists: 8,
+      extraHenchmenCount: 1,
+      extraHenchmenGroupLabel: "Henchmen Added to Hero Deck",
+      extraHenchmenGroupNote: "6 cards from this group added to the Hero Deck",
+    },
     setupNote:
       "Add 6 extra Henchmen from a single Henchman Group to the Hero Deck.\nSpecial Rules: You can fight Villains in the HQ.",
     twist: "KO a Hero from the HQ. Put the highest-Attack Villain from the city into that HQ space.",
@@ -2166,6 +2192,7 @@ const SCHEMES = [
       twistsByPlayers: { 1: 4, 2: 5, 3: 6, 4: 7, 5: 8 },
       extraHenchmenCount: 1,
       extraHenchmenGroupLabel: "Xerogen Experiments",
+      extraHenchmenGroupNote: "Also have Abomination",
     },
     setupNote: 'Twists equal to the number of players plus 3.\nSpecial Rules: All Xerogen Experiments also have Abomination.',
     twist:
@@ -2302,7 +2329,12 @@ const SCHEMES = [
   {
     name: "Secret Empire of Betrayal",
     exp: "shield",
-    overrides: { twists: 11, extraHeroCount: 1, extraHeroGroupLabel: "Additional Hero — Dark Loyalty Deck" },
+    overrides: {
+      twists: 11,
+      extraHeroCount: 1,
+      extraHeroGroupLabel: "Additional Hero — Dark Loyalty Deck",
+      extraHeroGroupNote: '5 cards costing 5 or less form the "Dark Loyalty" deck',
+    },
     setupNote:
       'Randomly pick 5 cards that cost 5 or less from an additional Hero. Shuffle them to form a "Dark Loyalty" deck.',
     twist:
@@ -2345,7 +2377,12 @@ const SCHEMES = [
   {
     name: "Master of Tyrants",
     exp: "secret_wars",
-    overrides: { twists: 8, extraMastermindCount: 3, extraMastermindGroupLabel: "Tyrant Villains (3 other Masterminds)" },
+    overrides: {
+      twists: 8,
+      extraMastermindCount: 3,
+      extraMastermindGroupLabel: "Tyrant Villains (3 other Masterminds)",
+      extraMastermindGroupNote: 'Their 12 Tactics get shuffled into the Villain Deck as depowered "Tyrant Villains"',
+    },
     setupNote:
       'Shuffle the 12 Tactics of the 3 Masterminds shown in the "Tyrant Villains" section above into the Villain Deck. Those Tactics are "Tyrant Villains" with their printed Attack and no abilities.',
     twist:
@@ -2373,7 +2410,12 @@ const SCHEMES = [
   {
     name: "Build an Army of Annihilation",
     exp: "secret_wars",
-    overrides: { twists: 9, extraHenchmenCount: 1, extraHenchmenGroupLabel: '"Annihilation Wave" Henchmen (stand-in Henchman Group)' },
+    overrides: {
+      twists: 9,
+      extraHenchmenCount: 1,
+      extraHenchmenGroupLabel: '"Annihilation Wave" Henchmen (stand-in Henchman Group)',
+      extraHenchmenGroupNote: '10 cards go in the KO pile — not a real Henchman Group, just a stand-in',
+    },
     setupNote:
       'Put 10 extra Annihilation Wave Henchmen in the KO pile.\nNote: "Annihilation Wave" isn\'t an actual Henchman Group — use the randomly chosen Henchman Group shown above as a stand-in for it.',
     twist:
@@ -2456,6 +2498,7 @@ const SCHEMES = [
       twists: 8,
       extraMastermindCount: 3,
       extraMastermindGroupLabel: "Additional Masterminds (one Tactic each, added over Twists 1-3)",
+      extraMastermindGroupNote: "Added one at a time over Twists 1-3, each with one Tactic",
     },
     setupNote: "",
     twist: "Twists 1-3: Add another random Mastermind to the game with one Tactic.\nTwist 8: Evil wins!",
@@ -2546,7 +2589,12 @@ const SCHEMES = [
   {
     name: "Scavenge Alien Weaponry",
     exp: "spiderman_homecoming",
-    overrides: { twists: 7, extraHenchmenCount: 1, extraHenchmenGroupLabel: "Smugglers" },
+    overrides: {
+      twists: 7,
+      extraHenchmenCount: 1,
+      extraHenchmenGroupLabel: "Smugglers",
+      extraHenchmenGroupNote: "Get the Striker keyword",
+    },
     setupNote: "Special Rules: Smugglers have Striker.",
     twist: "Play two cards from the Villain Deck.",
     evilWins: "When 3 Villains per player have escaped or the Villain Deck runs out.",
@@ -2603,6 +2651,7 @@ const SCHEMES = [
       twists: 11,
       extraMastermindCount: 1,
       extraMastermindGroupLabel: "Drained Mastermind (see Setup)",
+      extraMastermindGroupNote: 'Set aside out of play with its 4 Tactics — its "Always Leads" Villains are shown as an extra Villain Group',
       extraMastermindRequiresVillainLead: true,
       extraVillainGroupFromExtraMastermind: true,
       extraVillainGroupNote: 'the Drained Mastermind\'s "Always Leads" Villains',
@@ -2687,7 +2736,12 @@ const SCHEMES = [
   {
     name: "World War Hulk",
     exp: "world_war_hulk",
-    overrides: { twists: 9, extraMastermindCount: 3, extraMastermindGroupLabel: "Lurking Masterminds (3 other Masterminds)" },
+    overrides: {
+      twists: 9,
+      extraMastermindCount: 3,
+      extraMastermindGroupLabel: "Lurking Masterminds (3 other Masterminds)",
+      extraMastermindGroupNote: "Each has 2 random Tactics — enters play when the current Mastermind's Tactics are all defeated",
+    },
     setupNote:
       "Each of the 3 Lurking Masterminds shown above has 2 random Tactics.\nSpecial Rules: When you defeat all of a Mastermind's Tactics, KO its face card and a random Lurking Mastermind enters play.",
     twist: "Twist 1-8: Swap the current Mastermind with a random Lurking Mastermind.\nTwist 9: Evil Wins!",
@@ -2705,7 +2759,12 @@ const SCHEMES = [
   {
     name: "Cytoplasm Spike Invasion",
     exp: "world_war_hulk",
-    overrides: { twists: 10, extraHenchmenNames: ["Cytoplasm Spikes"], extraHenchmenGroupLabel: "Cytoplasm Spikes (Infected Deck)" },
+    overrides: {
+      twists: 10,
+      extraHenchmenNames: ["Cytoplasm Spikes"],
+      extraHenchmenGroupLabel: "Cytoplasm Spikes (Infected Deck)",
+      extraHenchmenGroupNote: 'Shuffled into a separate "Infected Deck" with 20 Bystanders — not part of the normal Henchmen result',
+    },
     setupNote: 'Shuffle together 20 Bystanders and the Cytoplasm Spikes shown above as an "Infected Deck."',
     twist: "Reveal the top three cards of the Infected Deck. KO all Bystanders you revealed. All Spikes you revealed enter the city.",
     evilWins: "When the KO pile and Escape Pile combine to have 18 Bystanders and/or Spikes.",
