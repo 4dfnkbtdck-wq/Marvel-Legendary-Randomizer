@@ -92,10 +92,9 @@
  * `gender` ("male" or "female"), the in-fiction character's gender —
  * used by `weddingHeroes` below (Realm of Kings' "Ruin the Perfect
  * Wedding") to pick one of each. Left off for anything not meaningfully
- * a single gendered person (a team-as-one-card like "Ant Army" or "Cloak
- * & Dagger," a non-gendered character like Ultron) or genuinely
- * ambiguous across sources (e.g. The Ancient One) — those Heroes just
- * aren't eligible for that one pick.
+ * a single gendered person — a team-as-one-card like "Ant Army" or
+ * "Cloak & Dagger," or a non-gendered character like Ultron — those
+ * Heroes just aren't eligible for that one pick.
  *
  * A Villain Group entry can optionally carry `keywords`, an array of
  * printed-keyword strings (e.g. "Rise of the Living Dead"), for a Scheme
@@ -2269,16 +2268,13 @@ const HEROES = [
 
   // Legendary: Villains — Fear Itself: like the base "villains" expansion,
   // these are the player-controlled Villain characters (going in HEROES —
-  // see the exclusiveMode note at the top of this file). The four
-  // "Breaker of ___" Worthy entities are left without a `gender` — which
-  // Marvel character each one's Serpent-corrupted body actually was
-  // varies across sources and isn't worth guessing at.
-  { name: "Greithoth, Breaker of Wills", exp: "fear_itself", team: "Foes of Asgard" },
-  { name: "Kuurth, Breaker of Stone", exp: "fear_itself", team: "Foes of Asgard" },
-  { name: "Nerkkod, Breaker of Oceans", exp: "fear_itself", team: "Foes of Asgard" },
-  { name: "Nul, Breaker of Worlds", exp: "fear_itself", team: "Foes of Asgard" },
+  // see the exclusiveMode note at the top of this file).
+  { name: "Greithoth, Breaker of Wills", exp: "fear_itself", team: "Foes of Asgard", gender: "male" },
+  { name: "Kuurth, Breaker of Stone", exp: "fear_itself", team: "Foes of Asgard", gender: "male" },
+  { name: "Nerkkod, Breaker of Oceans", exp: "fear_itself", team: "Foes of Asgard", gender: "male" },
+  { name: "Nul, Breaker of Worlds", exp: "fear_itself", team: "Foes of Asgard", gender: "male" },
   { name: "Skadi", exp: "fear_itself", team: "HYDRA", gender: "female" },
-  { name: "Skirn, Breaker of Men", exp: "fear_itself", team: "Foes of Asgard" },
+  { name: "Skirn, Breaker of Men", exp: "fear_itself", team: "Foes of Asgard", gender: "female" },
 
   { name: "Black Cat", exp: "paint_town_red", team: "Spider-Friends", gender: "female" },
   { name: "Moon Knight", exp: "paint_town_red", team: "Marvel Knights", gender: "male" },
@@ -2327,9 +2323,7 @@ const HEROES = [
   { name: "Vision", exp: "civil_war", team: "Avengers", keywords: ["Size-Changing"], gender: "male" },
   { name: "Wiccan", exp: "civil_war", team: "Avengers", gender: "male" },
 
-  // "Brainstorm" here is left without a `gender` — an obscure alternate
-  // Fantastic Four member whose depiction isn't worth guessing at.
-  { name: "Brainstorm", exp: "annihilation", team: "Fantastic Four" },
+  { name: "Brainstorm", exp: "annihilation", team: "Fantastic Four", gender: "female" },
   { name: "Fantastic Four United", exp: "annihilation", team: "Fantastic Four" },
   { name: "Heralds of Galactus", exp: "annihilation" },
   { name: "Psi-Lord", exp: "annihilation", team: "Fantastic Four", gender: "male" },
@@ -2359,9 +2353,7 @@ const HEROES = [
   { name: "Ms. America", exp: "dimensions", team: "Avengers", gender: "female" },
   { name: "Squirrel Girl", exp: "dimensions", team: "Avengers", gender: "female" },
 
-  // "The Ancient One" is left without a `gender` — comics canon and
-  // screen depictions disagree.
-  { name: "The Ancient One", exp: "dr_strange" },
+  { name: "The Ancient One", exp: "dr_strange", gender: "male" },
   { name: "Clea", exp: "dr_strange", team: "Marvel Knights", gender: "female" },
   { name: "Doctor Strange", exp: "dr_strange", team: "Avengers", gender: "male" },
   { name: "Doctor Voodoo", exp: "dr_strange", team: "Avengers", gender: "male" },
@@ -2492,7 +2484,7 @@ const HEROES = [
   { name: "Black Widow", exp: "black_widow", team: "S.H.I.E.L.D.", gender: "female" },
   { name: "Falcon & Winter Soldier", exp: "black_widow", team: "Avengers", gender: "male" },
   { name: "Red Guardian", exp: "black_widow", gender: "male" },
-  { name: "White Tiger", exp: "black_widow", team: "Marvel Knights" },
+  { name: "White Tiger", exp: "black_widow", team: "Marvel Knights", gender: "female" },
   { name: "Yelena Belova", exp: "black_widow", team: "S.H.I.E.L.D.", gender: "female" },
 
   { name: "Ant Army", exp: "ant_man_wasp", keywords: ["Size-Changing"] },
