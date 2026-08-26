@@ -1899,7 +1899,7 @@ const SCHEMES = [
   {
     name: "Invade the Daily Bugle News HQ",
     exp: "paint_town_red",
-    overrides: { twists: 8 },
+    overrides: { twists: 8, extraHenchmenCount: 1, extraHenchmenGroupLabel: "Henchmen Added to Hero Deck" },
     setupNote:
       "Add 6 extra Henchmen from a single Henchman Group to the Hero Deck.\nSpecial Rules: You can fight Villains in the HQ.",
     twist: "KO a Hero from the HQ. Put the highest-Attack Villain from the city into that HQ space.",
