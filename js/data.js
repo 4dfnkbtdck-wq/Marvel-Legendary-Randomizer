@@ -151,7 +151,7 @@ const EXPANSIONS = [
   { id: "realm_of_kings", name: "Realm of Kings", confidence: "verified" },
   { id: "shield", name: "S.H.I.E.L.D.", confidence: "verified" },
   { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "verified" },
-  { id: "venom", name: "Venom", confidence: "light" },
+  { id: "venom", name: "Venom", confidence: "verified" },
   { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
   { id: "dimensions", name: "Dimensions", confidence: "verified" },
   { id: "revelations", name: "Revelations", confidence: "verified" },
@@ -211,7 +211,6 @@ const MASTERMINDS = [
 
   { name: "Morgan Le Fay", exp: "ant_man", leads: [{ category: "villains", name: "Queen's Vengeance" }] },
   { name: "Ultron", exp: "ant_man", leads: [{ category: "villains", name: "Ultron's Legacy" }] },
-  { name: "Carnage", exp: "venom" },
   { name: "Dormammu", exp: "dr_strange", leads: [{ category: "villains", name: "Lords of the Netherworld" }] },
   { name: "Nightmare", exp: "dr_strange", leads: [{ category: "villains", name: "Fear Lords" }] },
   { name: "Maestro", exp: "world_war_hulk" },
@@ -326,6 +325,9 @@ const MASTERMINDS = [
   { name: "King Hyperion", exp: "secret_wars_2", leads: [{ category: "villains", name: "Utopolis" }] },
   { name: "Shiklah, the Demon Bride", exp: "secret_wars_2", leads: [{ category: "villains", name: "Monster Metropolis" }] },
   { name: "Spider-Queen", exp: "secret_wars_2", leads: [{ category: "henchmen", name: "Spider-Infected" }] },
+
+  { name: "Hybrid", exp: "venom", leads: [{ category: "villains", name: "Life Foundation" }] },
+  { name: "Poison Thanos", exp: "venom", leads: [{ category: "villains", name: "Poisons" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -2405,6 +2407,53 @@ const SCHEMES = [
     twist: "Play two cards from the Villain Deck.",
     evilWins: "When 3 Villains per player have escaped or the Villain Deck runs out.",
   },
+
+  // The four Venom Schemes below are transcribed directly from the
+  // physical cards. "Symbiotic Absorption"'s "Set aside a second 'Drained'
+  // Mastermind" step reuses `extraMastermindCount: 1` (same mechanic as
+  // Secret Wars' "Master of Tyrants"/"Secret Wars"), shown in its own
+  // section; deriving an extra Villain Group from that Mastermind's own
+  // "Always Leads" and shuffling/copying its Tactics and Master Strike
+  // stay reference text only, since the app has no mechanism to derive a
+  // Villain Group from a randomly-picked Mastermind or to track Tactic
+  // cards at all.
+  {
+    name: "Invasion of the Venom Symbiotes",
+    exp: "venom",
+    overrides: { twists: 8, henchmenDelta: 1 },
+    setupNote: "",
+    twist:
+      'This Twist enters the city as a 3-Attack "Symbiote" Villain worth 3VP with "Ambush: This Symbiote Bonds with another Villain in the city. Play another card from the Villain Deck."',
+    evilWins: "When the Escape Pile has 3 cards per player, or the Villain Deck runs out.",
+  },
+  {
+    name: "Maximum Carnage",
+    exp: "venom",
+    overrides: { twists: 10 },
+    setupNote:
+      'Wound Stack has 6 Wounds per player.\nSpecial Rules: "Possessed Psychotics" have Attack equal to the number of Twists next to the Scheme. When you fight one, rescue it as a Bystander.',
+    twist:
+      'Stack this Twist next to the Scheme. If the Streets are empty, put a Bystander there as a "Possessed Psychotic" Villain. If the Streets weren\'t empty, each player gains a Wound.',
+    evilWins: "When there are 6 Bystanders in the Escape Pile or the Wound Stack runs out.",
+  },
+  {
+    name: "Paralyzing Venom",
+    exp: "venom",
+    overrides: { twists: 6 },
+    setupNote: 'All Bystanders are also "Biochemists."',
+    twist: "Each player KOs a Biochemist from their Victory Pile or discards down to 4 cards in hand.\nTwist 6: Evil wins!",
+    evilWins: "",
+  },
+  {
+    name: "Symbiotic Absorption",
+    exp: "venom",
+    overrides: { twists: 11, extraMastermindCount: 1, extraMastermindGroupLabel: "Drained Mastermind (see Setup)" },
+    setupNote:
+      'Set aside the Drained Mastermind shown above and its 4 Tactics, out of play. Add its "Always Leads" Villains as an extra Villain Group.\nSpecial Rules: If Tactics or Master Strikes mention the Drained Mastermind, use the main Mastermind instead.',
+    twist:
+      "Twist 1-4: Shuffle one of the Drained Mastermind's Tactics into the main Mastermind's Tactics.\nTwist 6, 8, 10: The Mastermind uses this Twist to copy the Master Strike ability of the Drained Mastermind.\nTwist 11: Evil Wins!",
+    evilWins: "",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2492,7 +2541,6 @@ const VILLAIN_GROUPS = [
 
   { name: "Queen's Vengeance", exp: "ant_man" },
   { name: "Ultron's Legacy", exp: "ant_man" },
-  { name: "Klyntar Symbiotes", exp: "venom" },
   { name: "Fear Lords", exp: "dr_strange" },
   { name: "Lords of the Netherworld", exp: "dr_strange" },
   { name: "The Mighty", exp: "fear_itself" },
@@ -2613,6 +2661,9 @@ const VILLAIN_GROUPS = [
 
   { name: "Salvagers", exp: "spiderman_homecoming" },
   { name: "Vulture Tech", exp: "spiderman_homecoming" },
+
+  { name: "Life Foundation", exp: "venom" },
+  { name: "Poisons", exp: "venom" },
 ];
 
 const HENCHMEN = [
@@ -2862,8 +2913,11 @@ const HEROES = [
   { name: "Peter's Allies", exp: "spiderman_homecoming", team: "Spider-Friends" },
   { name: "Tony Stark", exp: "spiderman_homecoming", team: "Avengers", gender: "male" },
 
-  { name: "Toxin", exp: "venom", gender: "male" },
-  { name: "Anti-Venom", exp: "venom", gender: "male" },
+  { name: "Carnage", exp: "venom", team: "Venomverse", gender: "male" },
+  { name: "Venom", exp: "venom", team: "Venomverse", gender: "male" },
+  { name: "Venom Rocket", exp: "venom", team: "Venomverse", gender: "male" },
+  { name: "Venomized Dr. Strange", exp: "venom", team: "Venomverse", gender: "male" },
+  { name: "Venompool", exp: "venom", team: "Venomverse", gender: "male" },
 
   { name: "Amadeus Cho", exp: "world_war_hulk", gender: "male" },
   { name: "Skaar", exp: "world_war_hulk", gender: "male" },
