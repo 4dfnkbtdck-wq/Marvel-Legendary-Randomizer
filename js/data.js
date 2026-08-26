@@ -2366,17 +2366,15 @@ const SCHEMES = [
   // extra deck (not a real named Henchman Group card), so it uses
   // `extraHenchmenCount: 1` + `extraHenchmenGroupLabel: "Smugglers"` —
   // same mechanic as Volume 1's "Sire Vampires at the Blood Bank." "Distract
-  // the Hero"'s "Use at least 1 [Hero Class] Hero" icon couldn't be
-  // identified with certainty from the card photo, and this app doesn't
-  // track Hero Class as data on Hero cards at all, so it stays reference
-  // text only in setupNote (flagged for verification against the physical
-  // card, same as "Collect an Interstellar Zoo"'s icon-order caveat).
+  // the Hero"'s "Use at least 1 [icon] Hero" is a Team icon (Spider-
+  // Friends), not a Hero Class, so it uses `requiredHeroTeam` — same idea
+  // as Deadpool's "Everybody Hates Deadpool" requiring a Mercs For Money
+  // Hero.
   {
     name: "Distract the Hero",
     exp: "spiderman_homecoming",
-    overrides: { twists: 8 },
-    setupNote:
-      "Use at least 1 Hero of the printed Hero Class (icon on the card wasn't legible enough to identify with confidence — verify against the physical card if the exact match matters).",
+    overrides: { twists: 8, requiredHeroTeam: "Spider-Friends" },
+    setupNote: "Use at least 1 Spider-Friends Hero.",
     twist:
       'If you get any Victory Points this turn, put this Twist on the bottom of the Villain Deck. Otherwise, stack this Twist next to the Scheme as a "Villainous Interruption."',
     evilWins: "When there have been 5 Villainous Interruptions.",
