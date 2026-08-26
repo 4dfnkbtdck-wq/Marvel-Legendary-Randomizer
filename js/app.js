@@ -31,6 +31,7 @@
       extraVillainGroup: null,
       extraHeroGroup: [],
       extraHenchmenGroup: [],
+      extraMastermindGroup: [],
       weddingHeroes: [],
       heroTeamSplit: null,
       heroTeamCount: null,
@@ -61,6 +62,7 @@
         extraVillainGroup: null,
         extraHeroGroup: [],
         extraHenchmenGroup: [],
+        extraMastermindGroup: [],
         weddingHeroes: [],
         heroTeamSplit: null,
         heroTeamCount: null,
@@ -176,6 +178,7 @@
   const EXTRA_GROUP_CONFIG = {
     heroes: { countKey: "extraHeroCount", labelKey: "extraHeroGroupLabel", stateKey: "extraHeroGroup" },
     henchmen: { countKey: "extraHenchmenCount", labelKey: "extraHenchmenGroupLabel", stateKey: "extraHenchmenGroup" },
+    mastermind: { countKey: "extraMastermindCount", labelKey: "extraMastermindGroupLabel", stateKey: "extraMastermindGroup" },
   };
 
   /** Adds the current extra-group members (if any — see EXTRA_GROUP_CONFIG/
@@ -568,6 +571,7 @@
     syncExtraVillainGroup();
     syncExtraGroup("heroes");
     syncExtraGroup("henchmen");
+    syncExtraGroup("mastermind");
     syncWeddingHeroes();
     syncUnveiledScheme();
   }
@@ -736,16 +740,21 @@
   }
 
   /** A Scheme can carry a per-category extra-group count (`extraHeroCount`
-   * for Heroes, `extraHenchmenCount` for Henchmen — see EXTRA_GROUP_CONFIG
-   * above), optionally paired with a display label (`extraHeroGroupLabel`/
-   * `extraHenchmenGroupLabel`), for a Scheme that draws a whole second,
+   * for Heroes, `extraHenchmenCount` for Henchmen, `extraMastermindCount`
+   * for Masterminds — see EXTRA_GROUP_CONFIG above), optionally paired with
+   * a display label (`extraHeroGroupLabel`/`extraHenchmenGroupLabel`/
+   * `extraMastermindGroupLabel`), for a Scheme that draws a whole second,
    * separate group of random cards beyond that category's normal result —
    * e.g. "The Time Heist"'s 4-Hero "Past Hero Deck" on top of a normal Hero
-   * Deck reduced to 4 via `heroCount`, or "Sire Vampires at the Blood
-   * Bank"'s "Vampire Neonates" Henchman group. Same "extra card" idea as
-   * `extraHero`/`extraVillainGroup` above, just for several cards at once,
-   * and generalized across categories since Heroes and Henchmen both need
-   * it. Kept in state[stateKey] (not one of the counted result categories)
+   * Deck reduced to 4 via `heroCount`, "Sire Vampires at the Blood Bank"'s
+   * "Vampire Neonates" Henchman group, or Secret Wars' "Master of Tyrants"
+   * picking 3 other Masterminds as "Tyrant Villains" (excluding whichever
+   * Mastermind is actually leading the game, the same way the main Heroes/
+   * Henchmen draws never duplicate into their own extra group). Same "extra
+   * card" idea as `extraHero`/`extraVillainGroup` above, just for several
+   * cards at once, and generalized across categories since Heroes,
+   * Henchmen, and Masterminds all need it. Kept in state[stateKey] (not one
+   * of the counted result categories)
    * and reused where still valid — not duplicated with the main result for
    * that category or with itself — only topping up or re-picking what's
    * missing, so a reroll of one slot (see rerollExtraGroupSlot) doesn't
@@ -1117,6 +1126,7 @@
       state.extraVillainGroup = null;
       state.extraHeroGroup = [];
       state.extraHenchmenGroup = [];
+      state.extraMastermindGroup = [];
       state.weddingHeroes = [];
       state.heroTeamSplit = null;
       state.heroTeamCount = null;

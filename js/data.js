@@ -454,7 +454,16 @@ const MASTERMINDS = [
 //                  section (falls back to "Extra Heroes"); see
 //                  syncExtraGroup in app.js. Same "extra card" idea
 //                  as `extraHero` above, just for several cards at once
-//                  rather than one), or
+//                  rather than one), or `extraHenchmenCount` (same idea,
+//                  for Henchmen — falls back to "Extra Henchmen"), or
+//                  `extraMastermindCount` (same idea again, but for
+//                  Masterminds — e.g. Secret Wars' "Master of Tyrants"
+//                  picking 3 other Masterminds as "Tyrant Villains,"
+//                  paired with `extraMastermindGroupLabel`, falls back to
+//                  "Extra Mastermind." Automatically excludes whichever
+//                  Mastermind is actually leading the game, the same way
+//                  the Heroes/Henchmen versions never duplicate their own
+//                  main result), or
 //                  `heroTeamSplit` (`{ count, perTeam }` — the Hero Deck
 //                  must be `perTeam` Heroes from each of `count` distinct
 //                  Teams, e.g. Civil War's "Avengers vs. X-Men": 3 Heroes
@@ -2151,11 +2160,15 @@ const SCHEMES = [
   // The eight Secret Wars: Volume 1 Schemes below are transcribed directly
   // from the physical cards. Several set up mechanics this app can't
   // simulate (per-player split Villain Decks and dimensions for
-  // "Fragmented Realities"/"Smash Two Dimensions Together," borrowing
-  // Tactics from other Masterminds for "Master of Tyrants," a Sidekick
+  // "Fragmented Realities"/"Smash Two Dimensions Together," a Sidekick
   // Stack for "Corrupt the Next Generation of Heroes," a second Mastermind
   // for "Dark Alliance") — those stay reference text in setupNote/twist.
-  // "Build an Army of Annihilation" needs Annihilation's own "Annihilation
+  // "Master of Tyrants" DOES randomize its "Choose 3 other Masterminds"
+  // step (`extraMastermindCount: 3` — see EXTRA_GROUP_CONFIG in app.js),
+  // shown as their own "Tyrant Villains" section; shuffling their 12
+  // Tactics into the Villain Deck as depowered Tyrant Villains stays
+  // reference text, since the app has no notion of a Mastermind's Tactic
+  // cards. "Build an Army of Annihilation" needs Annihilation's own "Annihilation
   // Wave" group in play (`requiredVillainGroup` — it's a Villain Group in
   // this database, led by Annihilus, despite its individual cards being
   // called "Henchmen" on this Scheme's own text; cross-expansion, only
@@ -2180,9 +2193,9 @@ const SCHEMES = [
   {
     name: "Master of Tyrants",
     exp: "secret_wars",
-    overrides: { twists: 8 },
+    overrides: { twists: 8, extraMastermindCount: 3, extraMastermindGroupLabel: "Tyrant Villains (3 other Masterminds)" },
     setupNote:
-      'Choose 3 other Masterminds, and shuffle their 12 Tactics into the Villain Deck. Those Tactics are "Tyrant Villains" with their printed Attack and no abilities.',
+      'Shuffle the 12 Tactics of the 3 Masterminds shown in the "Tyrant Villains" section above into the Villain Deck. Those Tactics are "Tyrant Villains" with their printed Attack and no abilities.',
     twist:
       'Twist 1-7: Put this Twist under a Tyrant Villain as "Dark Power." It gets +2 Attack.\nTwist 8: All Tyrant Villains in the city escape.',
     evilWins: "When 5 Tyrant Villains escape.",
