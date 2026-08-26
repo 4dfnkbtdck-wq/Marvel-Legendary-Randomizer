@@ -137,7 +137,7 @@ const EXPANSIONS = [
   { id: "x_men", name: "X-Men", confidence: "moderate" },
   { id: "champions", name: "Champions", confidence: "verified" },
   { id: "civil_war", name: "Civil War", confidence: "verified" },
-  { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "light" },
+  { id: "secret_wars", name: "Secret Wars: Volume 1", confidence: "verified" },
   { id: "annihilation", name: "Annihilation", confidence: "verified" },
   { id: "ant_man", name: "Ant-Man", confidence: "verified" },
   { id: "cap_75", name: "Captain America 75th Anniversary", confidence: "verified" },
@@ -218,7 +218,6 @@ const MASTERMINDS = [
   { name: "Annihilus", exp: "annihilation", leads: [{ category: "villains", name: "Annihilation Wave" }] },
   { name: "Kang the Conqueror", exp: "annihilation", leads: [{ category: "villains", name: "Timelines of Kang" }] },
   { name: "Uru-Enchanted Iron Man", exp: "fear_itself", leads: [{ category: "villains", name: "The Mighty" }] },
-  { name: "Doctor Doom (Battleworld)", exp: "secret_wars" },
 
   { name: "Doctor Strange", exp: "villains", leads: [{ category: "villains", name: "Defenders" }] },
   { name: "Nick Fury", exp: "villains", leads: [{ category: "villains", name: "Avengers" }] },
@@ -315,6 +314,11 @@ const MASTERMINDS = [
 
   { name: "HYDRA High Council", exp: "shield", leads: [{ category: "villains", name: "HYDRA Elite" }] },
   { name: "HYDRA Super-Adaptoid", exp: "shield", leads: [{ category: "villains", name: "A.I.M., HYDRA Offshoot" }] },
+
+  { name: "Madelyne Pryor, Goblin Queen", exp: "secret_wars", leads: [{ category: "villains", name: "Limbo" }] },
+  { name: "Nimrod, Super Sentinel", exp: "secret_wars", leads: [{ category: "villains", name: "Sentinel Territories" }] },
+  { name: "Wasteland Hulk", exp: "secret_wars", leads: [{ category: "villains", name: "Wasteland" }] },
+  { name: "Zombie Green Goblin", exp: "secret_wars", leads: [{ category: "villains", name: "The Deadlands" }] },
 ];
 
 // The eight Core Set (2012) schemes below are transcribed directly from
@@ -2143,6 +2147,100 @@ const SCHEMES = [
       'Shuffle this Twist into the Dark Loyalty deck as a "Vicious Betrayal." Then reveal the top card of that deck. If it\'s a Hero, gain it. If it\'s a Vicious Betrayal, put it next to the Scheme and each other player gains a Wound.',
     evilWins: "When there are 6 Vicious Betrayals next to the Scheme.",
   },
+
+  // The eight Secret Wars: Volume 1 Schemes below are transcribed directly
+  // from the physical cards. Several set up mechanics this app can't
+  // simulate (per-player split Villain Decks and dimensions for
+  // "Fragmented Realities"/"Smash Two Dimensions Together," borrowing
+  // Tactics from other Masterminds for "Master of Tyrants," a Sidekick
+  // Stack for "Corrupt the Next Generation of Heroes," a second Mastermind
+  // for "Dark Alliance") — those stay reference text in setupNote/twist.
+  // "Build an Army of Annihilation" needs Annihilation's own "Annihilation
+  // Wave" group in play (`requiredVillainGroup` — it's a Villain Group in
+  // this database, led by Annihilus, despite its individual cards being
+  // called "Henchmen" on this Scheme's own text; cross-expansion, only
+  // resolves with Annihilation also switched on, same as other
+  // cross-expansion required-card cases in this file) for its "put extra
+  // Annihilation Wave Henchmen in the KO pile"/"KO Annihilation Henchmen"
+  // text to make sense. "Crush Them With My Bare Hands" only adds its
+  // extra Villain Group at 1 player (`villainCountByPlayers: { 1: 2 }`,
+  // since the Core Set's own 1-player Villain Group count is 1).
+  {
+    name: "Fragmented Realities",
+    exp: "secret_wars",
+    overrides: {
+      twistsByPlayers: { 1: 2, 2: 4, 3: 6, 4: 8, 5: 10 },
+      villainCountDelta: 1,
+    },
+    setupNote:
+      "Shuffle the Villain Deck, then split it as evenly as possible into a Villain Deck for each player. Then, shuffle 2 Twists into each player's Villain Deck.\nSpecial Rules: The normal city does not exist. Instead, each player has a different dimension in front of them with one city space. Villains and Bystanders from your Villain Deck enter your dimension. You can fight Villains in any dimension.",
+    twist: "Play two cards from your Villain Deck.",
+    evilWins: "When the number of non-grey Heroes in the KO pile is 5 times the number of players.",
+  },
+  {
+    name: "Master of Tyrants",
+    exp: "secret_wars",
+    overrides: { twists: 8 },
+    setupNote:
+      'Choose 3 other Masterminds, and shuffle their 12 Tactics into the Villain Deck. Those Tactics are "Tyrant Villains" with their printed Attack and no abilities.',
+    twist:
+      'Twist 1-7: Put this Twist under a Tyrant Villain as "Dark Power." It gets +2 Attack.\nTwist 8: All Tyrant Villains in the city escape.',
+    evilWins: "When 5 Tyrant Villains escape.",
+  },
+  {
+    name: "Pan-Dimensional Plague",
+    exp: "secret_wars",
+    overrides: { twists: 10 },
+    setupNote:
+      "Special Rules: When a player recruits a Hero with a Wound next to it, that player can either gain that Wound or pay 1 Recruit to return that Wound to the Wound Stack.",
+    twist: "KO all Wounds from next to the HQ. Then, put a Wound from the Wound Stack next to each Hero in the HQ.",
+    evilWins: "When the Wound Stack runs out.",
+  },
+  {
+    name: "Smash Two Dimensions Together",
+    exp: "secret_wars",
+    overrides: { twists: 8, villainCountDelta: 1 },
+    setupNote:
+      "Put the Villain Deck on the Bank space.\nSpecial Rules: The Sewers and Bank do not exist, so the city is only 3 spaces. There is a parallel dimension with 3 city spaces above the main city. Whenever a Villain enters the city, the current player chooses which city it enters.",
+    twist: "Twist 1-7: Play two cards from the Villain Deck.\nTwist 8: All Villains in both dimensions escape.",
+    evilWins: "When 10 Villains escape.",
+  },
+  {
+    name: "Build an Army of Annihilation",
+    exp: "secret_wars",
+    overrides: { twists: 9, requiredVillainGroup: "Annihilation Wave" },
+    setupNote: "Put 10 extra Annihilation Wave Henchmen in the KO pile.",
+    twist:
+      "KO all Annihilation Henchmen from players' Victory Piles. Stack this Twist next to the Scheme. Then, for each Twist in that stack, put an Annihilation Henchman from the KO pile next to the Mastermind. Players can fight those Henchmen.",
+    evilWins: "When there are 10 Annihilation Henchmen next to the Mastermind.",
+  },
+  {
+    name: "Corrupt the Next Generation of Heroes",
+    exp: "secret_wars",
+    overrides: { twists: 8 },
+    setupNote:
+      "Add 10 Sidekicks to the Villain Deck.\nSpecial Rules: Sidekicks in the Villain Deck and city are Villains. Their Attack is 2 plus the number of Twists stacked next to this Scheme. When you defeat a Sidekick, gain it to the top of your deck.",
+    twist:
+      "Twist 1-7: Each player returns a Sidekick from their discard pile to the Sidekick Stack. Then, two Sidekicks from the Sidekick Stack enter the city.\nTwist 8: All Sidekicks in the city escape.",
+    evilWins: "When 4 Sidekicks escape.",
+  },
+  {
+    name: "Crush Them With My Bare Hands",
+    exp: "secret_wars",
+    overrides: { twists: 5, villainCountByPlayers: { 1: 2 } },
+    setupNote: "If playing solo, add an extra Villain Group.",
+    twist: "This Twist becomes a Master Strike that takes effect immediately.",
+    evilWins: "When 8 Master Strikes have taken effect.",
+  },
+  {
+    name: "Dark Alliance",
+    exp: "secret_wars",
+    overrides: { twists: 8 },
+    setupNote: "",
+    twist:
+      "Twist 1: Add a random second Mastermind to the game with one Mastermind Tactic.\nTwists 2-4: If the second Mastermind is still in play, it gains another Mastermind Tactic.\nTwist 5-6: Each Mastermind captures a Bystander.\nTwist 7: Evil wins!",
+    evilWins: "",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2330,6 +2428,17 @@ const VILLAIN_GROUPS = [
 
   { name: "A.I.M., HYDRA Offshoot", exp: "shield" },
   { name: "HYDRA Elite", exp: "shield" },
+
+  // "The Deadlands" carries the same "Rise of the Living Dead" keyword as
+  // What If...?'s "Zombie Avengers" (see above), so it's also eligible for
+  // Marvel Zombies' `requiredVillainGroupKeyword: "Rise of the Living Dead"`
+  // requirement when both expansions are on.
+  { name: "The Deadlands", exp: "secret_wars", keywords: ["Rise of the Living Dead"] },
+  { name: "Domain of Apocalypse", exp: "secret_wars" },
+  { name: "Limbo", exp: "secret_wars" },
+  { name: "Manhattan (Earth-1610)", exp: "secret_wars" },
+  { name: "Sentinel Territories", exp: "secret_wars" },
+  { name: "Wasteland", exp: "secret_wars" },
 ];
 
 const HENCHMEN = [
@@ -2381,6 +2490,10 @@ const HENCHMEN = [
 
   { name: "HYDRA Base", exp: "revelations" },
   { name: "Mandarin's Rings", exp: "revelations" },
+
+  { name: "Ghost Racers", exp: "secret_wars" },
+  { name: "M.O.D.O.K.S", exp: "secret_wars" },
+  { name: "Thor Corps", exp: "secret_wars" },
 ];
 
 const HEROES = [
@@ -2680,6 +2793,21 @@ const HEROES = [
   { name: "Scarlet Witch", exp: "revelations", team: "Avengers", gender: "female" },
   { name: "Speed", exp: "revelations", team: "Avengers", gender: "male" },
   { name: "War Machine", exp: "revelations", team: "Avengers", gender: "male" },
+
+  { name: "Apocalyptic Kitty Pryde", exp: "secret_wars", team: "X-Men", gender: "female" },
+  { name: "Black Bolt", exp: "secret_wars", team: "Illuminati", gender: "male" },
+  { name: "Black Panther", exp: "secret_wars", team: "Illuminati", gender: "male" },
+  { name: "Captain Marvel", exp: "secret_wars", team: "Avengers", gender: "female" },
+  { name: "Dr. Strange", exp: "secret_wars", team: "Illuminati", gender: "male" },
+  { name: "Lady Thor", exp: "secret_wars", team: "Avengers", gender: "female" },
+  { name: "Magik", exp: "secret_wars", team: "X-Men", gender: "female" },
+  { name: "Maximus", exp: "secret_wars", team: "Cabal", gender: "male" },
+  { name: "Namor, The Sub-Mariner", exp: "secret_wars", team: "Cabal", gender: "male" },
+  { name: "Old Man Logan", exp: "secret_wars", team: "X-Men", gender: "male" },
+  { name: "Proxima Midnight", exp: "secret_wars", team: "Cabal", gender: "female" },
+  { name: "Superior Iron Man", exp: "secret_wars", team: "Illuminati", gender: "male" },
+  { name: "Thanos", exp: "secret_wars", team: "Cabal", gender: "male" },
+  { name: "Ultimate Spider-Man", exp: "secret_wars", team: "Spider-Friends", gender: "male" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
