@@ -152,7 +152,7 @@ const EXPANSIONS = [
   { id: "shield", name: "S.H.I.E.L.D.", confidence: "verified" },
   { id: "spiderman_homecoming", name: "Spider-Man Homecoming", confidence: "verified" },
   { id: "venom", name: "Venom", confidence: "verified" },
-  { id: "world_war_hulk", name: "World War Hulk", confidence: "light" },
+  { id: "world_war_hulk", name: "World War Hulk", confidence: "verified" },
   { id: "dimensions", name: "Dimensions", confidence: "verified" },
   { id: "revelations", name: "Revelations", confidence: "verified" },
   { id: "villains", name: "Legendary: Villains", confidence: "verified" },
@@ -214,7 +214,12 @@ const MASTERMINDS = [
   { name: "Ultron", exp: "ant_man", leads: [{ category: "villains", name: "Ultron's Legacy" }] },
   { name: "Dormammu", exp: "dr_strange", leads: [{ category: "villains", name: "Lords of the Netherworld" }] },
   { name: "Nightmare", exp: "dr_strange", leads: [{ category: "villains", name: "Fear Lords" }] },
-  { name: "Maestro", exp: "world_war_hulk" },
+  { name: "General Thunderbolt Ross", exp: "world_war_hulk", leads: [{ category: "villains", name: "Code Red" }] },
+  { name: "Illuminati, Secret Society", exp: "world_war_hulk", leads: [{ category: "villains", name: "Illuminati" }] },
+  { name: "King Hulk, Sakaarson", exp: "world_war_hulk", leads: [{ category: "villains", name: "Warbound" }] },
+  { name: "M.O.D.O.K.", exp: "world_war_hulk", leads: [{ category: "villains", name: "Intelligencia" }] },
+  { name: "The Red King", exp: "world_war_hulk", leads: [{ category: "villains", name: "Sakaar Imperial Guard" }] },
+  { name: "The Sentry", exp: "world_war_hulk", leads: [{ category: "villains", name: "Aspects of the Void" }] },
   { name: "Vulture", exp: "spiderman_homecoming", leads: [{ category: "villains", name: "Vulture Tech" }] },
   { name: "Adrian Toomes", exp: "spiderman_homecoming", leads: [{ category: "villains", name: "Salvagers" }] },
   { name: "Annihilus", exp: "annihilation", leads: [{ category: "villains", name: "Annihilation Wave" }] },
@@ -2538,6 +2543,91 @@ const SCHEMES = [
       'You "forget your past": If you have any face up Villains or Tactics in your Victory Pile, put one of them on the bottom of your Victory Pile face down, then shuffle this Twist back into the Villain Deck, then play a card from the Villain Deck. If you didn\'t have any face up Villains or Tactics, then instead stack this Twist next to the Scheme as a "Total Memory Wipe."',
     evilWins: "When there are 4 Total Memory Wipes.",
   },
+
+  // The eight World War Hulk Schemes below are transcribed directly from
+  // the physical cards.
+  {
+    name: "Mutating Gamma Rays",
+    exp: "world_war_hulk",
+    overrides: {
+      twists: 7,
+      extraHero: true,
+      extraHeroNameContains: ["Hulk"],
+      extraHeroNote: '14 cards go into a face-up "Mutation Pile" (not the Villain Deck)',
+    },
+    setupNote: "",
+    twist:
+      'Twist 1-6: Each player in turn puts a non-grey Hero from their hand into the Mutation Pile, then may put a different card name with the same cost from the Mutation Pile into their discard pile.\nTwist 7: Evil Wins!',
+    evilWins: "",
+  },
+  {
+    name: "Shoot Hulk into Space",
+    exp: "world_war_hulk",
+    overrides: {
+      twists: 8,
+      extraHero: true,
+      extraHeroNameContains: ["Hulk"],
+      extraHeroNote: '14 cards shuffled into a "Hulk Deck" (not the Villain Deck)',
+    },
+    setupNote: "",
+    twist:
+      'Put 2 cards from the Hulk Deck into a face-up "Prison Ship" stack next to the S.H.I.E.L.D. Officer Stack.\nSpecial Rules: You may recruit the top card of the Prison Ship stack.',
+    evilWins: "When there are 10 cards in the Prison Ship or the Hulk Deck runs out.",
+  },
+  {
+    name: "Subjugate with Obedience Disks",
+    exp: "world_war_hulk",
+    overrides: { twists: 11 },
+    setupNote: "",
+    twist:
+      'Put this Twist under an HQ space as an "Obedience Disk." No space can have two more Obedience Disks than any other space.\nSpecial Rules: To recruit a Hero in the HQ, you must also pay 1 Recruit for each Obedience Disk under it.',
+    evilWins: "When each HQ space has 2 Obedience Disks.",
+  },
+  {
+    name: "World War Hulk",
+    exp: "world_war_hulk",
+    overrides: { twists: 9, extraMastermindCount: 3, extraMastermindGroupLabel: "Lurking Masterminds (3 other Masterminds)" },
+    setupNote:
+      "Each of the 3 Lurking Masterminds shown above has 2 random Tactics.\nSpecial Rules: When you defeat all of a Mastermind's Tactics, KO its face card and a random Lurking Mastermind enters play.",
+    twist: "Twist 1-8: Swap the current Mastermind with a random Lurking Mastermind.\nTwist 9: Evil Wins!",
+    evilWins: "",
+  },
+  {
+    name: "Break the Planet Asunder",
+    exp: "world_war_hulk",
+    overrides: { twists: 9, heroCount: 7 },
+    setupNote: "",
+    twist:
+      'Stack this Twist next to the Scheme as a "Tectonic Break." Then KO each Hero from the HQ whose printed Attack is less than the number of Tectonic Breaks (no printed Attack counts as 0).',
+    evilWins: "When 25 non-grey Heroes are KO'd.",
+  },
+  {
+    name: "Cytoplasm Spike Invasion",
+    exp: "world_war_hulk",
+    overrides: { twists: 10, requiredHenchmen: "Cytoplasm Spikes" },
+    setupNote: 'Shuffle together 20 Bystanders and 10 Cytoplasm Spike Henchmen as an "Infected Deck."',
+    twist: "Reveal the top three cards of the Infected Deck. KO all Bystanders you revealed. All Spikes you revealed enter the city.",
+    evilWins: "When the KO pile and Escape Pile combine to have 18 Bystanders and/or Spikes.",
+  },
+  {
+    name: "Fall of the Hulks",
+    exp: "world_war_hulk",
+    overrides: { twists: 10 },
+    setupNote:
+      '6 Wounds per player in Wound Stack.\nUse exactly two Heroes with "Hulk" in their Hero Names (not enforced by the app — pick manually).',
+    twist:
+      "Twist 3-6: Cross-Dimensional Hulk Rampage (reference text — not otherwise explained on this card).\nTwist 7-10: Each player gains a Wound.",
+    evilWins: "When the Wound Stack runs out.",
+  },
+  {
+    name: "Gladiator Pits of Sakaar",
+    exp: "world_war_hulk",
+    overrides: { twists: 6 },
+    setupNote: "",
+    twist:
+      "Until the start of your next turn, each player can only play cards from a single Team of their choice during their turn (e.g. S.H.I.E.L.D., Avengers, X-Men, Hulk, etc.).",
+    evilWins: "When 2 Villains per player have escaped or the Villain Deck runs out.",
+  },
 ];
 
 // The four Messiah Complex "Unveiled Scheme" cards, transcribed directly
@@ -2751,6 +2841,14 @@ const VILLAIN_GROUPS = [
 
   { name: "Berserkers", exp: "weapon_x" },
   { name: "Weapon Plus", exp: "weapon_x" },
+
+  { name: "Aspects of the Void", exp: "world_war_hulk" },
+  { name: "Code Red", exp: "world_war_hulk" },
+  { name: "Illuminati", exp: "world_war_hulk" },
+  { name: "Intelligencia", exp: "world_war_hulk" },
+  { name: "Sakaar Imperial Guard", exp: "world_war_hulk" },
+  { name: "U-Foes", exp: "world_war_hulk" },
+  { name: "Warbound", exp: "world_war_hulk" },
 ];
 
 const HENCHMEN = [
@@ -2810,6 +2908,10 @@ const HENCHMEN = [
   { name: "Khonshu Guardians", exp: "secret_wars_2" },
   { name: "Magma Men", exp: "secret_wars_2" },
   { name: "Spider-Infected", exp: "secret_wars_2" },
+
+  { name: "Cytoplasm Spikes", exp: "world_war_hulk" },
+  { name: "Death's Heads", exp: "world_war_hulk" },
+  { name: "Sakaaran Hivelings", exp: "world_war_hulk" },
 ];
 
 const HEROES = [
@@ -3006,9 +3108,21 @@ const HEROES = [
   { name: "Venomized Dr. Strange", exp: "venom", team: "Venomverse", gender: "male" },
   { name: "Venompool", exp: "venom", team: "Venomverse", gender: "male" },
 
-  { name: "Amadeus Cho", exp: "world_war_hulk", gender: "male" },
-  { name: "Skaar", exp: "world_war_hulk", gender: "male" },
-  { name: "Red Hulk", exp: "world_war_hulk", gender: "male" },
+  { name: "Amadeus Cho", exp: "world_war_hulk", team: "Champions", gender: "male" },
+  { name: "Bruce Banner", exp: "world_war_hulk", team: "Avengers", gender: "male" },
+  { name: "Caiera", exp: "world_war_hulk", team: "Warbound", gender: "female" },
+  { name: "Gladiator Hulk", exp: "world_war_hulk", team: "Warbound", gender: "male" },
+  { name: "Hiroim", exp: "world_war_hulk", team: "Warbound", gender: "male" },
+  { name: "Hulkbuster Iron Man", exp: "world_war_hulk", team: "Avengers", gender: "male" },
+  { name: "Joe Fixit, Grey Hulk", exp: "world_war_hulk", team: "Crime Syndicate", gender: "male" },
+  { name: "Korg", exp: "world_war_hulk", team: "Warbound", gender: "male" },
+  { name: "Miek the Unhived", exp: "world_war_hulk", team: "Warbound", gender: "male" },
+  { name: "Namora", exp: "world_war_hulk", team: "Champions", gender: "female" },
+  { name: "No Name, Brood Queen", exp: "world_war_hulk", team: "Warbound", gender: "female" },
+  { name: "Rick Jones", exp: "world_war_hulk", team: "S.H.I.E.L.D.", gender: "male" },
+  { name: "Sentry", exp: "world_war_hulk", team: "Avengers", gender: "male" },
+  { name: "She-Hulk", exp: "world_war_hulk", team: "Avengers", gender: "female" },
+  { name: "Skaar, Son of Hulk", exp: "world_war_hulk", team: "Avengers", gender: "male" },
 
   // Legendary: Villains — these are Villain characters (the deck-building
   // pool players actually recruit from in this expansion), not Heroes
