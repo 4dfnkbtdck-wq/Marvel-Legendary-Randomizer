@@ -2168,14 +2168,13 @@ const SCHEMES = [
   // shown as their own "Tyrant Villains" section; shuffling their 12
   // Tactics into the Villain Deck as depowered Tyrant Villains stays
   // reference text, since the app has no notion of a Mastermind's Tactic
-  // cards. "Build an Army of Annihilation" needs Annihilation's own "Annihilation
-  // Wave" group in play (`requiredVillainGroup` — it's a Villain Group in
-  // this database, led by Annihilus, despite its individual cards being
-  // called "Henchmen" on this Scheme's own text; cross-expansion, only
-  // resolves with Annihilation also switched on, same as other
-  // cross-expansion required-card cases in this file) for its "put extra
-  // Annihilation Wave Henchmen in the KO pile"/"KO Annihilation Henchmen"
-  // text to make sense. "Crush Them With My Bare Hands" only adds its
+  // cards. "Build an Army of Annihilation" calls for "Annihilation Wave"
+  // Henchmen, but no such Henchman group exists in this database (or the
+  // physical game outside this one Scheme's own text) — so it uses
+  // `extraHenchmenCount: 1` to randomly pick any one available Henchman
+  // Group as a stand-in, shown in its own labeled section, rather than
+  // `requiredVillainGroup`/`requiredHenchmen` naming a specific (and here
+  // nonexistent) card. "Crush Them With My Bare Hands" only adds its
   // extra Villain Group at 1 player (`villainCountByPlayers: { 1: 2 }`,
   // since the Core Set's own 1-player Villain Group count is 1).
   {
@@ -2221,8 +2220,9 @@ const SCHEMES = [
   {
     name: "Build an Army of Annihilation",
     exp: "secret_wars",
-    overrides: { twists: 9, requiredVillainGroup: "Annihilation Wave" },
-    setupNote: "Put 10 extra Annihilation Wave Henchmen in the KO pile.",
+    overrides: { twists: 9, extraHenchmenCount: 1, extraHenchmenGroupLabel: '"Annihilation Wave" Henchmen (stand-in Henchman Group)' },
+    setupNote:
+      'Put 10 extra Annihilation Wave Henchmen in the KO pile.\nNote: "Annihilation Wave" isn\'t an actual Henchman Group — use the randomly chosen Henchman Group shown above as a stand-in for it.',
     twist:
       "KO all Annihilation Henchmen from players' Victory Piles. Stack this Twist next to the Scheme. Then, for each Twist in that stack, put an Annihilation Henchman from the KO pile next to the Mastermind. Players can fight those Henchmen.",
     evilWins: "When there are 10 Annihilation Henchmen next to the Mastermind.",
