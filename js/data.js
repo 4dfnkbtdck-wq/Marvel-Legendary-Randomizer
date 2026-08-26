@@ -3093,7 +3093,7 @@ const HEROES = [
   { name: "Banshee", exp: "x_men", team: "X-Men", gender: "male" },
   { name: "Beast", exp: "x_men", team: "X-Men", gender: "male" },
   { name: "Cannonball", exp: "x_men", team: "X-Men", gender: "male" },
-  { name: "Colossus & Wolverine", exp: "x_men", team: "X-Men", gender: "male" },
+  { name: "Colossus & Wolverine", exp: "x_men", team: "X-Men" },
   { name: "Dazzler", exp: "x_men", team: "X-Men", gender: "female" },
   { name: "Havok", exp: "x_men", team: "X-Men", gender: "male" },
   { name: "Jubilee", exp: "x_men", team: "X-Men", gender: "female" },
