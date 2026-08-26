@@ -2,7 +2,6 @@
   "use strict";
 
   const STORAGE_KEY = "legendary-randomizer/v2";
-  const HISTORY_LIMIT = 20;
 
   const CATEGORIES = [
     { key: "mastermind", label: "Mastermind", pool: MASTERMINDS, countKey: null, fixedCount: 1 },
@@ -1605,7 +1604,6 @@
       loggedAt: null,
     };
     state.history.unshift(entry);
-    if (state.history.length > HISTORY_LIMIT) state.history.length = HISTORY_LIMIT;
     state.currentHistoryId = entry.id;
     saveState();
   }
@@ -1659,11 +1657,11 @@
   /** Adds (delta 1) or removes (delta -1) one history entry's contribution
    * to state.cardStats (every card in its snapshot, scored per statSide
    * above) and to state.gameLog's lifetime win/loss tally — the latter
-   * kept separate from state.history because History is capped at
-   * HISTORY_LIMIT entries and can be cleared, but the stats it fed
-   * shouldn't shrink just because the audit trail did. Used both to
-   * apply a freshly-logged outcome and to reverse a previously-logged
-   * one (editing, clearing, or deleting the entry). */
+   * kept separate from state.history because it's kept even after
+   * "Clear All" empties the History list, so the stats it fed don't
+   * disappear along with the audit trail. Used both to apply a
+   * freshly-logged outcome and to reverse a previously-logged one
+   * (editing, clearing, or deleting the entry). */
   function applyEntryOutcome(entry, outcome, delta) {
     CATEGORIES.forEach((c) => {
       (entry.result[c.key] || []).forEach((item) => {

@@ -318,6 +318,10 @@ body {
   background: var(--red-brand, #ed1d24);
 }
 
+.ios-list-button.destructive {
+  color: var(--red);
+}
+
 .ios-list-button:disabled {
   color: var(--label-tertiary);
   background: var(--grouped-bg);
