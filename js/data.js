@@ -3438,10 +3438,10 @@ const HEROES = [
   { name: "Spider-Gwen", exp: "secret_wars_2", team: "Spider-Friends", gender: "female" },
   { name: "Time-Travelling Jean Grey", exp: "secret_wars_2", team: "X-Men", gender: "female" },
 
-  { name: "Fantomex", exp: "weapon_x", gender: "male" },
-  { name: "Marrow", exp: "weapon_x", gender: "female" },
-  { name: "Weapon H", exp: "weapon_x", gender: "male" },
-  { name: "Weapon X", exp: "weapon_x", gender: "male" },
+  { name: "Fantomex", exp: "weapon_x", team: "X-Force", gender: "male" },
+  { name: "Marrow", exp: "weapon_x", team: "X-Force", gender: "female" },
+  { name: "Weapon H", exp: "weapon_x", team: "Avengers", gender: "male" },
+  { name: "Weapon X", exp: "weapon_x", team: "Marvel Knights", gender: "male" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
