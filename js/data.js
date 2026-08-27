@@ -141,6 +141,7 @@ const TEAM_ICONS = {
   "Inhumans": "img/teams/inhumans.png",
   "Guardians of the Multiverse": "img/teams/guardians-of-the-multiverse.png",
   "Warbound": "img/teams/warbound.webp",
+  "Champions": "img/teams/champions.webp",
 };
 
 const EXPANSIONS = [
