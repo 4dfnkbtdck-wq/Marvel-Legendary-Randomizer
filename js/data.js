@@ -156,6 +156,7 @@ const TEAM_ICONS = {
   "Avengers": "img/teams/avengers.webp",
   "X-Men": "img/teams/x-men.png",
   "Guardians of the Galaxy": "img/teams/guardians-of-the-galaxy.webp",
+  "Spider-Friends": "img/teams/spider-friends.webp",
 };
 
 const EXPANSIONS = [
