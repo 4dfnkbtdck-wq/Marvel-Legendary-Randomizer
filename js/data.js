@@ -3491,7 +3491,7 @@ const HEROES = [
  * elsewhere (setup notes, Twist/Evil Wins text) — this is just "what does
  * this word mean," not a rules-arbitration tool. */
 const KEYWORDS = [
-  { term: "Ambush", definition: "An effect that triggers the instant a Villain is revealed, before Heroes get to act against it." },
+  { term: "Ambush", definition: "An effect that triggers the instant a card enters play — a Villain being revealed into the city, or on some Heroes, entering the HQ — rather than waiting to be used normally." },
   { term: "Ambush Scheme", definition: "A special Scheme card shuffled into the Villain Deck alongside its Villain Group — defeating it scores Victory Points immediately, and for the rest of the game it also triggers whenever a Scheme Twist is played." },
   { term: "Antics", definition: "A bonus ability on some cards, usable only if you have at least three cards — between your hand and what you've played this turn — that are low-cost and/or have Size-Changing." },
   { term: "Bystander", definition: "A civilian card shuffled into the Villain Deck — defeat it for no reward, Rescue it for Victory Points, or let a Villain capture it to advance the Scheme." },
@@ -3510,12 +3510,15 @@ const KEYWORDS = [
   { term: "Master Strike", definition: "A powerful card unique to the Mastermind, shuffled into the Villain Deck partway through the game and tougher than a normal Villain." },
   { term: "Microscopic Size-Changing", definition: "A more powerful version of Size-Changing that can reduce a card's Recruit or Fight cost below zero, actually gaining you the difference instead." },
   { term: "Momentum", definition: "A keyword giving a Villain a Fight Point bonus for entering a new city space this turn, whether it walked in, was pushed, or was moved there." },
+  { term: "Multiclass", definition: "A keyword marking a card as counting toward more than one Hero Class or Villain Class at once — it satisfies any ability that checks for either class's icon." },
   { term: "Recruit", definition: "Spending Recruit Points to buy a Hero card from the HQ into your discard pile." },
   { term: "Rescue", definition: "Some Heroes let you save a Bystander instead of fighting it, turning it face-down into a Victory Point card." },
   { term: "Size-Changing", definition: "A keyword on some Heroes and Villains that discounts their Recruit or Fight cost if you played a card of a specific type this turn." },
+  { term: "Throne's Favor", definition: "A shared token representing control of a contested seat of power — only one exists at a time, and gaining it takes it away from whoever currently holds it, including the Mastermind." },
   { term: "Transform", definition: "An instruction on some Mastermind cards to flip the double-sided Mastermind over, swapping which abilities and Fight value are in play for the rest of the game." },
   { term: "Twist", definition: "A card in the Villain Deck that triggers a Scheme-specific effect when revealed, instead of being fought." },
   { term: "Wound", definition: "A useless card added to your deck, usually from a Villain's attack — it clutters your hand until you find a way to remove it." },
+  { term: "Wound a Villain", definition: "An ability on some Heroes letting you place a Wound card onto a Villain instead of playing it — the Villain gets weaker for each Wound on it until it's defeated or leaves the city." },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
