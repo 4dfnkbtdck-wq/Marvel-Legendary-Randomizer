@@ -77,6 +77,23 @@
           cardStats[c.key][name] = { wins: Number(entry.wins) || 0, losses: Number(entry.losses) || 0 };
         });
       });
+      // The currently-displayed setup (result/locks and everything derived
+      // from it) used to be runtime-only — fine when every "manage the
+      // pool" sheet was an overlay on this same page, but now that some of
+      // those sheets live on a separate page (see setup.html), losing the
+      // in-progress setup on every navigation there and back would be a
+      // real regression, not just a refresh quirk. So this is persisted
+      // like everything else above now.
+      const result = {};
+      CATEGORIES.forEach((c) => {
+        const saved = (parsed.result && parsed.result[c.key]) || [];
+        result[c.key] = Array.isArray(saved) ? saved.filter((card) => card && typeof card.name === "string") : [];
+      });
+      const locks = {};
+      CATEGORIES.forEach((c) => {
+        const saved = (parsed.locks && parsed.locks[c.key]) || [];
+        locks[c.key] = Array.isArray(saved) ? saved.map(Boolean) : [];
+      });
       return {
         expansions: new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions),
         options: { ...defaults.options, ...(parsed.options || {}) },
@@ -90,19 +107,19 @@
           heroWins: Number(parsed.gameLog && parsed.gameLog.heroWins) || 0,
           evilWins: Number(parsed.gameLog && parsed.gameLog.evilWins) || 0,
         },
-        currentHistoryId: null,
-        result: {},
-        locks: {},
-        keywordChoices: {},
-        extraCard: null,
-        extraVillainGroup: null,
-        extraHeroGroup: [],
-        extraHenchmenGroup: [],
-        extraMastermindGroup: [],
-        weddingHeroes: [],
-        heroTeamSplit: null,
-        heroTeamCount: null,
-        unveiledScheme: null,
+        currentHistoryId: parsed.currentHistoryId || null,
+        result,
+        locks,
+        keywordChoices: (parsed.keywordChoices && typeof parsed.keywordChoices === "object") ? parsed.keywordChoices : {},
+        extraCard: parsed.extraCard || null,
+        extraVillainGroup: parsed.extraVillainGroup || null,
+        extraHeroGroup: Array.isArray(parsed.extraHeroGroup) ? parsed.extraHeroGroup : [],
+        extraHenchmenGroup: Array.isArray(parsed.extraHenchmenGroup) ? parsed.extraHenchmenGroup : [],
+        extraMastermindGroup: Array.isArray(parsed.extraMastermindGroup) ? parsed.extraMastermindGroup : [],
+        weddingHeroes: Array.isArray(parsed.weddingHeroes) ? parsed.weddingHeroes : [],
+        heroTeamSplit: parsed.heroTeamSplit || null,
+        heroTeamCount: parsed.heroTeamCount || null,
+        unveiledScheme: parsed.unveiledScheme || null,
       };
     } catch (e) {
       return defaults;
@@ -125,6 +142,19 @@
           history: state.history,
           cardStats: state.cardStats,
           gameLog: state.gameLog,
+          currentHistoryId: state.currentHistoryId,
+          result: state.result,
+          locks: state.locks,
+          keywordChoices: state.keywordChoices,
+          extraCard: state.extraCard,
+          extraVillainGroup: state.extraVillainGroup,
+          extraHeroGroup: state.extraHeroGroup,
+          extraHenchmenGroup: state.extraHenchmenGroup,
+          extraMastermindGroup: state.extraMastermindGroup,
+          weddingHeroes: state.weddingHeroes,
+          heroTeamSplit: state.heroTeamSplit,
+          heroTeamCount: state.heroTeamCount,
+          unveiledScheme: state.unveiledScheme,
         })
       );
     } catch (e) {
@@ -1864,6 +1894,7 @@
    * (see openExpansionsSheet/expansionRow below) rather than taking up
    * space inline on the main page. */
   function renderExpansionsCount() {
+    if (!el.expansionsCount) return; // this row now lives on setup.html only
     el.expansionsCount.textContent = `${state.expansions.size} of ${EXPANSIONS.length}`;
   }
 
@@ -1942,6 +1973,7 @@
    * openTeamThemeSheet/teamRow below) rather than a chip row on the
    * main page. */
   function renderTeamThemeCount() {
+    if (!el.teamThemeSection) return; // this section now lives on setup.html only
     const teams = availableTeams();
     const hasUnaffiliated = hasUnaffiliatedHeroes();
     const total = teams.length + (hasUnaffiliated ? 1 : 0);
@@ -2009,6 +2041,7 @@
   }
 
   function renderCardPool() {
+    if (!el.cardPoolList) return; // this list now lives on setup.html only
     el.cardPoolList.innerHTML = "";
     CATEGORIES.forEach((category) => {
       const total = effectivePool(category).filter((c) => state.expansions.has(c.exp)).length;
@@ -2043,6 +2076,7 @@
   }
 
   function renderPlayersSegmented() {
+    if (!el.playersSegmented) return; // Setup Size stays on index.html only
     const buttons = Array.from(el.playersSegmented.querySelectorAll("button"));
     buttons.forEach((btn) => {
       btn.classList.toggle("active", Number(btn.dataset.value) === state.options.players);
@@ -2098,6 +2132,7 @@
   }
 
   function renderWarnings() {
+    if (!el.warnings) return; // this banner (and the Randomize button it disables) stays on index.html only
     const warnings = poolWarnings();
     el.warnings.innerHTML = "";
     if (!warnings.length) {
@@ -2158,6 +2193,7 @@
   }
 
   function renderResults() {
+    if (!el.results) return; // results/randomize stay on index.html only
     el.results.innerHTML = "";
     const hasAnyResult = CATEGORIES.some((c) => (state.result[c.key] || []).length);
 
@@ -2226,6 +2262,7 @@
    * of these buttons is what creates the History entry in the first
    * place, so there's usually no entry yet when this renders. */
   function renderOutcomeStatus() {
+    if (!el.logWinBtn) return; // Log Result stays on index.html only
     const entry = currentHistoryEntry();
     el.logWinBtn.classList.toggle("active-outcome", !!entry && entry.outcome === "win");
     el.logLossBtn.classList.toggle("active-outcome", !!entry && entry.outcome === "loss");
@@ -2561,10 +2598,12 @@
   }
 
   function renderHistoryCount() {
+    if (!el.historyCount) return; // Past Setups now lives on setup.html only
     el.historyCount.textContent = `${state.history.length} saved`;
   }
 
   function renderCustomCardsCount() {
+    if (!el.customCardsCount) return; // Custom Cards stays on index.html only
     el.customCardsCount.textContent = `${totalCustomCardCount()} saved`;
   }
 
@@ -2616,6 +2655,12 @@
   }
 
   function render() {
+    // Every caller of render() just mutated the current setup (a fresh
+    // randomize, a reroll, a lock toggle, a manual card choice, a history
+    // restore) — persist it here rather than at each call site, so it
+    // survives navigating to setup.html and back. See loadState's
+    // result/locks comment for why this now matters.
+    saveState();
     renderWarnings();
     renderResults();
     renderCardPool();
@@ -2896,6 +2941,10 @@
   function restoreEntryAndClose(entry) {
     restoreHistoryEntry(entry);
     closeSheet();
+    // Past Setups now lives on setup.html, but the restored setup itself
+    // only shows on index.html's results screen — hop back there so
+    // "Restore" still feels like it actually did something.
+    if (!el.results) window.location.href = "index.html";
   }
 
   /** Delete this Past Setup and re-render the sheet in place — shared
@@ -3891,43 +3940,52 @@
     bindSheet();
     render();
 
-    el.randomizeAll.addEventListener("click", randomizeAll);
-    el.rerollAllBtn.addEventListener("click", rerollAllUnlocked);
+    // index.html and setup.html share this one script, so every binding
+    // below is guarded — each element only exists on whichever page its
+    // row actually lives on now (see the render*() guards above).
+    if (el.randomizeAll) el.randomizeAll.addEventListener("click", randomizeAll);
+    if (el.rerollAllBtn) el.rerollAllBtn.addEventListener("click", rerollAllUnlocked);
 
-    el.openExpansions.addEventListener("click", openExpansionsSheet);
-    el.openTeamTheme.addEventListener("click", openTeamThemeSheet);
+    if (el.openExpansions) el.openExpansions.addEventListener("click", openExpansionsSheet);
+    if (el.openTeamTheme) el.openTeamTheme.addEventListener("click", openTeamThemeSheet);
 
-    el.playersSegmented.addEventListener("click", (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      applyPlayerCount(Number(btn.dataset.value));
-    });
+    if (el.playersSegmented) {
+      el.playersSegmented.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        applyPlayerCount(Number(btn.dataset.value));
+      });
+    }
 
-    el.openHistory.addEventListener("click", openHistorySheet);
-    el.openCustomCards.addEventListener("click", openCustomCardsSheet);
-    el.setupKeywordsBtn.addEventListener("click", openSetupKeywordsSheet);
+    if (el.openHistory) el.openHistory.addEventListener("click", openHistorySheet);
+    if (el.openCustomCards) el.openCustomCards.addEventListener("click", openCustomCardsSheet);
+    if (el.setupKeywordsBtn) el.setupKeywordsBtn.addEventListener("click", openSetupKeywordsSheet);
 
-    el.copyBtn.addEventListener("click", async () => {
-      const text = setupText();
-      const original = el.copyBtn.textContent;
-      try {
-        await navigator.clipboard.writeText(text);
-        el.copyBtn.textContent = "Copied!";
-      } catch (e) {
-        el.copyBtn.textContent = "Copy failed";
-      }
-      setTimeout(() => (el.copyBtn.textContent = original), 1500);
-    });
+    if (el.copyBtn) {
+      el.copyBtn.addEventListener("click", async () => {
+        const text = setupText();
+        const original = el.copyBtn.textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          el.copyBtn.textContent = "Copied!";
+        } catch (e) {
+          el.copyBtn.textContent = "Copy failed";
+        }
+        setTimeout(() => (el.copyBtn.textContent = original), 1500);
+      });
+    }
 
-    el.logWinBtn.addEventListener("click", () => logCurrentOutcome("win"));
-    el.logLossBtn.addEventListener("click", () => logCurrentOutcome("loss"));
+    if (el.logWinBtn) el.logWinBtn.addEventListener("click", () => logCurrentOutcome("win"));
+    if (el.logLossBtn) el.logLossBtn.addEventListener("click", () => logCurrentOutcome("loss"));
 
-    el.excludeBtn.addEventListener("click", () => {
-      excludeCurrentSetup();
-      const original = el.excludeBtn.textContent;
-      el.excludeBtn.textContent = "Excluded!";
-      setTimeout(() => (el.excludeBtn.textContent = original), 1500);
-    });
+    if (el.excludeBtn) {
+      el.excludeBtn.addEventListener("click", () => {
+        excludeCurrentSetup();
+        const original = el.excludeBtn.textContent;
+        el.excludeBtn.textContent = "Excluded!";
+        setTimeout(() => (el.excludeBtn.textContent = original), 1500);
+      });
+    }
   }
 
   document.addEventListener("DOMContentLoaded", init);
