@@ -511,6 +511,52 @@ body {
   flex-shrink: 0;
 }
 
+/* Tighter vertical rhythm for the results screen only (#results spans
+ * Mastermind through Heroes) so more of a setup fits on screen at once,
+ * without dropping any row content, icons, or controls. */
+#results .ios-group {
+  margin-bottom: 1.1rem;
+}
+
+#results .group-header {
+  padding: 0 0.9rem 0.3rem;
+}
+
+#results .group-footer {
+  padding: 0.35rem 0.9rem 0;
+  font-size: 0.76rem;
+}
+
+#results .ios-row,
+#results .result-row {
+  padding: 0.45rem 0.85rem;
+  min-height: 38px;
+  gap: 0.6rem;
+}
+
+#results .row-text-main {
+  font-size: 0.92rem;
+}
+
+#results .row-text-sub {
+  font-size: 0.76rem;
+}
+
+#results .scheme-note {
+  margin-top: 0.45rem;
+}
+
+#results .scheme-note summary {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.74rem;
+}
+
+#results .scheme-note-body {
+  margin-top: 0.3rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+}
+
 .round-btn {
   width: 30px;
   height: 30px;
