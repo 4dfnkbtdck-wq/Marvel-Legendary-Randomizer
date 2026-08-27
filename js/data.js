@@ -3562,7 +3562,9 @@ const KEYWORDS = [
   { term: "Uru-Enchanted Weapons", definition: "A keyword making an enemy tougher to fight — reveal that many cards from the top of the Villain Deck and add up their Victory Points as a bonus to the enemy's Fight value before you can defeat it." },
   { term: "Versatile", definition: "A keyword letting you choose Recruit Points or Fight Points — not both — for the printed amount when you play the card." },
   { term: "Victory Pile", definition: "Your personal collection of defeated Villains and rescued Bystanders, kept face-up and separate from your discard pile — each card in it is worth Victory Points at the end of the game." },
+  { term: "Villainous Weapon", definition: "A non-Villain card in the Villain Deck that gets captured by the Villain closest to the deck when it's played, empowering that Villain with a Fight Point bonus — defeat the Villain to claim the Weapon as your own Artifact." },
   { term: "When Recruited", definition: "A trigger on some Heroes that happens the moment you recruit them, before they've even reached your discard pile." },
+  { term: "Worthy", definition: "A keyword condition met by having a Hero that costs 5 or more among 'your Heroes' — some cards reward or require it." },
   { term: "Wound", definition: "A useless card added to your deck, usually from a Villain's attack — it clutters your hand until you find a way to remove it." },
   { term: "Wound a Villain", definition: "An ability on some Heroes letting you place a Wound card onto a Villain instead of playing it — the Villain gets weaker for each Wound on it until it's defeated or leaves the city." },
 ];
