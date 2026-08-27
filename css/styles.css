@@ -569,6 +569,22 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
+/* Wider variant for longer labels (Custom Card category picker) — same
+ * track/active-pill look as .segmented, just auto-width buttons
+ * instead of the fixed 30px built for single digits. */
+.segmented-wide {
+  width: 100%;
+}
+
+.segmented-wide button {
+  flex: 1;
+  width: auto;
+  height: auto;
+  padding: 0.42rem 0.15rem;
+  font-size: 0.72rem;
+  line-height: 1.15;
+}
+
 /* ---------- Sheet (modal) ---------- */
 
 .sheet-overlay {
@@ -638,6 +654,17 @@ body {
   font-weight: 600;
 }
 
+.sheet-header-btn:disabled {
+  color: var(--label-tertiary);
+  cursor: not-allowed;
+}
+
+.sheet-header-btn-add {
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .sheet-title {
   font-weight: 700;
   font-size: 1rem;
@@ -661,6 +688,49 @@ body {
 
 .sheet-search::placeholder {
   color: var(--label-tertiary);
+}
+
+/* ---------- Form rows (Add/Edit Custom Card) ---------- */
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.55rem 0.9rem 0.65rem;
+  border-bottom: 1px solid var(--separator);
+}
+
+.form-row:last-child {
+  border-bottom: none;
+}
+
+.form-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--label-secondary);
+}
+
+.form-input {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.98rem;
+  color: var(--label);
+  padding: 0.1rem 0;
+  width: 100%;
+}
+
+.form-input::placeholder {
+  color: var(--label-tertiary);
+}
+
+textarea.form-input {
+  resize: none;
+  min-height: 3.2em;
+  line-height: 1.4;
+  font-family: inherit;
 }
 
 .sheet-bulk-actions {

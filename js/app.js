@@ -31,6 +31,7 @@
       expansions: new Set(["core"]),
       options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, masterStrikes: 5, twists: 5, players: 3 },
       exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
+      customCards: { mastermind: [], scheme: [], villains: [], henchmen: [], heroes: [] },
       excludedTeams: new Set(),
       excludeUnaffiliated: false,
       history: [],
@@ -62,6 +63,11 @@
       CATEGORIES.forEach((c) => {
         exclusions[c.key] = new Set((parsed.exclusions && parsed.exclusions[c.key]) || []);
       });
+      const customCards = {};
+      CATEGORIES.forEach((c) => {
+        const saved = (parsed.customCards && parsed.customCards[c.key]) || [];
+        customCards[c.key] = Array.isArray(saved) ? saved.filter((card) => card && typeof card.name === "string") : [];
+      });
       const cardStats = emptyCardStats();
       CATEGORIES.forEach((c) => {
         const saved = (parsed.cardStats && parsed.cardStats[c.key]) || {};
@@ -75,6 +81,7 @@
         expansions: new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions),
         options: { ...defaults.options, ...(parsed.options || {}) },
         exclusions,
+        customCards,
         excludedTeams: new Set(parsed.excludedTeams || []),
         excludeUnaffiliated: !!parsed.excludeUnaffiliated,
         history: Array.isArray(parsed.history) ? parsed.history : [],
@@ -112,6 +119,7 @@
           expansions: Array.from(state.expansions),
           options: state.options,
           exclusions,
+          customCards: state.customCards,
           excludedTeams: Array.from(state.excludedTeams),
           excludeUnaffiliated: state.excludeUnaffiliated,
           history: state.history,
@@ -126,7 +134,7 @@
 
   function availableTeams() {
     const teams = new Set();
-    HEROES.forEach((h) => {
+    effectivePool(CATEGORY_BY_KEY.heroes).forEach((h) => {
       if (h.team && state.expansions.has(h.exp)) teams.add(h.team);
     });
     return Array.from(teams).sort();
@@ -137,12 +145,22 @@
    * single "Unaffiliated" toggle (see teamRow/state.excludeUnaffiliated)
    * alongside the real Teams from availableTeams above. */
   function hasUnaffiliatedHeroes() {
-    return HEROES.some((h) => !h.team && state.expansions.has(h.exp));
+    return effectivePool(CATEGORY_BY_KEY.heroes).some((h) => !h.team && state.expansions.has(h.exp));
+  }
+
+  /** category.pool (from data.js) plus any user-added Custom Cards for
+   * that category — everywhere the app reads "the pool of cards for
+   * this category" should go through this instead of category.pool
+   * directly, so a Custom Card behaves exactly like an official one
+   * (respects the "Custom Cards" expansion toggle, exclusions, search,
+   * randomization — all of it, with no separate code path). */
+  function effectivePool(category) {
+    return category.pool.concat(state.customCards[category.key]);
   }
 
   function poolFor(category) {
     const excluded = state.exclusions[category.key];
-    let pool = category.pool.filter((card) => state.expansions.has(card.exp) && !excluded.has(card.name));
+    let pool = effectivePool(category).filter((card) => state.expansions.has(card.exp) && !excluded.has(card.name));
     if (category.key === "heroes") {
       pool = pool.filter((card) => (card.team ? !state.excludedTeams.has(card.team) : !state.excludeUnaffiliated));
     }
@@ -421,13 +439,13 @@
   function currentMastermindData() {
     const mm = (state.result.mastermind || [])[0];
     if (!mm) return null;
-    return MASTERMINDS.find((m) => m.name === mm.name && m.exp === mm.exp) || null;
+    return effectivePool(CATEGORY_BY_KEY.mastermind).find((m) => m.name === mm.name && m.exp === mm.exp) || null;
   }
 
   function currentSchemeData() {
     const sc = (state.result.scheme || [])[0];
     if (!sc) return null;
-    return SCHEMES.find((s) => s.name === sc.name && s.exp === sc.exp) || null;
+    return effectivePool(CATEGORY_BY_KEY.scheme).find((s) => s.name === sc.name && s.exp === sc.exp) || null;
   }
 
   /** Drops every cached pick (see resolveFromCandidates) whose key starts
@@ -1819,6 +1837,8 @@
     excludeBtn: document.getElementById("exclude-setup"),
     openHistory: document.getElementById("open-history"),
     historyCount: document.getElementById("history-count"),
+    openCustomCards: document.getElementById("open-custom-cards"),
+    customCardsCount: document.getElementById("custom-cards-count"),
     sheetOverlay: document.getElementById("sheet-overlay"),
     sheetBackdrop: document.getElementById("sheet-backdrop"),
     sheetCancel: document.getElementById("sheet-cancel"),
@@ -1985,7 +2005,7 @@
   function renderCardPool() {
     el.cardPoolList.innerHTML = "";
     CATEGORIES.forEach((category) => {
-      const total = category.pool.filter((c) => state.expansions.has(c.exp)).length;
+      const total = effectivePool(category).filter((c) => state.expansions.has(c.exp)).length;
       const available = poolFor(category).length;
 
       const li = document.createElement("li");
@@ -2400,7 +2420,7 @@
    * the Scheme), plus the current Scheme's Twist effect and Evil Wins text,
    * since both get referenced throughout the game, not just at setup. */
   function villainDeckSection(schemeItem) {
-    const scheme = SCHEMES.find((s) => s.name === schemeItem.name && s.exp === schemeItem.exp);
+    const scheme = effectivePool(CATEGORY_BY_KEY.scheme).find((s) => s.name === schemeItem.name && s.exp === schemeItem.exp);
 
     const section = document.createElement("section");
     section.className = "ios-group";
@@ -2569,6 +2589,10 @@
     el.historyCount.textContent = `${state.history.length} saved`;
   }
 
+  function renderCustomCardsCount() {
+    el.customCardsCount.textContent = `${totalCustomCardCount()} saved`;
+  }
+
   function setupText() {
     const lines = ["MARVEL LEGENDARY — Game Setup", ""];
     if (state.options.players) lines.push(`Players: ${state.options.players}`, "");
@@ -2621,6 +2645,7 @@
     renderResults();
     renderCardPool();
     renderHistoryCount();
+    renderCustomCardsCount();
   }
 
   // ---------- Sheet (modal) ----------
@@ -2698,19 +2723,22 @@
     if (!sheetState) return;
     el.sheetList.innerHTML = "";
     el.sheetAction.classList.add("hidden");
+    el.sheetAction.classList.remove("sheet-header-btn-accent", "sheet-header-btn-add");
+    el.sheetAction.disabled = false;
+    el.sheetAction.title = "";
     el.sheetBulkActions.classList.add("hidden");
 
     if (sheetState.mode === "manage") {
       const category = CATEGORY_BY_KEY[sheetState.categoryKey];
       el.sheetTitle.textContent = `Manage ${category.label}`;
       el.sheetSearchWrap.classList.remove("hidden");
-      const pool = category.pool.filter((c) => state.expansions.has(c.exp));
+      const pool = effectivePool(category).filter((c) => state.expansions.has(c.exp));
       const excluded = state.exclusions[category.key];
       const allIncluded = pool.every((c) => !excluded.has(c.name));
       const allExcluded = pool.length > 0 && pool.every((c) => excluded.has(c.name));
       showBulkActions(allIncluded, allExcluded);
 
-      const items = category.pool
+      const items = effectivePool(category)
         .filter((c) => state.expansions.has(c.exp))
         .filter((c) => c.name.toLowerCase().includes(sheetState.search.toLowerCase()))
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -2762,6 +2790,10 @@
         return;
       }
       renderHistoryDetail(entry);
+    } else if (sheetState.mode === "customCards") {
+      renderCustomCardsList();
+    } else if (sheetState.mode === "addCustomCard") {
+      renderAddCustomCardForm();
     } else if (sheetState.mode === "expansions") {
       el.sheetTitle.textContent = "Expansions";
       el.sheetSearchWrap.classList.add("hidden");
@@ -3099,6 +3131,348 @@
     el.sheetList.appendChild(actionGroup);
   }
 
+  // ---------- Custom Cards ----------
+
+  function newCustomCardId() {
+    return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function totalCustomCardCount() {
+    return CATEGORIES.reduce((sum, c) => sum + state.customCards[c.key].length, 0);
+  }
+
+  function newCustomCardDraft(categoryKey) {
+    return { editId: null, categoryKey: categoryKey || "mastermind", name: "", team: "", twists: 5, bystanders: 8, setupNote: "" };
+  }
+
+  function openCustomCardsSheet() {
+    openSheet({ mode: "customCards" });
+  }
+
+  function openAddCustomCardSheet() {
+    openSheet({ mode: "addCustomCard", draft: newCustomCardDraft("mastermind") });
+  }
+
+  function openEditCustomCardSheet(categoryKey, card) {
+    const draft = newCustomCardDraft(categoryKey);
+    draft.editId = card.id;
+    draft.name = card.name;
+    draft.team = card.team || "";
+    if (card.overrides) {
+      if (card.overrides.twists != null) draft.twists = card.overrides.twists;
+      if (card.overrides.bystanders != null) draft.bystanders = card.overrides.bystanders;
+    }
+    draft.setupNote = card.setupNote || "";
+    openSheet({ mode: "addCustomCard", draft });
+  }
+
+  /** Same "refresh everything a pool-composition change could affect"
+   * sequence expansionRow's checkbox handler uses — a Custom Card is
+   * just another card in the pool, so adding/editing/deleting one
+   * needs the same fan-out. */
+  function refreshAfterCustomCardsChanged() {
+    syncRequiredCards();
+    saveState();
+    renderWarnings();
+    renderExpansionsCount();
+    renderCardPool();
+    renderTeamThemeCount();
+    renderCustomCardsCount();
+    renderResults();
+  }
+
+  function saveCustomCardDraft() {
+    const draft = sheetState && sheetState.draft;
+    if (!draft) return;
+    const name = draft.name.trim();
+    if (!name) return;
+
+    const card = { id: draft.editId || newCustomCardId(), name, exp: "custom" };
+    if (draft.categoryKey === "heroes" && draft.team.trim()) card.team = draft.team.trim();
+    if (draft.categoryKey === "scheme") {
+      card.overrides = { twists: draft.twists, bystanders: draft.bystanders };
+      if (draft.setupNote.trim()) card.setupNote = draft.setupNote.trim();
+    }
+
+    // Editing: drop the old copy first — it may have lived in a
+    // different category's array if the category was changed.
+    if (draft.editId) {
+      CATEGORIES.forEach((c) => {
+        state.customCards[c.key] = state.customCards[c.key].filter((existing) => existing.id !== draft.editId);
+      });
+    }
+    state.customCards[draft.categoryKey].push(card);
+    state.expansions.add("custom");
+
+    refreshAfterCustomCardsChanged();
+    openCustomCardsSheet();
+  }
+
+  function deleteCustomCard(categoryKey, id) {
+    state.customCards[categoryKey] = state.customCards[categoryKey].filter((c) => c.id !== id);
+    refreshAfterCustomCardsChanged();
+    renderSheet();
+  }
+
+  /** One entry in the Custom Cards list — tapping the row edits it
+   * (opens the same form saveCustomCardDraft writes to, prefilled);
+   * the trailing delete button removes it immediately, no confirm,
+   * matching Manage <Category>'s own switch-off-to-remove pattern. */
+  function customCardRow(categoryKey, card) {
+    const li = document.createElement("li");
+    li.className = "ios-row history-row";
+    li.addEventListener("click", () => openEditCustomCardSheet(categoryKey, card));
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    const main = document.createElement("span");
+    main.className = "row-text-main";
+    main.textContent = card.name;
+    const sub = document.createElement("span");
+    sub.className = "row-text-sub";
+    sub.textContent = categoryKey === "heroes" && card.team ? `Custom · ${card.team}` : "Custom";
+    text.appendChild(main);
+    text.appendChild(sub);
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "round-btn";
+    delBtn.textContent = "🗑";
+    delBtn.title = `Delete ${card.name}`;
+    delBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteCustomCard(categoryKey, card.id);
+    });
+
+    li.appendChild(text);
+    li.appendChild(delBtn);
+    return li;
+  }
+
+  function renderCustomCardsList() {
+    el.sheetTitle.textContent = "Custom Cards";
+    el.sheetSearchWrap.classList.add("hidden");
+    el.sheetAction.classList.remove("hidden");
+    el.sheetAction.classList.add("sheet-header-btn-add");
+    el.sheetAction.textContent = "+";
+    el.sheetAction.title = "Add a custom card";
+
+    if (!totalCustomCardCount()) {
+      el.sheetList.appendChild(emptyRow("No custom cards yet. Tap + to add one."));
+      return;
+    }
+
+    CATEGORIES.forEach((category) => {
+      const cards = state.customCards[category.key];
+      if (!cards.length) return;
+
+      const section = document.createElement("section");
+      section.className = "ios-group";
+
+      const header = document.createElement("div");
+      header.className = "group-header";
+      const span = document.createElement("span");
+      span.textContent = category.label;
+      header.appendChild(span);
+      section.appendChild(header);
+
+      const list = document.createElement("ul");
+      list.className = "ios-list";
+      cards.forEach((card) => list.appendChild(customCardRow(category.key, card)));
+      section.appendChild(list);
+
+      el.sheetList.appendChild(section);
+    });
+  }
+
+  /** A stepper row like countStepperRow, but bound to a plain draft
+   * object (sheetState.draft) instead of state.options — used for the
+   * Twists/Bystanders fields on a Scheme Custom Card, which aren't
+   * live game state until the card is actually saved. */
+  function draftStepperRow(labelText, draft, key, min, max) {
+    const row = document.createElement("li");
+    row.className = "ios-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    text.textContent = labelText;
+
+    const stepper = document.createElement("span");
+    stepper.className = "stepper";
+    const decBtn = document.createElement("button");
+    decBtn.type = "button";
+    decBtn.className = "stepper-btn";
+    decBtn.textContent = "−";
+    decBtn.setAttribute("aria-label", `Decrease ${labelText.toLowerCase()}`);
+    const valueSpan = document.createElement("span");
+    valueSpan.className = "stepper-value";
+    const incBtn = document.createElement("button");
+    incBtn.type = "button";
+    incBtn.className = "stepper-btn";
+    incBtn.textContent = "+";
+    incBtn.setAttribute("aria-label", `Increase ${labelText.toLowerCase()}`);
+
+    valueSpan.textContent = draft[key];
+    decBtn.disabled = draft[key] <= min;
+    incBtn.disabled = draft[key] >= max;
+
+    stepper.appendChild(decBtn);
+    stepper.appendChild(valueSpan);
+    stepper.appendChild(incBtn);
+    stepper.addEventListener("click", (e) => {
+      const btn = e.target.closest(".stepper-btn");
+      if (!btn) return;
+      const delta = btn === incBtn ? 1 : -1;
+      draft[key] = Math.max(min, Math.min(max, draft[key] + delta));
+      renderSheet();
+    });
+
+    row.appendChild(text);
+    row.appendChild(stepper);
+    return row;
+  }
+
+  const CUSTOM_CARD_CATEGORY_LABELS = { mastermind: "Mastermind", scheme: "Scheme", villains: "Villain", henchmen: "Henchman", heroes: "Hero" };
+
+  function renderAddCustomCardForm() {
+    const draft = sheetState.draft;
+    el.sheetTitle.textContent = draft.editId ? "Edit Custom Card" : "Add Custom Card";
+    el.sheetSearchWrap.classList.add("hidden");
+    el.sheetAction.classList.remove("hidden");
+    el.sheetAction.textContent = "Save";
+
+    const categorySection = document.createElement("section");
+    categorySection.className = "ios-group";
+    const categoryHeader = document.createElement("div");
+    categoryHeader.className = "group-header";
+    const categoryHeaderSpan = document.createElement("span");
+    categoryHeaderSpan.textContent = "Category";
+    categoryHeader.appendChild(categoryHeaderSpan);
+    categorySection.appendChild(categoryHeader);
+
+    const categoryList = document.createElement("ul");
+    categoryList.className = "ios-list";
+    const categoryRow = document.createElement("li");
+    categoryRow.className = "ios-row";
+    const segmented = document.createElement("span");
+    segmented.className = "segmented segmented-wide";
+    CATEGORIES.forEach((category) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = CUSTOM_CARD_CATEGORY_LABELS[category.key];
+      if (draft.categoryKey === category.key) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        draft.categoryKey = category.key;
+        renderSheet();
+      });
+      segmented.appendChild(btn);
+    });
+    categoryRow.appendChild(segmented);
+    categoryList.appendChild(categoryRow);
+    categorySection.appendChild(categoryList);
+    el.sheetList.appendChild(categorySection);
+
+    const detailsSection = document.createElement("section");
+    detailsSection.className = "ios-group";
+    const detailsHeader = document.createElement("div");
+    detailsHeader.className = "group-header";
+    const detailsHeaderSpan = document.createElement("span");
+    detailsHeaderSpan.textContent = "Details";
+    detailsHeader.appendChild(detailsHeaderSpan);
+    detailsSection.appendChild(detailsHeader);
+
+    const detailsList = document.createElement("ul");
+    detailsList.className = "ios-list";
+    detailsList.appendChild(
+      formInputRow("Name", draft.name, (value) => {
+        draft.name = value;
+        updateSaveButtonState();
+      })
+    );
+    if (draft.categoryKey === "heroes") {
+      detailsList.appendChild(
+        formInputRow("Team (optional)", draft.team, (value) => {
+          draft.team = value;
+        })
+      );
+    }
+    detailsSection.appendChild(detailsList);
+    el.sheetList.appendChild(detailsSection);
+
+    if (draft.categoryKey === "scheme") {
+      const deckSection = document.createElement("section");
+      deckSection.className = "ios-group";
+      const deckHeader = document.createElement("div");
+      deckHeader.className = "group-header";
+      const deckHeaderSpan = document.createElement("span");
+      deckHeaderSpan.textContent = "Villain Deck";
+      deckHeader.appendChild(deckHeaderSpan);
+      deckSection.appendChild(deckHeader);
+
+      const deckList = document.createElement("ul");
+      deckList.className = "ios-list";
+      deckList.appendChild(draftStepperRow("Bystanders", draft, "bystanders", 0, 30));
+      deckList.appendChild(draftStepperRow("Twists", draft, "twists", 0, 16));
+      deckSection.appendChild(deckList);
+      el.sheetList.appendChild(deckSection);
+
+      const noteSection = document.createElement("section");
+      noteSection.className = "ios-group";
+      const noteHeader = document.createElement("div");
+      noteHeader.className = "group-header";
+      const noteHeaderSpan = document.createElement("span");
+      noteHeaderSpan.textContent = "Setup Note";
+      noteHeader.appendChild(noteHeaderSpan);
+      noteSection.appendChild(noteHeader);
+
+      const noteList = document.createElement("ul");
+      noteList.className = "ios-list";
+      noteList.appendChild(
+        formTextareaRow("Optional — special rules, setup text, etc.", draft.setupNote, (value) => {
+          draft.setupNote = value;
+        })
+      );
+      noteSection.appendChild(noteList);
+      el.sheetList.appendChild(noteSection);
+    }
+
+    updateSaveButtonState();
+  }
+
+  function formInputRow(labelText, value, onInput) {
+    const row = document.createElement("li");
+    row.className = "form-row";
+    const label = document.createElement("span");
+    label.className = "form-label";
+    label.textContent = labelText;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "form-input";
+    input.value = value;
+    input.addEventListener("input", () => onInput(input.value));
+    row.appendChild(label);
+    row.appendChild(input);
+    return row;
+  }
+
+  function formTextareaRow(placeholder, value, onInput) {
+    const row = document.createElement("li");
+    row.className = "form-row";
+    const textarea = document.createElement("textarea");
+    textarea.className = "form-input";
+    textarea.placeholder = placeholder;
+    textarea.rows = 3;
+    textarea.value = value;
+    textarea.addEventListener("input", () => onInput(textarea.value));
+    row.appendChild(textarea);
+    return row;
+  }
+
+  function updateSaveButtonState() {
+    if (!sheetState || sheetState.mode !== "addCustomCard") return;
+    el.sheetAction.disabled = !sheetState.draft.name.trim();
+  }
+
   /** "Select All" — include everything for the sheet's current mode.
    * Shared by the bulk-actions bar's left button (see
    * showBulkActions/bindSheet) across manage/expansions/teamTheme; a
@@ -3142,7 +3516,7 @@
     if (!sheetState) return;
     if (sheetState.mode === "manage") {
       const category = CATEGORY_BY_KEY[sheetState.categoryKey];
-      category.pool.filter((c) => state.expansions.has(c.exp)).forEach((c) => state.exclusions[category.key].add(c.name));
+      effectivePool(category).filter((c) => state.expansions.has(c.exp)).forEach((c) => state.exclusions[category.key].add(c.name));
       syncRequiredCards();
       saveState();
       renderWarnings();
@@ -3175,8 +3549,11 @@
     el.sheetBackdrop.addEventListener("click", closeSheet);
     el.sheetCancel.addEventListener("click", () => {
       // From the Past Setups detail screen, "Back" returns to the list
-      // it was opened from rather than dismissing the whole sheet.
+      // it was opened from rather than dismissing the whole sheet; same
+      // idea for the Add/Edit Custom Card form returning to the Custom
+      // Cards list.
       if (sheetState && sheetState.mode === "historyDetail") openHistorySheet();
+      else if (sheetState && sheetState.mode === "addCustomCard") openCustomCardsSheet();
       else closeSheet();
     });
     el.sheetSearch.addEventListener("input", () => {
@@ -3185,21 +3562,28 @@
       renderSheet();
     });
     el.sheetAction.addEventListener("click", () => {
-      // Only "history" mode still uses the single sheetAction button
-      // (its "Clear All" deletes records rather than toggling a set of
-      // switches) — manage/expansions/teamTheme use the always-visible
-      // Select All/Deselect All bar instead, see sheetSelectAll/
-      // sheetDeselectAll below.
-      if (!sheetState || sheetState.mode !== "history") return;
-      state.history.forEach((entry) => {
-        if (entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
-      });
-      state.history = [];
-      state.currentHistoryId = null;
-      saveState();
-      renderSheet();
-      renderHistoryCount();
-      renderOutcomeStatus();
+      // The single sheetAction button means something different per
+      // mode: "history"'s "Clear All" wipes every saved record,
+      // "customCards"'s "+" opens the add form, and "addCustomCard"'s
+      // "Save" writes the draft — manage/expansions/teamTheme use the
+      // always-visible Select All/Deselect All bar instead, see
+      // sheetSelectAll/sheetDeselectAll below.
+      if (!sheetState) return;
+      if (sheetState.mode === "history") {
+        state.history.forEach((entry) => {
+          if (entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
+        });
+        state.history = [];
+        state.currentHistoryId = null;
+        saveState();
+        renderSheet();
+        renderHistoryCount();
+        renderOutcomeStatus();
+      } else if (sheetState.mode === "customCards") {
+        openAddCustomCardSheet();
+      } else if (sheetState.mode === "addCustomCard") {
+        saveCustomCardDraft();
+      }
     });
     el.sheetSelectAll.addEventListener("click", sheetSelectAll);
     el.sheetDeselectAll.addEventListener("click", sheetDeselectAll);
@@ -3226,6 +3610,7 @@
     });
 
     el.openHistory.addEventListener("click", openHistorySheet);
+    el.openCustomCards.addEventListener("click", openCustomCardsSheet);
 
     el.copyBtn.addEventListener("click", async () => {
       const text = setupText();
