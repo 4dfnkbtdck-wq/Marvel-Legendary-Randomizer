@@ -198,6 +198,37 @@ body {
   margin-top: 0.05rem;
 }
 
+/* Keyword Glossary rows: unlike every other row-text-main, the term
+ * shouldn't ellipsis-truncate (they're all short anyway) and the
+ * definition is the reason the row exists, so let it wrap fully
+ * instead of relying on row-text-sub's usual single-line treatment. */
+.glossary-term {
+  font-weight: 700;
+  white-space: normal;
+}
+
+.glossary-definition {
+  line-height: 1.4;
+  padding: 0.15rem 0;
+}
+
+.glossary-expansions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.glossary-expansion-tag {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--label-secondary);
+  background: var(--switch-off);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+
 /* ---------- iOS switch ---------- */
 
 .ios-switch {
@@ -687,6 +718,27 @@ body {
 }
 
 .sheet-search::placeholder {
+  color: var(--label-tertiary);
+}
+
+/* Same look as .sheet-search, for a search box on a standalone page
+ * (e.g. glossary.html) instead of inside the sheet overlay. */
+.page-search-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.page-search {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: var(--grouped-bg);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+  color: var(--label);
+  font-family: inherit;
+}
+
+.page-search::placeholder {
   color: var(--label-tertiary);
 }
 
