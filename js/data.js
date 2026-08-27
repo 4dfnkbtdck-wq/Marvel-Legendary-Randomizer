@@ -140,6 +140,7 @@ const TEAM_ICONS = {
   "Heroes of Asgard": "img/teams/heroes-of-asgard.png",
   "Inhumans": "img/teams/inhumans.png",
   "Guardians of the Multiverse": "img/teams/guardians-of-the-multiverse.png",
+  "Warbound": "img/teams/warbound.webp",
 };
 
 const EXPANSIONS = [
