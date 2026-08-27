@@ -2796,6 +2796,8 @@
       renderAddCustomCardForm();
     } else if (sheetState.mode === "chooseLeads") {
       renderChooseLeadsList();
+    } else if (sheetState.mode === "chooseTeam") {
+      renderChooseTeamList();
     } else if (sheetState.mode === "expansions") {
       el.sheetTitle.textContent = "Expansions";
       el.sheetSearchWrap.classList.add("hidden");
@@ -3194,6 +3196,16 @@
     openSheet({ mode: "chooseLeads", draft, leadsCategoryKey });
   }
 
+  /** Opens the Team picker for a Custom Hero — every Team name already
+   * in use by an official or Custom Hero (see effectivePool), across
+   * every expansion, for the same "defining this card's own data"
+   * reason openChooseLeadsSheet isn't expansion-filtered either. Unlike
+   * the leads picker, the search box doubles as free text: typing a
+   * name nothing matches offers to use it as a brand-new Team. */
+  function openChooseTeamSheet(draft) {
+    openSheet({ mode: "chooseTeam", draft });
+  }
+
   /** Same "refresh everything a pool-composition change could affect"
    * sequence expansionRow's checkbox handler uses — a Custom Card is
    * just another card in the pool, so adding/editing/deleting one
@@ -3420,15 +3432,43 @@
         updateSaveButtonState();
       })
     );
-    if (draft.categoryKey === "heroes") {
-      detailsList.appendChild(
-        formInputRow("Team (optional)", draft.team, (value) => {
-          draft.team = value;
-        })
-      );
-    }
     detailsSection.appendChild(detailsList);
     el.sheetList.appendChild(detailsSection);
+
+    if (draft.categoryKey === "heroes") {
+      const teamSection = document.createElement("section");
+      teamSection.className = "ios-group";
+      const teamHeader = document.createElement("div");
+      teamHeader.className = "group-header";
+      const teamHeaderSpan = document.createElement("span");
+      teamHeaderSpan.textContent = "Team";
+      teamHeader.appendChild(teamHeaderSpan);
+      teamSection.appendChild(teamHeader);
+
+      const teamList = document.createElement("ul");
+      teamList.className = "ios-list";
+      const teamBtn = document.createElement("button");
+      teamBtn.type = "button";
+      teamBtn.className = "ios-row nav-row";
+      const teamText = document.createElement("span");
+      teamText.className = "row-text";
+      teamText.textContent = "Team (optional)";
+      const teamTrailing = document.createElement("span");
+      teamTrailing.className = "row-trailing";
+      teamTrailing.textContent = draft.team || "None";
+      const teamChevron = document.createElement("span");
+      teamChevron.className = "chevron";
+      teamChevron.textContent = "›";
+      teamBtn.appendChild(teamText);
+      teamBtn.appendChild(teamTrailing);
+      teamBtn.appendChild(teamChevron);
+      teamBtn.addEventListener("click", () => openChooseTeamSheet(draft));
+      const teamLi = document.createElement("li");
+      teamLi.appendChild(teamBtn);
+      teamList.appendChild(teamLi);
+      teamSection.appendChild(teamList);
+      el.sheetList.appendChild(teamSection);
+    }
 
     if (draft.categoryKey === "mastermind") {
       const leadsSection = document.createElement("section");
@@ -3617,6 +3657,63 @@
     appendSheetList(names.map((name) => chooseLeadsRow(name, sheetState.draft)));
   }
 
+  function chooseTeamRow(label, value, draft, isCreateNew) {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ios-row sheet-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    text.textContent = label;
+    btn.appendChild(text);
+
+    if (!isCreateNew && draft.team === value) {
+      const check = document.createElement("span");
+      check.textContent = "✓";
+      check.style.color = "var(--blue)";
+      check.style.fontWeight = "700";
+      btn.appendChild(check);
+    }
+
+    btn.addEventListener("click", () => {
+      draft.team = value;
+      openSheet({ mode: "addCustomCard", draft });
+    });
+
+    li.appendChild(btn);
+    return li;
+  }
+
+  /** The Team picker for a Custom Hero. Unlike chooseLeadsRow's list
+   * (an exact-name requirement, so free text wouldn't make sense),
+   * Team is just a label — the search box doubles as a way to use a
+   * brand-new Team name that isn't in the list yet, offered as a "Use
+   * ‘…’" row whenever the typed text doesn't exactly match one already
+   * in use. "None" clears the Team (Unaffiliated). */
+  function renderChooseTeamList() {
+    const draft = sheetState.draft;
+    el.sheetTitle.textContent = "Choose Team";
+    el.sheetSearchWrap.classList.remove("hidden");
+
+    const search = sheetState.search.trim();
+    const allTeams = Array.from(new Set(effectivePool(CATEGORY_BY_KEY.heroes).map((h) => h.team).filter(Boolean)));
+    const matches = allTeams.filter((name) => name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => a.localeCompare(b));
+    const exactMatch = allTeams.some((name) => name.toLowerCase() === search.toLowerCase());
+
+    const rows = [];
+    if (!search) rows.push(chooseTeamRow("None", "", draft, false));
+    if (search && !exactMatch) rows.push(chooseTeamRow(`Use "${search}"`, search, draft, true));
+    matches.forEach((name) => rows.push(chooseTeamRow(name, name, draft, false)));
+
+    if (!rows.length) {
+      el.sheetList.appendChild(emptyRow("No teams match."));
+      return;
+    }
+
+    appendSheetList(rows);
+  }
+
   /** "Select All" — include everything for the sheet's current mode.
    * Shared by the bulk-actions bar's left button (see
    * showBulkActions/bindSheet) across manage/expansions/teamTheme; a
@@ -3699,8 +3796,9 @@
       // it was opened from (carrying the in-progress draft forward).
       if (sheetState && sheetState.mode === "historyDetail") openHistorySheet();
       else if (sheetState && sheetState.mode === "addCustomCard") openCustomCardsSheet();
-      else if (sheetState && sheetState.mode === "chooseLeads") openSheet({ mode: "addCustomCard", draft: sheetState.draft });
-      else closeSheet();
+      else if (sheetState && (sheetState.mode === "chooseLeads" || sheetState.mode === "chooseTeam")) {
+        openSheet({ mode: "addCustomCard", draft: sheetState.draft });
+      } else closeSheet();
     });
     el.sheetSearch.addEventListener("input", () => {
       if (!sheetState) return;
