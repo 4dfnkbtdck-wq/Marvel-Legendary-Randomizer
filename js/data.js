@@ -151,6 +151,7 @@ const TEAM_ICONS = {
   "Brotherhood": "img/teams/brotherhood.png",
   "Crime Syndicate": "img/teams/crime-syndicate.png",
   "Sinister Six": "img/teams/sinister-six.png",
+  "X-Force": "img/teams/x-force.webp",
 };
 
 const EXPANSIONS = [
