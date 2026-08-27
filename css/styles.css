@@ -100,7 +100,7 @@ body {
 .screen {
   max-width: 500px;
   margin: 0 auto;
-  padding: 0 1rem 3rem;
+  padding: 1rem 1rem 3rem;
 }
 
 .large-title-block {
@@ -651,10 +651,4 @@ body {
   text-align: center;
   padding: 0.5rem 0.75rem 0;
   line-height: 1.5;
-}
-
-.page-footer code {
-  background: var(--grouped-bg);
-  padding: 0.05rem 0.3rem;
-  border-radius: 4px;
 }

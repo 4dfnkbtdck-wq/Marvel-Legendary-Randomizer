@@ -2087,10 +2087,6 @@
     const hasAnyResult = CATEGORIES.some((c) => (state.result[c.key] || []).length);
 
     if (!hasAnyResult) {
-      const empty = document.createElement("p");
-      empty.className = "empty-state";
-      empty.textContent = "Pick your expansions above, then tap Randomize Setup to build a game.";
-      el.results.appendChild(empty);
       el.copyGroup.classList.add("hidden");
       el.outcomeGroup.classList.add("hidden");
       el.excludeGroup.classList.add("hidden");
