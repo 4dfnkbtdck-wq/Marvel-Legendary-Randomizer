@@ -135,6 +135,7 @@
  * its name with no icon. */
 const TEAM_ICONS = {
   "X-Factor Investigations": "img/teams/x-factor-investigations.webp",
+  "Heroes of Wakanda": "img/teams/heroes-of-wakanda.png",
 };
 
 const EXPANSIONS = [
