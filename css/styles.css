@@ -146,18 +146,6 @@ body {
   margin: 0;
 }
 
-.header-action {
-  background: none;
-  border: none;
-  color: var(--blue);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: normal;
-  cursor: pointer;
-  padding: 0;
-}
-
 .ios-list {
   list-style: none;
   margin: 0;
