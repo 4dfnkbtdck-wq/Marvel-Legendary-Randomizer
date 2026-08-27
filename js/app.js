@@ -1791,6 +1791,10 @@
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   }
 
+  function formatDateOnly(ts) {
+    return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
   // ---------- Rendering ----------
 
   const el = {
@@ -2621,11 +2625,17 @@
 
   // ---------- Sheet (modal) ----------
 
-  let sheetState = null; // { mode: 'manage'|'choose'|'history', categoryKey, slotIndex, search }
+  let sheetState = null; // { mode: 'manage'|'choose'|'history'|'historyDetail', categoryKey, slotIndex, search, entryId }
+
+  /** Which Past Setups row (by entry id) currently has its "⋯" overflow
+   * menu open, if any — reset on every openSheet so switching sheets/
+   * modes always starts closed. */
+  let openHistoryMenuId = null;
 
   function openSheet(next) {
     sheetState = { search: "", ...next };
     el.sheetSearch.value = "";
+    openHistoryMenuId = null;
     renderSheet();
     el.sheetOverlay.classList.remove("hidden");
   }
@@ -2645,6 +2655,10 @@
 
   function openHistorySheet() {
     openSheet({ mode: "history" });
+  }
+
+  function openHistoryDetail(entryId) {
+    openSheet({ mode: "historyDetail", entryId });
   }
 
   function openExpansionsSheet() {
@@ -2667,6 +2681,17 @@
     el.sheetBulkActions.classList.remove("hidden");
     el.sheetSelectAll.disabled = allSelected;
     el.sheetDeselectAll.disabled = allDeselected;
+  }
+
+  /** Wraps `rows` in a single `<ul class="ios-list">` and appends it to
+   * the sheet — the flat, single-group modes (manage/choose/history/
+   * expansions/teamTheme) all render one of these; historyDetail
+   * appends several instead, one per category (see below). */
+  function appendSheetList(rows) {
+    const ul = document.createElement("ul");
+    ul.className = "ios-list";
+    rows.forEach((row) => ul.appendChild(row));
+    el.sheetList.appendChild(ul);
   }
 
   function renderSheet() {
@@ -2695,7 +2720,7 @@
         return;
       }
 
-      items.forEach((item) => el.sheetList.appendChild(manageRow(category, item)));
+      appendSheetList(items.map((item) => manageRow(category, item)));
     } else if (sheetState.mode === "choose") {
       const category = CATEGORY_BY_KEY[sheetState.categoryKey];
       el.sheetTitle.textContent = `Choose ${category.label}`;
@@ -2711,7 +2736,7 @@
         return;
       }
 
-      items.forEach((item) => el.sheetList.appendChild(chooseRow(category, item, currentItem)));
+      appendSheetList(items.map((item) => chooseRow(category, item, currentItem)));
     } else if (sheetState.mode === "history") {
       el.sheetTitle.textContent = "Past Setups";
       el.sheetSearchWrap.classList.add("hidden");
@@ -2725,14 +2750,25 @@
         el.sheetList.appendChild(emptyRow("No saved setups yet. Randomize a setup and it'll show up here."));
         return;
       }
-      state.history.forEach((entry) => el.sheetList.appendChild(historyRow(entry)));
+      appendSheetList(state.history.flatMap((entry) => historyRow(entry)));
+    } else if (sheetState.mode === "historyDetail") {
+      const entry = state.history.find((h) => h.id === sheetState.entryId);
+      if (!entry) {
+        // The entry this detail screen was showing is gone (deleted, or
+        // un-logged via the outcome pill, which removes it from
+        // history) — fall back to the list instead of a dead screen.
+        sheetState = { mode: "history", search: "" };
+        renderSheet();
+        return;
+      }
+      renderHistoryDetail(entry);
     } else if (sheetState.mode === "expansions") {
       el.sheetTitle.textContent = "Expansions";
       el.sheetSearchWrap.classList.add("hidden");
       showBulkActions(state.expansions.size === EXPANSIONS.length, state.expansions.size === 0);
 
       const sortedExpansions = [...EXPANSIONS].sort((a, b) => a.name.localeCompare(b.name));
-      sortedExpansions.forEach((exp) => el.sheetList.appendChild(expansionRow(exp)));
+      appendSheetList(sortedExpansions.map((exp) => expansionRow(exp)));
     } else if (sheetState.mode === "teamTheme") {
       el.sheetTitle.textContent = "Hero Team Theme";
       el.sheetSearchWrap.classList.add("hidden");
@@ -2748,16 +2784,17 @@
       const excludedCount = teams.filter((t) => state.excludedTeams.has(t)).length + (hasUnaffiliated && state.excludeUnaffiliated ? 1 : 0);
       showBulkActions(excludedCount === 0, excludedCount === total);
 
-      teams.forEach((team) => el.sheetList.appendChild(teamRow(team)));
-      if (hasUnaffiliated) el.sheetList.appendChild(teamRow(UNAFFILIATED));
+      const rows = teams.map((team) => teamRow(team));
+      if (hasUnaffiliated) rows.push(teamRow(UNAFFILIATED));
+      appendSheetList(rows);
     }
   }
 
   function emptyRow(text) {
-    const li = document.createElement("li");
-    li.className = "sheet-empty";
-    li.textContent = text;
-    return li;
+    const p = document.createElement("p");
+    p.className = "sheet-empty";
+    p.textContent = text;
+    return p;
   }
 
   function manageRow(category, item) {
@@ -2840,11 +2877,73 @@
     return li;
   }
 
+  /** Restore this Past Setup onto the main screen and dismiss the
+   * sheet entirely — shared by the compact row's overflow menu and the
+   * detail screen's own Restore button. */
+  function restoreEntryAndClose(entry) {
+    restoreHistoryEntry(entry);
+    closeSheet();
+  }
+
+  /** Delete this Past Setup and re-render the sheet in place — shared
+   * by the overflow menu and the detail screen's Delete button. From
+   * the detail screen, renderSheet's historyDetail branch notices the
+   * entry it was showing is now gone and falls back to the list on its
+   * own, so this doesn't need to know which screen called it. */
+  function deleteEntryAndRefresh(entry) {
+    deleteHistoryEntry(entry.id);
+    renderSheet();
+    renderHistoryCount();
+    renderOutcomeStatus();
+  }
+
+  /** The green W / red L toggle used both on a compact history row and
+   * in the detail screen's summary bar — tapping the side that's
+   * already logged un-logs it (see toggleAndPruneOutcome), which
+   * removes the entry from Past Setups entirely. */
+  function buildOutcomePill(entry) {
+    const pill = document.createElement("div");
+    pill.className = "outcome-pill";
+
+    const winBtn = document.createElement("button");
+    winBtn.type = "button";
+    winBtn.className = "outcome-win";
+    if (entry.outcome === "win") winBtn.classList.add("active");
+    winBtn.textContent = "W";
+    winBtn.title = entry.outcome === "win" ? "Logged as a Heroes win — tap to remove from Past Setups" : "Log as a Heroes win";
+    winBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      logHistoryOutcome(entry.id, "win");
+    });
+
+    const lossBtn = document.createElement("button");
+    lossBtn.type = "button";
+    lossBtn.className = "outcome-loss";
+    if (entry.outcome === "loss") lossBtn.classList.add("active");
+    lossBtn.textContent = "L";
+    lossBtn.title = entry.outcome === "loss" ? "Logged as an Evil win — tap to remove from Past Setups" : "Log as an Evil win";
+    lossBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      logHistoryOutcome(entry.id, "loss");
+    });
+
+    pill.appendChild(winBtn);
+    pill.appendChild(lossBtn);
+    return pill;
+  }
+
+  /** Returns an array of one `<li>` (or two, when this entry's "⋯" is
+   * open — see openHistoryMenuId) rather than a single row, so its
+   * Restore/Delete options can render as an ordinary sibling row
+   * instead of a floating popover — appendSheetList's callers flatMap
+   * over this for exactly that reason. */
   function historyRow(entry) {
     const li = document.createElement("li");
-    li.className = "ios-row";
+    li.className = "ios-row history-row";
+    li.addEventListener("click", () => openHistoryDetail(entry.id));
 
     const mastermind = (entry.result.mastermind || [])[0];
+    const scheme = (entry.result.scheme || [])[0];
     const heroCount = (entry.result.heroes || []).length;
 
     const text = document.createElement("div");
@@ -2854,60 +2953,150 @@
     main.textContent = mastermind ? mastermind.name : "Setup";
     const sub = document.createElement("span");
     sub.className = "row-text-sub";
-    const outcomeLabel = entry.outcome === "win" ? " · Heroes Won" : entry.outcome === "loss" ? " · Evil Won" : "";
-    sub.textContent = `${formatTimestamp(entry.timestamp)} · ${heroCount} heroes${entry.players ? ` · ${entry.players}p` : ""}${outcomeLabel}`;
+    const subParts = [formatDateOnly(entry.timestamp)];
+    if (scheme) subParts.push(scheme.name);
+    subParts.push(`${heroCount} heroes`);
+    if (entry.players) subParts.push(`${entry.players}p`);
+    sub.textContent = subParts.join(" · ");
     text.appendChild(main);
     text.appendChild(sub);
 
     const actions = document.createElement("div");
     actions.className = "result-row-actions";
+    actions.appendChild(buildOutcomePill(entry));
 
-    const winBtn = document.createElement("button");
-    winBtn.type = "button";
-    winBtn.className = "round-btn outcome-win";
-    if (entry.outcome === "win") winBtn.classList.add("active-outcome");
-    winBtn.textContent = "W";
-    winBtn.title = entry.outcome === "win" ? "Logged as a Heroes win — tap to remove from Past Setups" : "Log as a Heroes win";
-    winBtn.addEventListener("click", () => logHistoryOutcome(entry.id, "win"));
-
-    const lossBtn = document.createElement("button");
-    lossBtn.type = "button";
-    lossBtn.className = "round-btn outcome-loss";
-    if (entry.outcome === "loss") lossBtn.classList.add("active-outcome");
-    lossBtn.textContent = "L";
-    lossBtn.title = entry.outcome === "loss" ? "Logged as an Evil win — tap to remove from Past Setups" : "Log as an Evil win";
-    lossBtn.addEventListener("click", () => logHistoryOutcome(entry.id, "loss"));
-
-    const restoreBtn = document.createElement("button");
-    restoreBtn.type = "button";
-    restoreBtn.className = "round-btn";
-    restoreBtn.textContent = "↩️";
-    restoreBtn.title = "Restore this setup";
-    restoreBtn.addEventListener("click", () => {
-      restoreHistoryEntry(entry);
-      closeSheet();
-    });
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.type = "button";
-    deleteBtn.className = "round-btn";
-    deleteBtn.textContent = "🗑";
-    deleteBtn.title = "Delete this saved setup";
-    deleteBtn.addEventListener("click", () => {
-      deleteHistoryEntry(entry.id);
+    const overflowBtn = document.createElement("button");
+    overflowBtn.type = "button";
+    overflowBtn.className = "round-btn";
+    overflowBtn.textContent = "⋯";
+    overflowBtn.title = "Restore or delete this setup";
+    overflowBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openHistoryMenuId = openHistoryMenuId === entry.id ? null : entry.id;
       renderSheet();
-      renderHistoryCount();
-      renderOutcomeStatus();
     });
-
-    actions.appendChild(winBtn);
-    actions.appendChild(lossBtn);
-    actions.appendChild(restoreBtn);
-    actions.appendChild(deleteBtn);
+    actions.appendChild(overflowBtn);
 
     li.appendChild(text);
     li.appendChild(actions);
+
+    if (openHistoryMenuId !== entry.id) return [li];
+
+    const menuLi = document.createElement("li");
+    menuLi.className = "ios-row history-menu-row";
+
+    const restoreBtn = document.createElement("button");
+    restoreBtn.type = "button";
+    restoreBtn.className = "text-action";
+    restoreBtn.textContent = "Restore Setup";
+    restoreBtn.addEventListener("click", () => restoreEntryAndClose(entry));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "text-action destructive";
+    deleteBtn.textContent = "Delete";
+    deleteBtn.addEventListener("click", () => {
+      openHistoryMenuId = null;
+      deleteEntryAndRefresh(entry);
+    });
+
+    menuLi.appendChild(restoreBtn);
+    menuLi.appendChild(deleteBtn);
+
+    return [li, menuLi];
+  }
+
+  /** A single read-only row in the Past Setups detail screen — same
+   * name + team-icon + subtext treatment as manageRow/resultRow, minus
+   * any control, since a saved setup's cards aren't editable. */
+  function historyDetailRow(category, item) {
+    const li = document.createElement("li");
+    li.className = "ios-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    const main = document.createElement("span");
+    main.className = "row-text-main";
+    main.appendChild(nameWithTeamIcon(item));
+    const sub = document.createElement("span");
+    sub.className = "row-text-sub";
+    sub.textContent = poolRowSubText(category, item);
+    text.appendChild(main);
+    text.appendChild(sub);
+
+    li.appendChild(text);
     return li;
+  }
+
+  /** Renders the Past Setups detail screen for one entry — every
+   * category's cards, grouped exactly like the main Results screen
+   * (just read-only), plus the same outcome pill and Restore/Delete
+   * actions the compact row offers. */
+  function renderHistoryDetail(entry) {
+    const mastermind = (entry.result.mastermind || [])[0];
+    el.sheetTitle.textContent = mastermind ? mastermind.name : "Setup";
+    el.sheetSearchWrap.classList.add("hidden");
+
+    const summary = document.createElement("div");
+    summary.className = "detail-summary";
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    const metaParts = [formatTimestamp(entry.timestamp)];
+    if (entry.players) metaParts.push(`${entry.players}p`);
+    meta.textContent = metaParts.join(" · ");
+    summary.appendChild(meta);
+    summary.appendChild(buildOutcomePill(entry));
+    el.sheetList.appendChild(summary);
+
+    CATEGORIES.forEach((category) => {
+      const items = entry.result[category.key] || [];
+      if (!items.length) return;
+
+      const section = document.createElement("section");
+      section.className = "ios-group";
+
+      const header = document.createElement("div");
+      header.className = "group-header";
+      const span = document.createElement("span");
+      span.textContent = category.label;
+      header.appendChild(span);
+      section.appendChild(header);
+
+      const list = document.createElement("ul");
+      list.className = "ios-list";
+      items.forEach((item) => list.appendChild(historyDetailRow(category, item)));
+      section.appendChild(list);
+
+      el.sheetList.appendChild(section);
+    });
+
+    const actionGroup = document.createElement("section");
+    actionGroup.className = "ios-group action-group";
+    const actionList = document.createElement("ul");
+    actionList.className = "ios-list";
+
+    const restoreLi = document.createElement("li");
+    restoreLi.className = "ios-row-button";
+    const restoreBtn = document.createElement("button");
+    restoreBtn.type = "button";
+    restoreBtn.className = "ios-list-button";
+    restoreBtn.textContent = "Restore Setup";
+    restoreBtn.addEventListener("click", () => restoreEntryAndClose(entry));
+    restoreLi.appendChild(restoreBtn);
+
+    const deleteLi = document.createElement("li");
+    deleteLi.className = "ios-row-button";
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "ios-list-button destructive";
+    deleteBtn.textContent = "Delete";
+    deleteBtn.addEventListener("click", () => deleteEntryAndRefresh(entry));
+    deleteLi.appendChild(deleteBtn);
+
+    actionList.appendChild(restoreLi);
+    actionList.appendChild(deleteLi);
+    actionGroup.appendChild(actionList);
+    el.sheetList.appendChild(actionGroup);
   }
 
   /** "Select All" — include everything for the sheet's current mode.
@@ -2984,7 +3173,12 @@
 
   function bindSheet() {
     el.sheetBackdrop.addEventListener("click", closeSheet);
-    el.sheetCancel.addEventListener("click", closeSheet);
+    el.sheetCancel.addEventListener("click", () => {
+      // From the Past Setups detail screen, "Back" returns to the list
+      // it was opened from rather than dismissing the whole sheet.
+      if (sheetState && sheetState.mode === "historyDetail") openHistorySheet();
+      else closeSheet();
+    });
     el.sheetSearch.addEventListener("input", () => {
       if (!sheetState) return;
       sheetState.search = el.sheetSearch.value;
