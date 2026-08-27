@@ -2225,11 +2225,6 @@
 
       const list = document.createElement("ul");
       list.className = "ios-list";
-      if (category.countKey) {
-        list.appendChild(
-          countStepperRow("Count", category.countKey, category.min, category.max, () => resizeCategoryTo(category.key))
-        );
-      }
       items.forEach((item, index) => list.appendChild(resultRow(category, item, index)));
       section.appendChild(list);
 
