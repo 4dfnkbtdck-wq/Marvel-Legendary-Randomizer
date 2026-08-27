@@ -935,6 +935,21 @@ textarea.form-input {
   line-height: 1.5;
 }
 
+/* Same "‹ Back" link as .page-footer, just relocated above the title so
+ * a long page (e.g. the Keyword Glossary) doesn't need a full scroll to
+ * get back — see the matching one still kept at the bottom too. Left-
+ * aligned and smaller than the bottom one so it reads like a nav-bar
+ * back link rather than repeating that big end-of-page call to action. */
+.page-footer-top {
+  text-align: left;
+  padding: 0 0 0.75rem;
+}
+
+.page-footer-top .footer-button {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.88rem;
+}
+
 .footer-button {
   display: inline-block;
   background: var(--grouped-bg);
