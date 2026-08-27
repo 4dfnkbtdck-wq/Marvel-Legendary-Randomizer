@@ -202,6 +202,13 @@ const EXPANSIONS = [
   { id: "midnight_sons", name: "Midnight Sons", confidence: "verified" },
   { id: "secret_wars_2", name: "Secret Wars: Volume 2", confidence: "verified" },
   { id: "weapon_x", name: "Weapon X", confidence: "verified" },
+
+  // Synthetic — not a real expansion. Every card added through Custom
+  // Cards is tagged exp: "custom", so this toggle (like any other
+  // expansion) turns all of them on/off at once via the normal pool
+  // filtering — no separate on/off system needed. See openAddCustomCard/
+  // saveCustomCard in app.js.
+  { id: "custom", name: "Custom Cards", confidence: "verified" },
 ];
 
 const MASTERMINDS = [
