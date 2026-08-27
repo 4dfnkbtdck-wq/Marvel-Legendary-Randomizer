@@ -3492,12 +3492,17 @@ const HEROES = [
  * this word mean," not a rules-arbitration tool. */
 const KEYWORDS = [
   { term: "Ambush", definition: "An effect that triggers the instant a Villain is revealed, before Heroes get to act against it." },
+  { term: "Ambush Scheme", definition: "A special Scheme card shuffled into the Villain Deck alongside its Villain Group — defeating it scores Victory Points immediately, and for the rest of the game it also triggers whenever a Scheme Twist is played." },
+  { term: "Antics", definition: "A bonus ability on some cards, usable only if you have at least three cards — between your hand and what you've played this turn — that are low-cost and/or have Size-Changing." },
   { term: "Bystander", definition: "A civilian card shuffled into the Villain Deck — defeat it for no reward, Rescue it for Victory Points, or let a Villain capture it to advance the Scheme." },
   { term: "Chivalrous Duel", definition: "A keyword on some Villains that can only be fought using Fight Points from a single Hero Name — you can't combine points from two different Heroes." },
   { term: "Conqueror", definition: "A keyword tied to a specific city space, giving a Fight Point bonus whenever any Villain — including the Conqueror card itself — occupies that space." },
+  { term: "Double-Cross", definition: "A keyword forcing every player to reveal their hand and discard one of their highest-cost duplicate cards." },
   { term: "Empowered", definition: "A keyword giving a Hero, Villain, or Mastermind a Fight Point bonus for each card of a matching color currently in the HQ." },
+  { term: "Explore", definition: "A keyword that swaps a Hero out of the HQ for a fresh one from the top of the Hero Deck, sometimes granting a bonus based on the Hero it finds." },
   { term: "Fight", definition: "Spending Attack Points to defeat a Villain in the city, a Bystander, or a Master Strike." },
   { term: "Focus", definition: "A keyword letting you spend Recruit Points for a repeatable bonus effect for the rest of the turn, as many times as you can afford." },
+  { term: "Heist", definition: "A once-per-turn action comparing the variety of Hero costs you've played this turn against the top card of the Villain Deck — beat it to trigger every Heist ability from cards you played or fought that turn." },
   { term: "HQ", definition: "The row of face-up Hero cards available to Recruit from." },
   { term: "KO'd", definition: "A card removed from the game entirely — out of every deck, hand, and discard pile for the rest of the game." },
   { term: "Man and Woman Out of Time", definition: "A keyword letting a Hero be set aside after you use its ability, then played again for free at the start of your next turn before being discarded." },
@@ -3508,6 +3513,7 @@ const KEYWORDS = [
   { term: "Recruit", definition: "Spending Recruit Points to buy a Hero card from the HQ into your discard pile." },
   { term: "Rescue", definition: "Some Heroes let you save a Bystander instead of fighting it, turning it face-down into a Victory Point card." },
   { term: "Size-Changing", definition: "A keyword on some Heroes and Villains that discounts their Recruit or Fight cost if you played a card of a specific type this turn." },
+  { term: "Transform", definition: "An instruction on some Mastermind cards to flip the double-sided Mastermind over, swapping which abilities and Fight value are in play for the rest of the game." },
   { term: "Twist", definition: "A card in the Villain Deck that triggers a Scheme-specific effect when revealed, instead of being fought." },
   { term: "Wound", definition: "A useless card added to your deck, usually from a Villain's attack — it clutters your hand until you find a way to remove it." },
 ];
