@@ -1830,6 +1830,8 @@
     results: document.getElementById("results"),
     copyGroup: document.getElementById("copy-group"),
     copyBtn: document.getElementById("copy-setup"),
+    setupKeywordsGroup: document.getElementById("setup-keywords-group"),
+    setupKeywordsBtn: document.getElementById("setup-keywords"),
     outcomeGroup: document.getElementById("outcome-group"),
     logWinBtn: document.getElementById("log-win"),
     logLossBtn: document.getElementById("log-loss"),
@@ -2190,6 +2192,7 @@
     if (!hasAnyResult) {
       el.rerollGroup.classList.add("hidden");
       el.copyGroup.classList.add("hidden");
+      el.setupKeywordsGroup.classList.add("hidden");
       el.outcomeGroup.classList.add("hidden");
       el.excludeGroup.classList.add("hidden");
       return;
@@ -2197,6 +2200,7 @@
 
     el.rerollGroup.classList.remove("hidden");
     el.copyGroup.classList.remove("hidden");
+    el.setupKeywordsGroup.classList.remove("hidden");
     el.outcomeGroup.classList.remove("hidden");
     el.excludeGroup.classList.remove("hidden");
     renderOutcomeStatus();
@@ -2798,6 +2802,8 @@
       renderChooseLeadsList();
     } else if (sheetState.mode === "chooseTeam") {
       renderChooseTeamList();
+    } else if (sheetState.mode === "setupKeywords") {
+      renderSetupKeywordsList();
     } else if (sheetState.mode === "expansions") {
       el.sheetTitle.textContent = "Expansions";
       el.sheetSearchWrap.classList.add("hidden");
@@ -3161,6 +3167,25 @@
 
   function openCustomCardsSheet() {
     openSheet({ mode: "customCards" });
+  }
+
+  /** Every expansion actually represented in the current randomized
+   * setup (the exp on each mastermind/scheme/villain/henchman/hero
+   * card in state.result), plus both Core Set editions always — their
+   * rules terms (Ambush, Escape, Superpower Ability, etc.) underpin
+   * every other keyword regardless of which expansions were rolled. */
+  function currentSetupExpansions() {
+    const ids = new Set(["core", "core_2nd"]);
+    CATEGORIES.forEach((category) => {
+      (state.result[category.key] || []).forEach((item) => {
+        if (item && item.exp) ids.add(item.exp);
+      });
+    });
+    return ids;
+  }
+
+  function openSetupKeywordsSheet() {
+    openSheet({ mode: "setupKeywords" });
   }
 
   function openAddCustomCardSheet() {
@@ -3714,6 +3739,60 @@
     appendSheetList(rows);
   }
 
+  /** One row in the Setup Keywords sheet — same look as the full
+   * Keyword Glossary page (term, wrapped definition, expansion tags),
+   * except the tags shown are trimmed to just the expansions actually
+   * in this setup, not every expansion that keyword ever appears in. */
+  function setupKeywordRow(entry, setupExpansions) {
+    const li = document.createElement("li");
+    li.className = "ios-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    const main = document.createElement("span");
+    main.className = "row-text-main glossary-term";
+    main.textContent = entry.term;
+    const sub = document.createElement("span");
+    sub.className = "row-text-sub glossary-definition";
+    sub.textContent = entry.definition;
+    text.appendChild(main);
+    text.appendChild(sub);
+
+    const tags = document.createElement("span");
+    tags.className = "glossary-expansions";
+    entry.expansions
+      .filter((expId) => setupExpansions.has(expId))
+      .forEach((expId) => {
+        const expName = (EXPANSIONS.find((e) => e.id === expId) || {}).name || expId;
+        const tag = document.createElement("span");
+        tag.className = "glossary-expansion-tag";
+        tag.textContent = expName;
+        tags.appendChild(tag);
+      });
+    text.appendChild(tags);
+
+    li.appendChild(text);
+    return li;
+  }
+
+  function renderSetupKeywordsList() {
+    el.sheetTitle.textContent = "Setup Keywords";
+    el.sheetSearchWrap.classList.remove("hidden");
+
+    const setupExpansions = currentSetupExpansions();
+    const q = sheetState.search.trim().toLowerCase();
+    const entries = KEYWORDS.filter((k) => k.expansions.some((expId) => setupExpansions.has(expId)))
+      .filter((k) => !q || k.term.toLowerCase().includes(q) || k.definition.toLowerCase().includes(q))
+      .sort((a, b) => a.term.localeCompare(b.term));
+
+    if (!entries.length) {
+      el.sheetList.appendChild(emptyRow("No matching keywords."));
+      return;
+    }
+
+    appendSheetList(entries.map((entry) => setupKeywordRow(entry, setupExpansions)));
+  }
+
   /** "Select All" — include everything for the sheet's current mode.
    * Shared by the bulk-actions bar's left button (see
    * showBulkActions/bindSheet) across manage/expansions/teamTheme; a
@@ -3855,6 +3934,7 @@
 
     el.openHistory.addEventListener("click", openHistorySheet);
     el.openCustomCards.addEventListener("click", openCustomCardsSheet);
+    el.setupKeywordsBtn.addEventListener("click", openSetupKeywordsSheet);
 
     el.copyBtn.addEventListener("click", async () => {
       const text = setupText();
