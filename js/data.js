@@ -3441,7 +3441,7 @@ const HEROES = [
   { name: "Fantomex", exp: "weapon_x", team: "X-Force", gender: "male" },
   { name: "Marrow", exp: "weapon_x", team: "X-Force", gender: "female" },
   { name: "Weapon H", exp: "weapon_x", team: "Avengers", gender: "male" },
-  { name: "Weapon X", exp: "weapon_x", team: "Marvel Knights", gender: "male" },
+  { name: "Weapon X (Wolverine)", exp: "weapon_x", team: "Marvel Knights", gender: "male" },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
