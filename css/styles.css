@@ -410,26 +410,64 @@ body {
   color: var(--banner-text);
 }
 
+/* A tappable, collapsed-by-default note — <details class="scheme-note">
+ * <summary>Label</summary><div class="scheme-note-body">...</div>
+ * </details>. Collapsed, it's just the small summary chip; opening it
+ * reveals the same colored callout the block used to show open by
+ * default. */
 .scheme-note {
+  margin-top: 0.6rem;
+}
+
+.scheme-note summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  list-style: none;
+  cursor: pointer;
+  background: var(--info-bg);
+  color: var(--info-text);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.scheme-note summary::-webkit-details-marker {
+  display: none;
+}
+
+.scheme-note summary::before {
+  content: "›";
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+.scheme-note[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.scheme-note-body {
   background: var(--info-bg);
   border-left: 3px solid var(--info-border);
   border-radius: 0 10px 10px 0;
-  margin-top: 0.6rem;
+  margin-top: 0.4rem;
   padding: 0.65rem 0.85rem;
   font-size: 0.85rem;
   line-height: 1.5;
   color: var(--info-text);
 }
 
-.scheme-note strong {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+.scheme-note--evil summary {
+  background: var(--banner-bg);
+  color: var(--banner-text);
 }
 
-.scheme-note--evil {
+.scheme-note--evil .scheme-note-body {
   background: var(--banner-bg);
   border-left-color: var(--red);
   color: var(--banner-text);

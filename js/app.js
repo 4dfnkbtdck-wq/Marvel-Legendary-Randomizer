@@ -2230,10 +2230,7 @@
       section.appendChild(list);
 
       if (category.key === "scheme" && items[0] && items[0].setupNote) {
-        const note = document.createElement("div");
-        note.className = "scheme-note";
-        note.innerHTML = `<strong>Setup note</strong><br>${items[0].setupNote.replace(/\n/g, "<br>")}`;
-        section.appendChild(note);
+        section.appendChild(schemeNoteEl("Setup Note", items[0].setupNote.replace(/\n/g, "<br>")));
       }
 
       if (category.key === "henchmen") {
@@ -2417,6 +2414,28 @@
     return section;
   }
 
+  /** A tappable, collapsed-by-default note (Setup Note, On a Twist, Evil
+   * Wins, and their Unveiled Scheme counterparts) — these carry real rules
+   * text that matters throughout the game, but printing all of it open by
+   * default eats a lot of vertical space on the results screen for text
+   * you often already know. Native <details>/<summary> needs no JS to
+   * toggle open/closed. */
+  function schemeNoteEl(label, bodyHTML, isEvil) {
+    const details = document.createElement("details");
+    details.className = isEvil ? "scheme-note scheme-note--evil" : "scheme-note";
+
+    const summary = document.createElement("summary");
+    summary.textContent = label;
+    details.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "scheme-note-body";
+    body.innerHTML = bodyHTML;
+    details.appendChild(body);
+
+    return details;
+  }
+
   /** A reference section shown once you've randomized, covering everything
    * that only lives as a count in the Villain Deck rather than as a named
    * card (Bystanders, Master Strikes, Twists — none of these have a home in
@@ -2552,37 +2571,22 @@
     section.appendChild(list);
 
     if (scheme && scheme.twist) {
-      const twistNote = document.createElement("div");
-      twistNote.className = "scheme-note";
-      twistNote.innerHTML = `<strong>On a Twist</strong><br>${scheme.twist.replace(/\n/g, "<br>")}`;
-      section.appendChild(twistNote);
+      section.appendChild(schemeNoteEl("On a Twist", scheme.twist.replace(/\n/g, "<br>")));
     }
     if (scheme && scheme.evilWins) {
-      const evilNote = document.createElement("div");
-      evilNote.className = "scheme-note scheme-note--evil";
-      evilNote.innerHTML = `<strong>${scheme.winLabel || "Evil Wins"}</strong><br>${scheme.evilWins}`;
-      section.appendChild(evilNote);
+      section.appendChild(schemeNoteEl(scheme.winLabel || "Evil Wins", scheme.evilWins, true));
     }
 
     if (scheme && scheme.overrides && scheme.overrides.unveils && state.unveiledScheme) {
       const u = state.unveiledScheme;
       if (u.whenRevealed) {
-        const whenNote = document.createElement("div");
-        whenNote.className = "scheme-note";
-        whenNote.innerHTML = `<strong>${u.name} — When Revealed</strong><br>${u.whenRevealed.replace(/\n/g, "<br>")}`;
-        section.appendChild(whenNote);
+        section.appendChild(schemeNoteEl(`${u.name} — When Revealed`, u.whenRevealed.replace(/\n/g, "<br>")));
       }
       if (u.twist) {
-        const uTwistNote = document.createElement("div");
-        uTwistNote.className = "scheme-note";
-        uTwistNote.innerHTML = `<strong>${u.name} — On a Twist</strong><br>${u.twist.replace(/\n/g, "<br>")}`;
-        section.appendChild(uTwistNote);
+        section.appendChild(schemeNoteEl(`${u.name} — On a Twist`, u.twist.replace(/\n/g, "<br>")));
       }
       if (u.evilWins) {
-        const uEvilNote = document.createElement("div");
-        uEvilNote.className = "scheme-note scheme-note--evil";
-        uEvilNote.innerHTML = `<strong>Evil Wins (${u.name})</strong><br>${u.evilWins}`;
-        section.appendChild(uEvilNote);
+        section.appendChild(schemeNoteEl(`Evil Wins (${u.name})`, u.evilWins, true));
       }
     }
 
