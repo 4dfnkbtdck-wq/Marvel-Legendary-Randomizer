@@ -1582,6 +1582,25 @@
     return parts.join(" · ");
   }
 
+  /** A card row's name, with its Team's badge icon (see TEAM_ICONS in
+   * js/data.js) prepended when one exists — item.team is only ever set
+   * on Heroes, so this is a no-op for every other category. TEAM_ICONS
+   * is being filled in one Team at a time, so most Heroes still just
+   * show their name with no icon. */
+  function nameWithTeamIcon(item) {
+    const frag = document.createDocumentFragment();
+    const src = item.team && TEAM_ICONS[item.team];
+    if (src) {
+      const icon = document.createElement("img");
+      icon.src = src;
+      icon.alt = "";
+      icon.className = "team-icon";
+      frag.appendChild(icon);
+    }
+    frag.appendChild(document.createTextNode(item.name));
+    return frag;
+  }
+
   function poolWarnings() {
     const warnings = CATEGORIES.map((category) => {
       const pool = poolFor(category);
@@ -1912,7 +1931,15 @@
 
     const text = document.createElement("span");
     text.className = "row-text";
-    text.textContent = team;
+    const iconSrc = TEAM_ICONS[team];
+    if (iconSrc) {
+      const icon = document.createElement("img");
+      icon.src = iconSrc;
+      icon.alt = "";
+      icon.className = "team-icon";
+      text.appendChild(icon);
+    }
+    text.appendChild(document.createTextNode(team));
 
     const switchWrap = document.createElement("span");
     switchWrap.className = "ios-switch";
@@ -2100,7 +2127,7 @@
     text.className = "result-row-text";
     const mainSpan = document.createElement("span");
     mainSpan.className = "row-text-main";
-    mainSpan.textContent = item.name;
+    mainSpan.appendChild(nameWithTeamIcon(item));
     const subSpan = document.createElement("span");
     subSpan.className = "row-text-sub";
     subSpan.textContent = subText(category, item);
@@ -2741,7 +2768,7 @@
     text.className = "row-text";
     const main = document.createElement("span");
     main.className = "row-text-main";
-    main.textContent = item.name;
+    main.appendChild(nameWithTeamIcon(item));
     const sub = document.createElement("span");
     sub.className = "row-text-sub";
     sub.textContent = poolRowSubText(category, item);
@@ -2787,7 +2814,7 @@
     text.className = "row-text";
     const main = document.createElement("span");
     main.className = "row-text-main";
-    main.textContent = item.name;
+    main.appendChild(nameWithTeamIcon(item));
     const sub = document.createElement("span");
     sub.className = "row-text-sub";
     sub.textContent = poolRowSubText(category, item);

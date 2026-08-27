@@ -183,6 +183,14 @@ body {
   white-space: nowrap;
 }
 
+.team-icon {
+  width: 22px;
+  height: 22px;
+  margin-right: 0.35rem;
+  vertical-align: -6px;
+  object-fit: contain;
+}
+
 .row-text-sub {
   display: block;
   font-size: 0.8rem;
