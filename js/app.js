@@ -1732,7 +1732,6 @@
     outcomeGroup: document.getElementById("outcome-group"),
     logWinBtn: document.getElementById("log-win"),
     logLossBtn: document.getElementById("log-loss"),
-    outcomeStatus: document.getElementById("outcome-status"),
     excludeGroup: document.getElementById("exclude-group"),
     excludeBtn: document.getElementById("exclude-setup"),
     openHistory: document.getElementById("open-history"),
@@ -2167,9 +2166,6 @@
     if (!entry) return;
     el.logWinBtn.classList.toggle("active-outcome", entry.outcome === "win");
     el.logLossBtn.classList.toggle("active-outcome", entry.outcome === "loss");
-    el.outcomeStatus.textContent = entry.outcome
-      ? `Logged as ${entry.outcome === "win" ? "a Heroes win" : "an Evil win"} — feeds the Win/Loss Stats page. Tap again to clear.`
-      : "Once the game's over, log who won — it feeds the per-card Win/Loss Stats page.";
   }
 
   /** Every card currently in play for this setup — the 5 counted
