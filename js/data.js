@@ -153,6 +153,7 @@ const TEAM_ICONS = {
   "Sinister Six": "img/teams/sinister-six.png",
   "X-Force": "img/teams/x-force.webp",
   "Fantastic Four": "img/teams/fantastic-four.webp",
+  "Avengers": "img/teams/avengers.webp",
 };
 
 const EXPANSIONS = [
