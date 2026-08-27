@@ -337,10 +337,15 @@
     }
   }
 
-  function randomizeAll() {
-    // Mastermind and Scheme first, so the Scheme's numeric overrides (e.g.
-    // an extra Henchman group) are in effect before Villains/Henchmen/
-    // Heroes get rolled against those counts.
+  /** Rolls every one of the 5 counted categories, keeping whatever's
+   * currently locked — shared by randomizeAll (a fresh setup, saved as a
+   * new History entry) and rerollAllUnlocked (rerolls what's left
+   * unlocked in the current setup, overwriting its History entry
+   * instead — see below). Mastermind and Scheme go first, so the
+   * Scheme's numeric overrides (e.g. an extra Henchman group) are in
+   * effect before Villains/Henchmen/Heroes get rolled against those
+   * counts. */
+  function rollAllCategories() {
     randomizeCategory(CATEGORY_BY_KEY.mastermind, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.scheme, { keepLocked: true });
     syncSchemeNumbers();
@@ -350,30 +355,24 @@
     randomizeCategory(CATEGORY_BY_KEY.henchmen, { keepLocked: true });
     randomizeCategory(CATEGORY_BY_KEY.heroes, { keepLocked: true });
     resyncAndReconcile();
+  }
+
+  function randomizeAll() {
+    rollAllCategories();
     saveToHistory();
     render();
   }
 
-  function rerollOne(categoryKey, index) {
-    const category = CATEGORY_BY_KEY[categoryKey];
-    let pool = poolFor(category);
-    const existing = state.result[categoryKey] || [];
-    if (categoryKey === "heroes" && state.heroTeamSplit && existing[index]) {
-      pool = pool.filter((c) => c.team === existing[index].team);
-    }
-    if (categoryKey === "heroes" && state.heroTeamCount && existing[index]) {
-      const inTeam = existing[index].team === state.heroTeamCount.team;
-      pool = pool.filter((c) => (c.team === state.heroTeamCount.team) === inTeam);
-    }
-    const [picked] = pickRandom(pool, 1, extraGroupDrawExclusions(categoryKey, villainDrawExclusions(categoryKey, heroDrawExclusions(categoryKey, existing))));
-    if (picked) {
-      existing[index] = picked;
-      state.result[categoryKey] = existing;
-    }
-    if (signatureFlags[categoryKey]) signatureFlags[categoryKey][index] = false;
-    if (categoryKey === "mastermind" || categoryKey === "scheme") {
-      resyncAndReconcile();
-    }
+  /** "Reroll All" — rerolls every unlocked card across all 5 categories
+   * (randomizeCategory already leaves locked slots alone) and syncs the
+   * result into the current setup's History entry in place, rather than
+   * creating a new one: lock the Heroes you like, tap this, and the
+   * Past Setup you already have — and its Win/Loss Stats, if already
+   * logged — update to match instead of going stale. See
+   * syncCurrentHistorySnapshot below. */
+  function rerollAllUnlocked() {
+    rollAllCategories();
+    syncCurrentHistorySnapshot();
     render();
   }
 
@@ -1709,6 +1708,19 @@
     setEntryOutcome(entry, entry.outcome === outcome ? null : outcome, opts);
   }
 
+  /** Re-snapshots the current setup's History entry from live
+   * state.result without changing its logged outcome — just reusing
+   * setEntryOutcome's resync (and, if already logged, reverse/reapply)
+   * logic with the same outcome it already had. Called after "Reroll
+   * All" so the Past Setup you already have reflects what's actually on
+   * screen instead of the original roll. No-op if there's no current
+   * entry (nothing saved yet to sync into). */
+  function syncCurrentHistorySnapshot() {
+    const entry = currentHistoryEntry();
+    if (!entry) return;
+    setEntryOutcome(entry, entry.outcome, { resyncFromLive: true });
+  }
+
   function formatTimestamp(ts) {
     const d = new Date(ts);
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -1726,6 +1738,8 @@
     playersSegmented: document.getElementById("players-segmented"),
     randomizeAll: document.getElementById("randomize-all"),
     warnings: document.getElementById("warnings"),
+    rerollGroup: document.getElementById("reroll-group"),
+    rerollAllBtn: document.getElementById("reroll-all"),
     results: document.getElementById("results"),
     copyGroup: document.getElementById("copy-group"),
     copyBtn: document.getElementById("copy-setup"),
@@ -2064,17 +2078,8 @@
     lockBtn.title = locked ? "Locked — tap to unlock" : "Unlocked — tap to lock";
     lockBtn.addEventListener("click", () => toggleLock(category.key, index));
 
-    const rerollBtn = document.createElement("button");
-    rerollBtn.type = "button";
-    rerollBtn.className = "round-btn";
-    rerollBtn.textContent = "🔁";
-    rerollBtn.title = "Reroll just this one";
-    rerollBtn.disabled = locked;
-    rerollBtn.addEventListener("click", () => rerollOne(category.key, index));
-
     actions.appendChild(chooseBtn);
     actions.appendChild(lockBtn);
-    actions.appendChild(rerollBtn);
 
     li.appendChild(text);
     li.appendChild(actions);
@@ -2086,12 +2091,14 @@
     const hasAnyResult = CATEGORIES.some((c) => (state.result[c.key] || []).length);
 
     if (!hasAnyResult) {
+      el.rerollGroup.classList.add("hidden");
       el.copyGroup.classList.add("hidden");
       el.outcomeGroup.classList.add("hidden");
       el.excludeGroup.classList.add("hidden");
       return;
     }
 
+    el.rerollGroup.classList.remove("hidden");
     el.copyGroup.classList.remove("hidden");
     el.excludeGroup.classList.remove("hidden");
     renderOutcomeStatus();
@@ -2107,17 +2114,7 @@
       header.className = "group-header";
       const span = document.createElement("span");
       span.textContent = category.label;
-      const rerollSection = document.createElement("button");
-      rerollSection.type = "button";
-      rerollSection.className = "header-action";
-      rerollSection.textContent = "Reroll All";
-      rerollSection.addEventListener("click", () => {
-        randomizeCategory(category, { keepLocked: true });
-        resyncAndReconcile();
-        render();
-      });
       header.appendChild(span);
-      header.appendChild(rerollSection);
       section.appendChild(header);
 
       const list = document.createElement("ul");
@@ -2957,6 +2954,7 @@
     render();
 
     el.randomizeAll.addEventListener("click", randomizeAll);
+    el.rerollAllBtn.addEventListener("click", rerollAllUnlocked);
 
     el.openExpansions.addEventListener("click", openExpansionsSheet);
     el.openTeamTheme.addEventListener("click", openTeamThemeSheet);
