@@ -2076,12 +2076,11 @@
     return (preset && preset.henchmenNote) || null;
   }
 
-  /** Builds one self-contained count-adjustment row (label + stepper) for a
-   * post-randomize results section, e.g. "Villain Groups" or "Bystanders" —
-   * the same pattern originally proven for the Scheme Twists stepper.
-   * `onChange` runs before the shared re-render/re-save so a counted
-   * category (Villain Groups/Henchmen/Heroes) can resize its result list. */
-  function countStepperRow(labelText, key, min, max, onChange) {
+  /** Builds one read-only label/value row for a post-randomize results
+   * section, e.g. "Bystanders" or "Master Strikes" — these numbers are
+   * fully derived from the current Player count, Mastermind, and Scheme,
+   * so there's nothing for the user to adjust here. */
+  function readOnlyCountRow(labelText, key) {
     const row = document.createElement("li");
     row.className = "ios-row";
 
@@ -2089,43 +2088,12 @@
     text.className = "row-text";
     text.textContent = labelText;
 
-    const stepper = document.createElement("span");
-    stepper.className = "stepper";
-    const decBtn = document.createElement("button");
-    decBtn.type = "button";
-    decBtn.className = "stepper-btn";
-    decBtn.textContent = "−";
-    decBtn.setAttribute("aria-label", `Decrease ${labelText.toLowerCase()}`);
-    const valueSpan = document.createElement("span");
-    valueSpan.className = "stepper-value";
-    const incBtn = document.createElement("button");
-    incBtn.type = "button";
-    incBtn.className = "stepper-btn";
-    incBtn.textContent = "+";
-    incBtn.setAttribute("aria-label", `Increase ${labelText.toLowerCase()}`);
-
-    const value = state.options[key];
-    valueSpan.textContent = value;
-    decBtn.disabled = value <= min;
-    incBtn.disabled = value >= max;
-
-    stepper.appendChild(decBtn);
-    stepper.appendChild(valueSpan);
-    stepper.appendChild(incBtn);
-    stepper.addEventListener("click", (e) => {
-      const btn = e.target.closest(".stepper-btn");
-      if (!btn) return;
-      const delta = btn === incBtn ? 1 : -1;
-      state.options[key] = clampOption(state.options[key] + delta, min, max);
-      if (onChange) onChange();
-      detectPlayersFromOptions();
-      saveState();
-      renderPlayersSegmented();
-      renderResults();
-    });
+    const trailing = document.createElement("span");
+    trailing.className = "row-trailing";
+    trailing.textContent = state.options[key];
 
     row.appendChild(text);
-    row.appendChild(stepper);
+    row.appendChild(trailing);
     return row;
   }
 
@@ -2456,9 +2424,9 @@
 
     const list = document.createElement("ul");
     list.className = "ios-list";
-    list.appendChild(countStepperRow("Bystanders", "bystanders", 0, 30));
-    list.appendChild(countStepperRow("Master Strikes", "masterStrikes", 0, 10));
-    list.appendChild(countStepperRow("Twists", "twists", 0, 16));
+    list.appendChild(readOnlyCountRow("Bystanders", "bystanders"));
+    list.appendChild(readOnlyCountRow("Master Strikes", "masterStrikes"));
+    list.appendChild(readOnlyCountRow("Twists", "twists"));
 
     if (scheme && scheme.overrides && (scheme.overrides.extraHero || scheme.overrides.extraHeroName) && state.extraCard) {
       const isNamed = !!scheme.overrides.extraHeroName;
