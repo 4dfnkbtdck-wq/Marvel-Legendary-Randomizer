@@ -137,6 +137,7 @@ const TEAM_ICONS = {
   "X-Factor Investigations": "img/teams/x-factor-investigations.webp",
   "Heroes of Wakanda": "img/teams/heroes-of-wakanda.webp",
   "Venomverse": "img/teams/venomverse.webp",
+  "Heroes of Asgard": "img/teams/heroes-of-asgard.png",
 };
 
 const EXPANSIONS = [
