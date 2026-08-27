@@ -145,6 +145,7 @@ const TEAM_ICONS = {
   "Mercs For Money": "img/teams/mercs-for-money.webp",
   "New Warriors": "img/teams/new-warriors.webp",
   "Illuminati": "img/teams/illuminati.webp",
+  "Cabal": "img/teams/cabal.webp",
 };
 
 const EXPANSIONS = [
