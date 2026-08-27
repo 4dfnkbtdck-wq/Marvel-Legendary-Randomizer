@@ -146,6 +146,7 @@ const TEAM_ICONS = {
   "New Warriors": "img/teams/new-warriors.webp",
   "Illuminati": "img/teams/illuminati.webp",
   "Cabal": "img/teams/cabal.webp",
+  "HYDRA": "img/teams/hydra.png",
 };
 
 const EXPANSIONS = [
