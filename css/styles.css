@@ -212,6 +212,23 @@ body {
   padding: 0.15rem 0;
 }
 
+.glossary-expansions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.glossary-expansion-tag {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--label-secondary);
+  background: var(--switch-off);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+
 /* ---------- iOS switch ---------- */
 
 .ios-switch {

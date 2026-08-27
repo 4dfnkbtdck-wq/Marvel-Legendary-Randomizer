@@ -3740,6 +3740,17 @@
     text.appendChild(main);
     text.appendChild(sub);
 
+    const tags = document.createElement("span");
+    tags.className = "glossary-expansions";
+    entry.expansions.forEach((expId) => {
+      const expName = (EXPANSIONS.find((e) => e.id === expId) || {}).name || expId;
+      const tag = document.createElement("span");
+      tag.className = "glossary-expansion-tag";
+      tag.textContent = expName;
+      tags.appendChild(tag);
+    });
+    text.appendChild(tags);
+
     li.appendChild(text);
     return li;
   }
@@ -3749,9 +3760,13 @@
     el.sheetSearchWrap.classList.remove("hidden");
 
     const q = sheetState.search.trim().toLowerCase();
-    const entries = KEYWORDS.filter((k) => k.term.toLowerCase().includes(q) || k.definition.toLowerCase().includes(q)).sort((a, b) =>
-      a.term.localeCompare(b.term)
-    );
+    const entries = KEYWORDS.filter((k) => {
+      if (k.term.toLowerCase().includes(q) || k.definition.toLowerCase().includes(q)) return true;
+      return k.expansions.some((expId) => {
+        const expName = (EXPANSIONS.find((e) => e.id === expId) || {}).name || expId;
+        return expName.toLowerCase().includes(q);
+      });
+    }).sort((a, b) => a.term.localeCompare(b.term));
 
     if (!entries.length) {
       el.sheetList.appendChild(emptyRow("No matching keywords."));
