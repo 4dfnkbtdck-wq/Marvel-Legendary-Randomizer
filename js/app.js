@@ -2974,7 +2974,7 @@
       const original = el.copyBtn.textContent;
       try {
         await navigator.clipboard.writeText(text);
-        el.copyBtn.textContent = "✅ Copied!";
+        el.copyBtn.textContent = "Copied!";
       } catch (e) {
         el.copyBtn.textContent = "Copy failed";
       }
@@ -2998,7 +2998,7 @@
     el.excludeBtn.addEventListener("click", () => {
       excludeCurrentSetup();
       const original = el.excludeBtn.textContent;
-      el.excludeBtn.textContent = "✅ Excluded!";
+      el.excludeBtn.textContent = "Excluded!";
       setTimeout(() => (el.excludeBtn.textContent = original), 1500);
     });
   }
