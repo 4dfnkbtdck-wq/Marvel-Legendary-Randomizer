@@ -139,6 +139,7 @@ const TEAM_ICONS = {
   "Venomverse": "img/teams/venomverse.webp",
   "Heroes of Asgard": "img/teams/heroes-of-asgard.png",
   "Inhumans": "img/teams/inhumans.png",
+  "Guardians of the Multiverse": "img/teams/guardians-of-the-multiverse.png",
 };
 
 const EXPANSIONS = [
