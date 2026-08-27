@@ -2794,6 +2794,8 @@
       renderCustomCardsList();
     } else if (sheetState.mode === "addCustomCard") {
       renderAddCustomCardForm();
+    } else if (sheetState.mode === "chooseLeads") {
+      renderChooseLeadsList();
     } else if (sheetState.mode === "expansions") {
       el.sheetTitle.textContent = "Expansions";
       el.sheetSearchWrap.classList.add("hidden");
@@ -3142,7 +3144,17 @@
   }
 
   function newCustomCardDraft(categoryKey) {
-    return { editId: null, categoryKey: categoryKey || "mastermind", name: "", team: "", twists: 5, bystanders: 8, setupNote: "" };
+    return {
+      editId: null,
+      categoryKey: categoryKey || "mastermind",
+      name: "",
+      team: "",
+      twists: 5,
+      bystanders: 8,
+      setupNote: "",
+      leadsCategory: "none", // "none" | "villains" | "henchmen"
+      leadsName: "",
+    };
   }
 
   function openCustomCardsSheet() {
@@ -3163,7 +3175,23 @@
       if (card.overrides.bystanders != null) draft.bystanders = card.overrides.bystanders;
     }
     draft.setupNote = card.setupNote || "";
+    const lead = (card.leads || [])[0];
+    if (lead) {
+      draft.leadsCategory = lead.category;
+      draft.leadsName = lead.name || "";
+    }
     openSheet({ mode: "addCustomCard", draft });
+  }
+
+  /** Opens the "pick a Villain Group / Henchmen group" sub-sheet for a
+   * Custom Mastermind's "always leads" — every official card plus
+   * every Custom Card for that category (see effectivePool), unfiltered
+   * by which expansions happen to be enabled right now, since this is
+   * defining the Mastermind's own data rather than picking from today's
+   * live pool. Carries the in-progress draft forward so Back returns to
+   * the form with everything else still filled in. */
+  function openChooseLeadsSheet(draft, leadsCategoryKey) {
+    openSheet({ mode: "chooseLeads", draft, leadsCategoryKey });
   }
 
   /** Same "refresh everything a pool-composition change could affect"
@@ -3192,6 +3220,9 @@
     if (draft.categoryKey === "scheme") {
       card.overrides = { twists: draft.twists, bystanders: draft.bystanders };
       if (draft.setupNote.trim()) card.setupNote = draft.setupNote.trim();
+    }
+    if (draft.categoryKey === "mastermind" && draft.leadsCategory !== "none" && draft.leadsName) {
+      card.leads = [{ category: draft.leadsCategory, name: draft.leadsName }];
     }
 
     // Editing: drop the old copy first — it may have lived in a
@@ -3399,6 +3430,68 @@
     detailsSection.appendChild(detailsList);
     el.sheetList.appendChild(detailsSection);
 
+    if (draft.categoryKey === "mastermind") {
+      const leadsSection = document.createElement("section");
+      leadsSection.className = "ios-group";
+      const leadsHeader = document.createElement("div");
+      leadsHeader.className = "group-header";
+      const leadsHeaderSpan = document.createElement("span");
+      leadsHeaderSpan.textContent = "Leads";
+      leadsHeader.appendChild(leadsHeaderSpan);
+      leadsSection.appendChild(leadsHeader);
+
+      const leadsList = document.createElement("ul");
+      leadsList.className = "ios-list";
+      const leadsToggleRow = document.createElement("li");
+      leadsToggleRow.className = "ios-row";
+      const leadsToggle = document.createElement("span");
+      leadsToggle.className = "segmented segmented-wide";
+      [
+        { key: "none", label: "None" },
+        { key: "villains", label: "Villain Group" },
+        { key: "henchmen", label: "Henchman" },
+      ].forEach((option) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = option.label;
+        if (draft.leadsCategory === option.key) btn.classList.add("active");
+        btn.addEventListener("click", () => {
+          if (draft.leadsCategory !== option.key) draft.leadsName = "";
+          draft.leadsCategory = option.key;
+          renderSheet();
+        });
+        leadsToggle.appendChild(btn);
+      });
+      leadsToggleRow.appendChild(leadsToggle);
+      leadsList.appendChild(leadsToggleRow);
+
+      if (draft.leadsCategory !== "none") {
+        const pickLabel = draft.leadsCategory === "villains" ? "Villain Group" : "Henchman";
+        const pickBtn = document.createElement("button");
+        pickBtn.type = "button";
+        pickBtn.className = "ios-row nav-row";
+        const pickText = document.createElement("span");
+        pickText.className = "row-text";
+        pickText.textContent = `Always Leads ${pickLabel}`;
+        const pickTrailing = document.createElement("span");
+        pickTrailing.className = "row-trailing";
+        pickTrailing.textContent = draft.leadsName || "Choose one";
+        const pickChevron = document.createElement("span");
+        pickChevron.className = "chevron";
+        pickChevron.textContent = "›";
+        pickBtn.appendChild(pickText);
+        pickBtn.appendChild(pickTrailing);
+        pickBtn.appendChild(pickChevron);
+        pickBtn.addEventListener("click", () => openChooseLeadsSheet(draft, draft.leadsCategory));
+        const pickLi = document.createElement("li");
+        pickLi.appendChild(pickBtn);
+        leadsList.appendChild(pickLi);
+      }
+
+      leadsSection.appendChild(leadsList);
+      el.sheetList.appendChild(leadsSection);
+    }
+
     if (draft.categoryKey === "scheme") {
       const deckSection = document.createElement("section");
       deckSection.className = "ios-group";
@@ -3471,6 +3564,57 @@
   function updateSaveButtonState() {
     if (!sheetState || sheetState.mode !== "addCustomCard") return;
     el.sheetAction.disabled = !sheetState.draft.name.trim();
+  }
+
+  function chooseLeadsRow(name, draft) {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ios-row sheet-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    text.textContent = name;
+    btn.appendChild(text);
+
+    if (draft.leadsName === name) {
+      const check = document.createElement("span");
+      check.textContent = "✓";
+      check.style.color = "var(--blue)";
+      check.style.fontWeight = "700";
+      btn.appendChild(check);
+    }
+
+    btn.addEventListener("click", () => {
+      draft.leadsName = name;
+      openSheet({ mode: "addCustomCard", draft });
+    });
+
+    li.appendChild(btn);
+    return li;
+  }
+
+  /** The "always leads" picker for a Custom Mastermind — every Villain
+   * Group or Henchmen group name (official + Custom Cards, every
+   * expansion), deduplicated, since only the name is ever compared
+   * against (see requiredReason/requiredCardNames — leads matching is
+   * purely by exact name string, not by which expansion a card came
+   * from). */
+  function renderChooseLeadsList() {
+    const category = CATEGORY_BY_KEY[sheetState.leadsCategoryKey];
+    el.sheetTitle.textContent = `Choose ${category.label}`;
+    el.sheetSearchWrap.classList.remove("hidden");
+
+    const names = Array.from(new Set(effectivePool(category).map((c) => c.name)))
+      .filter((name) => name.toLowerCase().includes(sheetState.search.toLowerCase()))
+      .sort((a, b) => a.localeCompare(b));
+
+    if (!names.length) {
+      el.sheetList.appendChild(emptyRow("No cards match."));
+      return;
+    }
+
+    appendSheetList(names.map((name) => chooseLeadsRow(name, sheetState.draft)));
   }
 
   /** "Select All" — include everything for the sheet's current mode.
@@ -3551,9 +3695,11 @@
       // From the Past Setups detail screen, "Back" returns to the list
       // it was opened from rather than dismissing the whole sheet; same
       // idea for the Add/Edit Custom Card form returning to the Custom
-      // Cards list.
+      // Cards list, and the "always leads" picker returning to the form
+      // it was opened from (carrying the in-progress draft forward).
       if (sheetState && sheetState.mode === "historyDetail") openHistorySheet();
       else if (sheetState && sheetState.mode === "addCustomCard") openCustomCardsSheet();
+      else if (sheetState && sheetState.mode === "chooseLeads") openSheet({ mode: "addCustomCard", draft: sheetState.draft });
       else closeSheet();
     });
     el.sheetSearch.addEventListener("input", () => {
