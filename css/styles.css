@@ -586,6 +586,30 @@ body {
   color: var(--label-tertiary);
 }
 
+.sheet-bulk-actions {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0 0.9rem 0.6rem;
+  flex-shrink: 0;
+}
+
+.sheet-bulk-btn {
+  flex: 1;
+  border: none;
+  border-radius: 10px;
+  background: var(--grouped-bg);
+  color: var(--blue);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.55rem 0.6rem;
+  cursor: pointer;
+}
+
+.sheet-bulk-btn:disabled {
+  color: var(--label-tertiary);
+  cursor: not-allowed;
+}
+
 .sheet-list {
   flex: 1;
   overflow-y: auto;
