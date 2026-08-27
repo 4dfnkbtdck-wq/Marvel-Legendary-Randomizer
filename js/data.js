@@ -149,6 +149,7 @@ const TEAM_ICONS = {
   "HYDRA": "img/teams/hydra.png",
   "Foes of Asgard": "img/teams/foes-of-asgard.png",
   "Brotherhood": "img/teams/brotherhood.png",
+  "Crime Syndicate": "img/teams/crime-syndicate.png",
 };
 
 const EXPANSIONS = [
