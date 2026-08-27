@@ -359,7 +359,10 @@
 
   function randomizeAll() {
     rollAllCategories();
-    saveToHistory();
+    // Nothing gets saved to Past Setups until it's logged as a win or
+    // loss — see createHistoryEntry/logCurrentOutcome — so a fresh
+    // randomize just clears any link to whatever was previously current.
+    state.currentHistoryId = null;
     render();
   }
 
@@ -1602,7 +1605,14 @@
 
   // ---------- History ----------
 
-  function saveToHistory() {
+  /** Snapshots the live state.result into a brand-new History entry and
+   * makes it the current one. Past Setups only ever gains an entry
+   * through this — called from logCurrentOutcome the moment a result
+   * actually gets logged, not from randomizeAll/rerollAllUnlocked — so
+   * an un-played or abandoned setup never clutters the list, and
+   * whatever's saved is exactly what was on screen when the game ended
+   * (locks, rerolls, and all). */
+  function createHistoryEntry() {
     const snapshot = {};
     CATEGORIES.forEach((c) => (snapshot[c.key] = (state.result[c.key] || []).map((item) => ({ ...item }))));
     const entry = {
@@ -1616,6 +1626,7 @@
     state.history.unshift(entry);
     state.currentHistoryId = entry.id;
     saveState();
+    return entry;
   }
 
   function restoreHistoryEntry(entry) {
@@ -1701,11 +1712,46 @@
   }
 
   /** Toggles an outcome on/off: clicking the already-logged result again
-   * clears it, otherwise (re-)logs the tapped outcome. Shared by the
-   * results-screen buttons (current setup, resyncing from live state)
-   * and the History sheet's per-row buttons (past setups, as saved). */
-  function toggleEntryOutcome(entry, outcome, opts) {
-    setEntryOutcome(entry, entry.outcome === outcome ? null : outcome, opts);
+   * clears it, otherwise (re-)logs the tapped outcome. Clearing removes
+   * the entry from History entirely rather than leaving an unlogged
+   * ghost behind — Past Setups only keeps setups that were actually
+   * logged, so un-logging one is the same as it never having been saved.
+   * Shared by logCurrentOutcome (current setup, resyncing from live
+   * state) and logHistoryOutcome (a past entry, as saved) below. */
+  function toggleAndPruneOutcome(entry, outcome, opts) {
+    const next = entry.outcome === outcome ? null : outcome;
+    if (next) {
+      setEntryOutcome(entry, next, opts);
+      return;
+    }
+    if (entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
+    state.history = state.history.filter((h) => h.id !== entry.id);
+    if (state.currentHistoryId === entry.id) state.currentHistoryId = null;
+    saveState();
+  }
+
+  /** Logs (or edits/clears) the outcome for the setup currently on
+   * screen — creates its History entry on first log (from the live,
+   * possibly rerolled/locked result) since nothing's saved before then;
+   * see createHistoryEntry/toggleAndPruneOutcome above. */
+  function logCurrentOutcome(outcome) {
+    const entry = currentHistoryEntry() || createHistoryEntry();
+    toggleAndPruneOutcome(entry, outcome, { resyncFromLive: true });
+    renderOutcomeStatus();
+    renderHistoryCount();
+  }
+
+  /** Logs (or edits/clears) a past setup's outcome from its History
+   * sheet row — the entry already exists (that's why it's in the list),
+   * so unlike logCurrentOutcome this never creates one, only edits or
+   * removes it. */
+  function logHistoryOutcome(id, outcome) {
+    const entry = state.history.find((h) => h.id === id);
+    if (!entry) return;
+    toggleAndPruneOutcome(entry, outcome);
+    renderSheet();
+    renderHistoryCount();
+    renderOutcomeStatus();
   }
 
   /** Re-snapshots the current setup's History entry from live
@@ -2100,6 +2146,7 @@
 
     el.rerollGroup.classList.remove("hidden");
     el.copyGroup.classList.remove("hidden");
+    el.outcomeGroup.classList.remove("hidden");
     el.excludeGroup.classList.remove("hidden");
     renderOutcomeStatus();
 
@@ -2152,17 +2199,17 @@
     });
   }
 
-  /** Keeps the "Log Result" buttons (see index.html #outcome-group) in
-   * sync with the currently displayed setup's logged outcome, if any —
-   * see currentHistoryEntry/setEntryOutcome above. Hidden whenever there's
-   * no result on screen, or the current result's history entry was
-   * deleted out from under it. */
+  /** Keeps the "Log Result" buttons (see index.html #outcome-group)
+   * highlighted to match the currently displayed setup's logged
+   * outcome, if any — see currentHistoryEntry/logCurrentOutcome above.
+   * The group's own visibility is handled by renderResults (it stays
+   * shown any time there's a result on screen), not here: tapping one
+   * of these buttons is what creates the History entry in the first
+   * place, so there's usually no entry yet when this renders. */
   function renderOutcomeStatus() {
     const entry = currentHistoryEntry();
-    el.outcomeGroup.classList.toggle("hidden", !entry);
-    if (!entry) return;
-    el.logWinBtn.classList.toggle("active-outcome", entry.outcome === "win");
-    el.logLossBtn.classList.toggle("active-outcome", entry.outcome === "loss");
+    el.logWinBtn.classList.toggle("active-outcome", !!entry && entry.outcome === "win");
+    el.logLossBtn.classList.toggle("active-outcome", !!entry && entry.outcome === "loss");
   }
 
   /** Every card currently in play for this setup — the 5 counted
@@ -2793,24 +2840,16 @@
     winBtn.className = "round-btn";
     if (entry.outcome === "win") winBtn.classList.add("active-outcome", "outcome-win");
     winBtn.textContent = "🏆";
-    winBtn.title = entry.outcome === "win" ? "Logged as a Heroes win — tap to clear" : "Log as a Heroes win";
-    winBtn.addEventListener("click", () => {
-      toggleEntryOutcome(entry, "win");
-      renderSheet();
-      if (state.currentHistoryId === entry.id) renderOutcomeStatus();
-    });
+    winBtn.title = entry.outcome === "win" ? "Logged as a Heroes win — tap to remove from Past Setups" : "Log as a Heroes win";
+    winBtn.addEventListener("click", () => logHistoryOutcome(entry.id, "win"));
 
     const lossBtn = document.createElement("button");
     lossBtn.type = "button";
     lossBtn.className = "round-btn";
     if (entry.outcome === "loss") lossBtn.classList.add("active-outcome", "outcome-loss");
     lossBtn.textContent = "💀";
-    lossBtn.title = entry.outcome === "loss" ? "Logged as an Evil win — tap to clear" : "Log as an Evil win";
-    lossBtn.addEventListener("click", () => {
-      toggleEntryOutcome(entry, "loss");
-      renderSheet();
-      if (state.currentHistoryId === entry.id) renderOutcomeStatus();
-    });
+    lossBtn.title = entry.outcome === "loss" ? "Logged as an Evil win — tap to remove from Past Setups" : "Log as an Evil win";
+    lossBtn.addEventListener("click", () => logHistoryOutcome(entry.id, "loss"));
 
     const restoreBtn = document.createElement("button");
     restoreBtn.type = "button";
@@ -2979,19 +3018,8 @@
       setTimeout(() => (el.copyBtn.textContent = original), 1500);
     });
 
-    el.logWinBtn.addEventListener("click", () => {
-      const entry = currentHistoryEntry();
-      if (!entry) return;
-      toggleEntryOutcome(entry, "win", { resyncFromLive: true });
-      renderOutcomeStatus();
-    });
-
-    el.logLossBtn.addEventListener("click", () => {
-      const entry = currentHistoryEntry();
-      if (!entry) return;
-      toggleEntryOutcome(entry, "loss", { resyncFromLive: true });
-      renderOutcomeStatus();
-    });
+    el.logWinBtn.addEventListener("click", () => logCurrentOutcome("win"));
+    el.logLossBtn.addEventListener("click", () => logCurrentOutcome("loss"));
 
     el.excludeBtn.addEventListener("click", () => {
       excludeCurrentSetup();
