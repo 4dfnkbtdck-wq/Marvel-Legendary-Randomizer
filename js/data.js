@@ -3484,6 +3484,25 @@ const HEROES = [
   { name: "Weapon X (Wolverine)", exp: "weapon_x", team: "Marvel Knights", gender: "male" },
 ];
 
+/** Plain-language glossary of the game's own rules terms — surfaced as a
+ * searchable reference (see Keyword Glossary in app.js), not tied to any
+ * card data above. Kept short and general on purpose: exact numbers/edge
+ * cases vary by Scheme and card text, which the app already surfaces
+ * elsewhere (setup notes, Twist/Evil Wins text) — this is just "what does
+ * this word mean," not a rules-arbitration tool. */
+const KEYWORDS = [
+  { term: "Ambush", definition: "An effect that triggers the instant a Villain is revealed, before Heroes get to act against it." },
+  { term: "Bystander", definition: "A civilian card shuffled into the Villain Deck — defeat it for no reward, Rescue it for Victory Points, or let a Villain capture it to advance the Scheme." },
+  { term: "Fight", definition: "Spending Attack Points to defeat a Villain in the city, a Bystander, or a Master Strike." },
+  { term: "HQ", definition: "The row of face-up Hero cards available to Recruit from." },
+  { term: "KO'd", definition: "A card removed from the game entirely — out of every deck, hand, and discard pile for the rest of the game." },
+  { term: "Master Strike", definition: "A powerful card unique to the Mastermind, shuffled into the Villain Deck partway through the game and tougher than a normal Villain." },
+  { term: "Recruit", definition: "Spending Recruit Points to buy a Hero card from the HQ into your discard pile." },
+  { term: "Rescue", definition: "Some Heroes let you save a Bystander instead of fighting it, turning it face-down into a Victory Point card." },
+  { term: "Twist", definition: "A card in the Villain Deck that triggers a Scheme-specific effect when revealed, instead of being fought." },
+  { term: "Wound", definition: "A useless card added to your deck, usually from a Villain's attack — it clutters your hand until you find a way to remove it." },
+];
+
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
  * Building Game), by number of players. Villain Groups / Henchmen / Heroes
  * feed the counts in this file's option steppers; Bystanders has no named
@@ -3500,5 +3519,5 @@ const PLAYER_COUNT_TABLE = {
 };
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { EXPANSIONS, MASTERMINDS, SCHEMES, UNVEILED_SCHEMES, VILLAIN_GROUPS, HENCHMEN, HEROES, PLAYER_COUNT_TABLE };
+  module.exports = { EXPANSIONS, MASTERMINDS, SCHEMES, UNVEILED_SCHEMES, VILLAIN_GROUPS, HENCHMEN, HEROES, KEYWORDS, PLAYER_COUNT_TABLE };
 }

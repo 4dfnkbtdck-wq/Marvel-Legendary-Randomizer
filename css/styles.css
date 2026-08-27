@@ -198,6 +198,20 @@ body {
   margin-top: 0.05rem;
 }
 
+/* Keyword Glossary rows: unlike every other row-text-main, the term
+ * shouldn't ellipsis-truncate (they're all short anyway) and the
+ * definition is the reason the row exists, so let it wrap fully
+ * instead of relying on row-text-sub's usual single-line treatment. */
+.glossary-term {
+  font-weight: 700;
+  white-space: normal;
+}
+
+.glossary-definition {
+  line-height: 1.4;
+  padding: 0.15rem 0;
+}
+
 /* ---------- iOS switch ---------- */
 
 .ios-switch {

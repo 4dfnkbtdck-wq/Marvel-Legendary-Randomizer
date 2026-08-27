@@ -1839,6 +1839,7 @@
     historyCount: document.getElementById("history-count"),
     openCustomCards: document.getElementById("open-custom-cards"),
     customCardsCount: document.getElementById("custom-cards-count"),
+    openGlossary: document.getElementById("open-glossary"),
     sheetOverlay: document.getElementById("sheet-overlay"),
     sheetBackdrop: document.getElementById("sheet-backdrop"),
     sheetCancel: document.getElementById("sheet-cancel"),
@@ -2798,6 +2799,8 @@
       renderChooseLeadsList();
     } else if (sheetState.mode === "chooseTeam") {
       renderChooseTeamList();
+    } else if (sheetState.mode === "glossary") {
+      renderGlossaryList();
     } else if (sheetState.mode === "expansions") {
       el.sheetTitle.textContent = "Expansions";
       el.sheetSearchWrap.classList.add("hidden");
@@ -3161,6 +3164,10 @@
 
   function openCustomCardsSheet() {
     openSheet({ mode: "customCards" });
+  }
+
+  function openGlossarySheet() {
+    openSheet({ mode: "glossary" });
   }
 
   function openAddCustomCardSheet() {
@@ -3714,6 +3721,46 @@
     appendSheetList(rows);
   }
 
+  /** One row in the Keyword Glossary — read-only, term as the bold main
+   * line and the full definition wrapping underneath instead of the
+   * usual ellipsis-truncated subtext, since here the definition *is*
+   * the point. */
+  function glossaryRow(entry) {
+    const li = document.createElement("li");
+    li.className = "ios-row";
+
+    const text = document.createElement("span");
+    text.className = "row-text";
+    const main = document.createElement("span");
+    main.className = "row-text-main glossary-term";
+    main.textContent = entry.term;
+    const sub = document.createElement("span");
+    sub.className = "row-text-sub glossary-definition";
+    sub.textContent = entry.definition;
+    text.appendChild(main);
+    text.appendChild(sub);
+
+    li.appendChild(text);
+    return li;
+  }
+
+  function renderGlossaryList() {
+    el.sheetTitle.textContent = "Keyword Glossary";
+    el.sheetSearchWrap.classList.remove("hidden");
+
+    const q = sheetState.search.trim().toLowerCase();
+    const entries = KEYWORDS.filter((k) => k.term.toLowerCase().includes(q) || k.definition.toLowerCase().includes(q)).sort((a, b) =>
+      a.term.localeCompare(b.term)
+    );
+
+    if (!entries.length) {
+      el.sheetList.appendChild(emptyRow("No matching keywords."));
+      return;
+    }
+
+    appendSheetList(entries.map((entry) => glossaryRow(entry)));
+  }
+
   /** "Select All" — include everything for the sheet's current mode.
    * Shared by the bulk-actions bar's left button (see
    * showBulkActions/bindSheet) across manage/expansions/teamTheme; a
@@ -3855,6 +3902,7 @@
 
     el.openHistory.addEventListener("click", openHistorySheet);
     el.openCustomCards.addEventListener("click", openCustomCardsSheet);
+    el.openGlossary.addEventListener("click", openGlossarySheet);
 
     el.copyBtn.addEventListener("click", async () => {
       const text = setupText();
