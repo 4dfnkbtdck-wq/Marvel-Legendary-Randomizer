@@ -2864,17 +2864,17 @@
 
     const winBtn = document.createElement("button");
     winBtn.type = "button";
-    winBtn.className = "round-btn";
-    if (entry.outcome === "win") winBtn.classList.add("active-outcome", "outcome-win");
-    winBtn.textContent = "🏆";
+    winBtn.className = "round-btn outcome-win";
+    if (entry.outcome === "win") winBtn.classList.add("active-outcome");
+    winBtn.textContent = "W";
     winBtn.title = entry.outcome === "win" ? "Logged as a Heroes win — tap to remove from Past Setups" : "Log as a Heroes win";
     winBtn.addEventListener("click", () => logHistoryOutcome(entry.id, "win"));
 
     const lossBtn = document.createElement("button");
     lossBtn.type = "button";
-    lossBtn.className = "round-btn";
-    if (entry.outcome === "loss") lossBtn.classList.add("active-outcome", "outcome-loss");
-    lossBtn.textContent = "💀";
+    lossBtn.className = "round-btn outcome-loss";
+    if (entry.outcome === "loss") lossBtn.classList.add("active-outcome");
+    lossBtn.textContent = "L";
     lossBtn.title = entry.outcome === "loss" ? "Logged as an Evil win — tap to remove from Past Setups" : "Log as an Evil win";
     lossBtn.addEventListener("click", () => logHistoryOutcome(entry.id, "loss"));
 

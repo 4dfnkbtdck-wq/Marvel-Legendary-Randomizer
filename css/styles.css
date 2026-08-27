@@ -324,16 +324,33 @@ body {
   cursor: not-allowed;
 }
 
-.outcome-btn.active-outcome.outcome-win,
-.round-btn.active-outcome.outcome-win {
+.outcome-btn.active-outcome.outcome-win {
   background: var(--green);
   color: #fff;
 }
 
-.outcome-btn.active-outcome.outcome-loss,
-.round-btn.active-outcome.outcome-loss {
+.outcome-btn.active-outcome.outcome-loss {
   background: var(--red);
   color: #fff;
+}
+
+.round-btn.outcome-win {
+  background: var(--green);
+  color: #fff;
+  font-weight: 700;
+  opacity: 0.4;
+}
+
+.round-btn.outcome-loss {
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+  opacity: 0.4;
+}
+
+.round-btn.outcome-win.active-outcome,
+.round-btn.outcome-loss.active-outcome {
+  opacity: 1;
 }
 
 .action-group {
@@ -647,4 +664,15 @@ body {
   text-align: center;
   padding: 0.5rem 0.75rem 0;
   line-height: 1.5;
+}
+
+.footer-button {
+  display: inline-block;
+  background: var(--grouped-bg);
+  color: var(--blue);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
 }
