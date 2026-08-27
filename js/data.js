@@ -150,6 +150,7 @@ const TEAM_ICONS = {
   "Foes of Asgard": "img/teams/foes-of-asgard.png",
   "Brotherhood": "img/teams/brotherhood.png",
   "Crime Syndicate": "img/teams/crime-syndicate.png",
+  "Sinister Six": "img/teams/sinister-six.png",
 };
 
 const EXPANSIONS = [
