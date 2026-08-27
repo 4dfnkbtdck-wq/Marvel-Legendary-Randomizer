@@ -3528,6 +3528,7 @@ const KEYWORDS = [
   { term: "Grievous Wounds", definition: "A tougher variant of Wound that needs a specific Healing cost to remove instead of the normal method, but still counts as a Wound for every other card effect." },
   { term: "Heist", definition: "A once-per-turn action comparing the variety of Hero costs you've played this turn against the top card of the Villain Deck — beat it to trigger every Heist ability from cards you played or fought that turn." },
   { term: "Hero Class", definition: "A colored category (like Covert, Instinct, Strength, or Tech) printed on most Hero cards — plain S.H.I.E.L.D. Agents and Troopers have none. Many abilities check how many Hero Classes you've played, or a specific one." },
+  { term: "Hidden Witness", definition: "A face-down Bystander captured by a Villain, Mastermind, Scheme, or even a Hero in the HQ — pay 2 Recruit Points to rescue each one, which you must do before fighting that Villain or recruiting that Hero." },
   { term: "HQ", definition: "The row of face-up Hero cards available to Recruit from." },
   { term: "Investigate", definition: "A keyword letting you look at the top two cards of your deck (or another specified deck), reveal and draw one matching a stated trait, then return the rest to the top and/or bottom in any order." },
   { term: "KO'd", definition: "A card removed from the game entirely — out of every deck, hand, and discard pile for the rest of the game." },
