@@ -3545,6 +3545,7 @@ const KEYWORDS = [
   { term: "S.H.I.E.L.D. Clearance", definition: "A keyword forcing you to discard one or more S.H.I.E.L.D. Heroes as an extra cost to fight that Villain or Mastermind." },
   { term: "S.H.I.E.L.D. Officer", definition: "A basic Hero recruited by spending a fixed Recruit cost from the shared Officer Deck, instead of using HQ Recruit Points — you can recruit as many as you can afford in a turn." },
   { term: "Savior", definition: "A bonus ability on some Heroes and Villains, usable only if you have at least 3 Bystanders in your Victory Pile." },
+  { term: "Shard", definition: "A token that players, Villains, and Masterminds can gain from a shared supply — players spend one for +1 Fight Point, while a Villain or Mastermind gets a permanent Fight Point bonus for each one it holds." },
   { term: "Sidekick", definition: "A special card kept face-down in a shared Sidekick Stack — pay a Recruit cost once per turn to add the top one to your discard pile, or gain one for free when a card effect says to." },
   { term: "Size-Changing", definition: "A keyword on some Heroes and Villains that discounts their Recruit or Fight cost if you played a card of a specific type this turn." },
   { term: "Special Bystander", definition: "A Bystander with a bonus effect that triggers when you Rescue it, on top of the usual Victory Point." },
