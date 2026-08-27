@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Setup — Marvel Legendary Randomizer</title>
+  <meta name="description" content="Manage expansions, Team Filter, Past Setups, and the Mastermind/Scheme/Villain Group/Henchmen/Hero card pools." />
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23ed1d24'/%3E%3Ctext x='50' y='68' font-family='Arial' font-weight='bold' font-size='56' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/styles.css?v=162" />
+</head>
+<body>
+  <div class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-badge" style="text-decoration: none;">L</a>
+      <span class="navbar-title">Setup</span>
+    </div>
+  </div>
+
+  <main class="screen" id="screen">
+    <div class="large-title-block">
+      <h1 class="large-title">Setup</h1>
+      <p class="large-subtitle">Expansions, card pools, and Past Setups</p>
+    </div>
+
+    <section class="ios-group">
+      <div class="group-header"><span>History</span></div>
+      <ul class="ios-list">
+        <li>
+          <button type="button" class="ios-row nav-row" id="open-history">
+            <span class="row-text">Past Setups</span>
+            <span class="row-trailing" id="history-count">0 saved</span>
+            <span class="chevron">›</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section class="ios-group">
+      <div class="group-header"><span>Expansions</span></div>
+      <ul class="ios-list">
+        <li>
+          <button type="button" class="ios-row nav-row" id="open-expansions">
+            <span class="row-text">Manage Expansions</span>
+            <span class="row-trailing" id="expansions-count">0 of 0</span>
+            <span class="chevron">›</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section class="ios-group hidden" id="team-theme-section">
+      <div class="group-header"><span>Hero Team Theme</span></div>
+      <ul class="ios-list">
+        <li>
+          <button type="button" class="ios-row nav-row" id="open-team-theme">
+            <span class="row-text">Team Filter</span>
+            <span class="row-trailing" id="team-theme-count">0 of 0</span>
+            <span class="chevron">›</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section class="ios-group">
+      <div class="group-header">
+        <span>Card Pool</span>
+      </div>
+      <ul class="ios-list" id="card-pool-list"></ul>
+    </section>
+
+    <p class="page-footer">
+      <a href="index.html" class="footer-button">‹ Back to Randomizer</a>
+    </p>
+  </main>
+
+  <div class="sheet-overlay hidden" id="sheet-overlay">
+    <button type="button" class="sheet-backdrop" id="sheet-backdrop" aria-label="Close"></button>
+    <div class="sheet" id="sheet">
+      <div class="sheet-grabber"></div>
+      <div class="sheet-header">
+        <button type="button" class="sheet-header-btn" id="sheet-cancel">Back</button>
+        <span class="sheet-title" id="sheet-title">Manage</span>
+        <button type="button" class="sheet-header-btn sheet-header-btn-accent hidden" id="sheet-action">Clear</button>
+      </div>
+      <div class="sheet-search-wrap hidden" id="sheet-search-wrap">
+        <input type="search" id="sheet-search" class="sheet-search" placeholder="Search" autocomplete="off" />
+      </div>
+      <div class="sheet-bulk-actions hidden" id="sheet-bulk-actions">
+        <button type="button" class="sheet-bulk-btn" id="sheet-select-all">Select All</button>
+        <button type="button" class="sheet-bulk-btn" id="sheet-deselect-all">Deselect All</button>
+      </div>
+      <div class="sheet-list" id="sheet-list"></div>
+    </div>
+  </div>
+
+  <!-- Keep this ?v= in step with index.html's — see the note there. -->
+  <script src="js/data.js?v=162"></script>
+  <script src="js/app.js?v=162"></script>
+</body>
+</html>
