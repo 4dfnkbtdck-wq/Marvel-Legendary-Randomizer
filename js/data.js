@@ -142,6 +142,7 @@ const TEAM_ICONS = {
   "Guardians of the Multiverse": "img/teams/guardians-of-the-multiverse.png",
   "Warbound": "img/teams/warbound.webp",
   "Champions": "img/teams/champions.webp",
+  "Mercs For Money": "img/teams/mercs-for-money.webp",
 };
 
 const EXPANSIONS = [
