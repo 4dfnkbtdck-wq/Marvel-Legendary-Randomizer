@@ -31,7 +31,8 @@
       expansions: new Set(["core"]),
       options: { heroCount: 5, villainCount: 3, henchmenCount: 1, bystanders: 8, masterStrikes: 5, twists: 5, players: 3 },
       exclusions: { mastermind: new Set(), scheme: new Set(), villains: new Set(), henchmen: new Set(), heroes: new Set() },
-      teamFilter: new Set(),
+      excludedTeams: new Set(),
+      excludeUnaffiliated: false,
       history: [],
       cardStats: emptyCardStats(),
       gameLog: { heroWins: 0, evilWins: 0 },
@@ -74,7 +75,8 @@
         expansions: new Set(parsed.expansions && parsed.expansions.length ? parsed.expansions : defaults.expansions),
         options: { ...defaults.options, ...(parsed.options || {}) },
         exclusions,
-        teamFilter: new Set(parsed.teamFilter || []),
+        excludedTeams: new Set(parsed.excludedTeams || []),
+        excludeUnaffiliated: !!parsed.excludeUnaffiliated,
         history: Array.isArray(parsed.history) ? parsed.history : [],
         cardStats,
         gameLog: {
@@ -110,7 +112,8 @@
           expansions: Array.from(state.expansions),
           options: state.options,
           exclusions,
-          teamFilter: Array.from(state.teamFilter),
+          excludedTeams: Array.from(state.excludedTeams),
+          excludeUnaffiliated: state.excludeUnaffiliated,
           history: state.history,
           cardStats: state.cardStats,
           gameLog: state.gameLog,
@@ -129,11 +132,19 @@
     return Array.from(teams).sort();
   }
 
+  /** Whether any Hero in the currently enabled expansions has no known
+   * Team — these are represented in the Hero Team Theme sheet as a
+   * single "Unaffiliated" toggle (see teamRow/state.excludeUnaffiliated)
+   * alongside the real Teams from availableTeams above. */
+  function hasUnaffiliatedHeroes() {
+    return HEROES.some((h) => !h.team && state.expansions.has(h.exp));
+  }
+
   function poolFor(category) {
     const excluded = state.exclusions[category.key];
     let pool = category.pool.filter((card) => state.expansions.has(card.exp) && !excluded.has(card.name));
-    if (category.key === "heroes" && state.teamFilter.size) {
-      pool = pool.filter((card) => card.team && state.teamFilter.has(card.team));
+    if (category.key === "heroes") {
+      pool = pool.filter((card) => (card.team ? !state.excludedTeams.has(card.team) : !state.excludeUnaffiliated));
     }
     return pool;
   }
@@ -1574,7 +1585,7 @@
       const pool = poolFor(category);
       const n = countFor(category);
       if (pool.length < n) {
-        const teamNote = category.key === "heroes" && state.teamFilter.size ? "/team filter" : "";
+        const teamNote = category.key === "heroes" && (state.excludedTeams.size || state.excludeUnaffiliated) ? "/team filter" : "";
         return `${category.label}: need ${n}, only ${pool.length} available with current expansions/exclusions${teamNote}.`;
       }
       return null;
@@ -1782,7 +1793,6 @@
     input.addEventListener("change", () => {
       if (input.checked) state.expansions.add(exp.id);
       else state.expansions.delete(exp.id);
-      pruneTeamFilter();
       syncRequiredCards();
       saveState();
       renderWarnings();
@@ -1807,32 +1817,32 @@
     return li;
   }
 
-  /** Drop any selected team that's no longer available now that expansions
-   * changed, so the hero pool doesn't silently zero out against a team
-   * filter the user can no longer see or clear from the sheet. */
-  function pruneTeamFilter() {
-    const avail = new Set(availableTeams());
-    state.teamFilter.forEach((t) => {
-      if (!avail.has(t)) state.teamFilter.delete(t);
-    });
-  }
+  // Sentinel row label for the "no known Team" toggle — safe as a plain
+  // string since it's never a real Marvel team name (see
+  // hasUnaffiliatedHeroes/teamRow below).
+  const UNAFFILIATED = "Unaffiliated";
 
-  /** The main-page "Team Filter" nav row just shows a live summary
-   * ("All Teams" or "N of M") — same idea as renderExpansionsCount —
-   * since the actual toggle list lives in its own sheet (see
+  /** The main-page "Team Filter" nav row shows a live "N of M" summary —
+   * same convention as every other Manage row (Expansions, Card Pool
+   * categories): every Team (plus "Unaffiliated" if any Hero has no
+   * Team) starts included, and the count is how many still are. The
+   * actual toggle list lives in its own sheet (see
    * openTeamThemeSheet/teamRow below) rather than a chip row on the
    * main page. */
   function renderTeamThemeCount() {
     const teams = availableTeams();
-    el.teamThemeSection.classList.toggle("hidden", teams.length === 0);
-    if (!teams.length) return;
-    el.teamThemeCount.textContent = state.teamFilter.size ? `${state.teamFilter.size} of ${teams.length}` : "All Teams";
+    const hasUnaffiliated = hasUnaffiliatedHeroes();
+    const total = teams.length + (hasUnaffiliated ? 1 : 0);
+    el.teamThemeSection.classList.toggle("hidden", total === 0);
+    if (!total) return;
+    const excluded = teams.filter((t) => state.excludedTeams.has(t)).length + (hasUnaffiliated && state.excludeUnaffiliated ? 1 : 0);
+    el.teamThemeCount.textContent = `${total - excluded} of ${total}`;
   }
 
   /** One toggle row for the "Hero Team Theme" sheet — same switch markup
-   * as expansionRow, appended to el.sheetList. A team being checked adds
-   * it to state.teamFilter; with nothing checked, no restriction applies
-   * and every Hero is eligible regardless of Team. */
+   * and "on = included" convention as expansionRow/manageRow. Every Team
+   * (and "Unaffiliated", for Heroes with no known Team) starts checked;
+   * unchecking one excludes its Heroes from the pool via poolFor above. */
   function teamRow(team) {
     const li = document.createElement("li");
     li.className = "ios-row";
@@ -1844,13 +1854,19 @@
     const switchWrap = document.createElement("span");
     switchWrap.className = "ios-switch";
 
+    const isUnaffiliated = team === UNAFFILIATED;
     const input = document.createElement("input");
     input.type = "checkbox";
     input.setAttribute("aria-label", team);
-    input.checked = state.teamFilter.has(team);
+    input.checked = isUnaffiliated ? !state.excludeUnaffiliated : !state.excludedTeams.has(team);
     input.addEventListener("change", () => {
-      if (input.checked) state.teamFilter.add(team);
-      else state.teamFilter.delete(team);
+      if (isUnaffiliated) {
+        state.excludeUnaffiliated = !input.checked;
+      } else if (input.checked) {
+        state.excludedTeams.delete(team);
+      } else {
+        state.excludedTeams.add(team);
+      }
       saveState();
       renderWarnings();
       renderCardPool();
@@ -2641,18 +2657,22 @@
     } else if (sheetState.mode === "teamTheme") {
       el.sheetTitle.textContent = "Hero Team Theme";
       el.sheetSearchWrap.classList.add("hidden");
-      if (state.teamFilter.size) {
-        el.sheetAction.classList.remove("hidden");
-        el.sheetAction.classList.add("sheet-header-btn-accent");
-        el.sheetAction.textContent = "Clear Filter";
-      }
 
       const teams = availableTeams();
-      if (!teams.length) {
-        el.sheetList.appendChild(emptyRow("No Heroes with a known Team in the current pool."));
+      const hasUnaffiliated = hasUnaffiliatedHeroes();
+      if (!teams.length && !hasUnaffiliated) {
+        el.sheetAction.classList.add("hidden");
+        el.sheetList.appendChild(emptyRow("No Heroes in the current pool."));
         return;
       }
+
+      el.sheetAction.classList.remove("hidden");
+      el.sheetAction.classList.remove("sheet-header-btn-accent");
+      const excludedCount = teams.filter((t) => state.excludedTeams.has(t)).length + (hasUnaffiliated && state.excludeUnaffiliated ? 1 : 0);
+      el.sheetAction.textContent = excludedCount === 0 ? "Deselect All" : "Select All";
+
       teams.forEach((team) => el.sheetList.appendChild(teamRow(team)));
+      if (hasUnaffiliated) el.sheetList.appendChild(teamRow(UNAFFILIATED));
     }
   }
 
@@ -2859,7 +2879,6 @@
       } else if (sheetState.mode === "expansions") {
         const allSelected = state.expansions.size === EXPANSIONS.length;
         state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
-        pruneTeamFilter();
         syncRequiredCards();
         saveState();
         renderWarnings();
@@ -2869,11 +2888,21 @@
         renderResults();
         renderSheet();
       } else if (sheetState.mode === "teamTheme") {
-        state.teamFilter.clear();
+        const teams = availableTeams();
+        const hasUnaffiliated = hasUnaffiliatedHeroes();
+        const excludedCount = teams.filter((t) => state.excludedTeams.has(t)).length + (hasUnaffiliated && state.excludeUnaffiliated ? 1 : 0);
+        if (excludedCount === 0) {
+          state.excludedTeams = new Set(teams);
+          state.excludeUnaffiliated = hasUnaffiliated;
+        } else {
+          state.excludedTeams = new Set();
+          state.excludeUnaffiliated = false;
+        }
         saveState();
         renderWarnings();
         renderCardPool();
         renderTeamThemeCount();
+        renderResults();
         renderSheet();
       }
     });
