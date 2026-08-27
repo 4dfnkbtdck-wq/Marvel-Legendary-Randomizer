@@ -128,6 +128,15 @@
  *            guessed; wait for a source.
  */
 
+/** Small badge icons shown beside a Hero's name (wherever one's listed)
+ * and beside its Team's own entry in the Hero Team Theme sheet — keyed
+ * by the exact Team name used in a Hero's `team` field above. Being
+ * prototyped one Team at a time; a Team with no entry here just shows
+ * its name with no icon. */
+const TEAM_ICONS = {
+  "X-Factor Investigations": "img/teams/x-factor-investigations.webp",
+};
+
 const EXPANSIONS = [
   { id: "core", name: "Core Set (1st Edition)", confidence: "verified" },
   { id: "dark_city", name: "Dark City", confidence: "verified" },
