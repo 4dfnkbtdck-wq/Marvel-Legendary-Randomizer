@@ -3492,6 +3492,7 @@ const HEROES = [
  * this word mean," not a rules-arbitration tool. */
 const KEYWORDS = [
   { term: "Abomination", definition: "A keyword giving a Villain a Fight Point bonus equal to the printed Fight Points of whichever Hero currently sits in the HQ slot above its city space." },
+  { term: "Adapting Mastermind", definition: "A Mastermind with no separate Mastermind card — instead, its four Mastermind Tactics form a face-up stack, and only the one on top is currently active. Fighting or Master-Striking it shuffles the stack and reveals a new top Tactic ('Adapt'), so you can't predict which one you'll face next." },
   { term: "Ambush", definition: "An effect that triggers the instant a card enters play — a Villain being revealed into the city, or on some Heroes, entering the HQ — rather than waiting to be used normally." },
   { term: "Ambush Scheme", definition: "A special Scheme card shuffled into the Villain Deck alongside its Villain Group — defeating it scores Victory Points immediately, and for the rest of the game it also triggers whenever a Scheme Twist is played." },
   { term: "Antics", definition: "A bonus ability on some cards, usable only if you have at least three cards — between your hand and what you've played this turn — that are low-cost and/or have Size-Changing." },
@@ -3547,6 +3548,7 @@ const KEYWORDS = [
   { term: "Highest Abomination", definition: "A variant of Abomination that gives a Fight Point bonus equal to the highest printed Fight value among all five Heroes in the HQ, instead of just the one Hero in a specific city space." },
   { term: "HQ", definition: "The row of face-up Hero cards available to Recruit from." },
   { term: "Hunt for Victims", definition: "A keyword that KOs a Bystander already captured by any Villain or Mastermind (or sitting in the Escape Pile) — if there's no such Bystander, it captures a new one instead." },
+  { term: "Hydra Level", definition: "A keyword giving a bonus based on how many S.H.I.E.L.D. and/or HYDRA cards are currently in the Escape Pile — the HYDRA counterpart to S.H.I.E.L.D. Level." },
   { term: "Hyperspeed", definition: "A keyword that reveals a set number of cards from the top of your deck, gives you a bonus (Attack, Recruit, or both) for each revealed card with a matching icon, then discards all the revealed cards." },
   { term: "Investigate", definition: "A keyword letting you look at the top two cards of your deck (or another specified deck), reveal and draw one matching a stated trait, then return the rest to the top and/or bottom in any order." },
   { term: "KO'd", definition: "A card removed from the game entirely — out of every deck, hand, and discard pile for the rest of the game." },
@@ -3573,6 +3575,7 @@ const KEYWORDS = [
   { term: "Rise of the Living Dead", definition: "A keyword on some Villains — each player checks the top card of their Victory Pile, and if it's a Villain with this same keyword, it reenters the city, doing its Ambush ability again." },
   { term: "Ritual Artifact", definition: "An Artifact that can be discarded for a bonus effect once you've fulfilled its listed condition that turn, instead of leaving it in play." },
   { term: "S.H.I.E.L.D. Clearance", definition: "A keyword forcing you to discard one or more S.H.I.E.L.D. Heroes as an extra cost to fight that Villain or Mastermind." },
+  { term: "S.H.I.E.L.D. Level", definition: "A keyword giving a bonus usable only if you have enough S.H.I.E.L.D. and/or HYDRA cards in your Victory Pile to meet the listed number — checking, not spending, so it doesn't remove them." },
   { term: "S.H.I.E.L.D. Officer", definition: "A basic Hero recruited by spending a fixed Recruit cost from the shared Officer Deck, instead of using HQ Recruit Points — you can recruit as many as you can afford in a turn." },
   { term: "Sacrifice", definition: "A keyword letting you KO this card to use a bonus ability, usable only if you've already played another card of the matching Hero Class earlier in the turn — you still get the card's normal Recruit, Fight, and other abilities whether or not you Sacrifice it." },
   { term: "Savior", definition: "A bonus ability on some Heroes and Villains, usable only if you have at least 3 Bystanders in your Victory Pile." },
