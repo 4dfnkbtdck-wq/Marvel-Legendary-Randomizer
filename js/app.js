@@ -1576,18 +1576,22 @@
     return null;
   }
 
-  /** Sub-line text for a card row: expansion name, plus a Team tag for
-   * Heroes, plus why a Villain Group / Henchman is required, if it is. */
   /** Sub-line text for a card row in Card Pool's Manage/Choose sheets:
    * expansion name, plus a Team tag for Heroes. Cards with the same
    * printed name can appear more than once across expansions with
    * meaningfully different rules (e.g. "Secret Invasion of the Skrull
    * Shapeshifters" or "Super Hero Civil War") — without this, two
-   * identical-looking rows would be impossible to tell apart. */
+   * identical-looking rows would be impossible to tell apart.
+   *
+   * The Team tag is skipped when that Team already has a badge icon
+   * (see TEAM_ICONS / nameWithTeamIcon) — the icon next to the name
+   * already shows the Team, so spelling it out again would be
+   * redundant. Teams without an icon yet still get the text tag,
+   * since it's the only way to see the Team at all. */
   function poolRowSubText(category, item) {
     const expName = (EXPANSIONS.find((e) => e.id === item.exp) || {}).name || item.exp;
     const parts = [expName];
-    if (category.key === "heroes" && item.team) parts.push(item.team);
+    if (category.key === "heroes" && item.team && !TEAM_ICONS[item.team]) parts.push(item.team);
     return parts.join(" · ");
   }
 
