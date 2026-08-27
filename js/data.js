@@ -3500,6 +3500,8 @@ const KEYWORDS = [
   { term: "Ascending Mastermind", definition: "A powerful Villain that, instead of going to the Escape Pile when it escapes the city, becomes an additional Mastermind — with no Mastermind Tactics of its own, so defeating it once sends it straight to your Victory Pile. All Masterminds in play must be defeated to win." },
   { term: "Astral Plane", definition: "A unique space beside the Villain Deck where Villains have no physical form — they can only be fought with Recruit Points instead of Attack, and any Villain already there escapes when a new one enters." },
   { term: "Berserk", definition: "A keyword that discards the top card of your deck for a bonus equal to that card's printed Fight value — on a Hero it boosts your own Fight Points, but on an enemy it raises the Fight cost you need to match before you can defeat it." },
+  { term: "Betrayal", definition: "An ability printed on Bindings cards, usable only if you don't recruit any Heroes or defeat any Villains that turn — KO one Bindings from your hand this way, and every other player gains all the rest of your Bindings instead." },
+  { term: "Bindings", definition: "A useless card gained from certain effects (never recruited or drawn from a deck) that produces no Recruit Points or Attack while in your hand — some cards let you turn its burden into an advantage via its own Betrayal ability, or discard it outright." },
   { term: "Blood Frenzy", definition: "A keyword giving a bonus for each different Victory Point value among the cards in your Victory Pile, regardless of how many cards share each value." },
   { term: "Bribe", definition: "A keyword letting you fight this Villain by spending any combination of Attack and Recruit Points, instead of only Attack Points." },
   { term: "Burning Shards", definition: "A keyword letting you spend a specific number of Shards once per turn for a bonus effect, instead of their normal +1 Fight Point each." },
@@ -3528,6 +3530,7 @@ const KEYWORDS = [
   { term: "Divided Cards", definition: "A single Hero card printed as two mini-cards sharing one card — each time you play it, choose which side's stats and abilities to use, ignoring the other entirely." },
   { term: "Dodge", definition: "A keyword letting you discard this card from your hand on your turn to draw a replacement, instead of playing it for its printed abilities." },
   { term: "Double-Cross", definition: "A keyword forcing every player to reveal their hand and discard one of their highest-cost duplicate cards." },
+  { term: "Elusive", definition: "A keyword requiring you to have generated at least a specific amount of Attack this turn before you're allowed to fight this Villain — you don't have to actually spend that Attack, just have made it available this turn." },
   { term: "Empowered", definition: "A keyword giving a Hero, Villain, or Mastermind a Fight Point bonus for each card of a matching color currently in the HQ." },
   { term: "Endgame", definition: "A keyword giving an enemy a bonus (or other ability) that only applies once the Villain Deck has shrunk to 8 cards per player or fewer, representing the fight's climactic final stretch." },
   { term: "Enraging Wounds", definition: "A tougher Wound variant with its own unique Healing ability and, unlike normal Wounds, a bonus effect if you play it — its Healing ability can be used anytime, even after fighting or recruiting that turn." },
@@ -3566,6 +3569,7 @@ const KEYWORDS = [
   { term: "Momentum", definition: "A keyword giving a Villain a Fight Point bonus for entering a new city space this turn, whether it walked in, was pushed, or was moved there." },
   { term: "Moonlight", definition: "A keyword active only when most Heroes in the HQ have odd-numbered printed costs — if there's a tie, neither Moonlight nor Sunlight is active." },
   { term: "Multiclass", definition: "A keyword marking a card as counting toward more than one Hero Class or Villain Class at once — it satisfies any ability that checks for either class's icon." },
+  { term: "New Recruit", definition: "A card providing a temporary burst of Recruit Points or Attack — the moment you play it, it returns to a shared face-down stack instead of going to your discard pile, so you never draw the same one twice in a row." },
   { term: "Own", definition: "All the cards that belong to you — your hand, deck, played cards, discard pile, and Victory Pile — as opposed to a shared pile or another player's cards." },
   { term: "Patrol", definition: "A keyword usable only while a specified city space is completely empty of cards — once anything occupies that space during the turn, the ability is off again." },
   { term: "Phasing", definition: "A keyword letting you swap a card in your hand for the top card of your deck during your turn, without it counting as playing or drawing a card." },
@@ -3619,6 +3623,7 @@ const KEYWORDS = [
   { term: "Worthy", definition: "A keyword condition met by having a Hero that costs 5 or more among 'your Heroes' — some cards reward or require it." },
   { term: "Wound", definition: "A useless card added to your deck, usually from a Villain's attack — it clutters your hand until you find a way to remove it." },
   { term: "Wound a Villain", definition: "An ability on some Heroes letting you place a Wound card onto a Villain instead of playing it — the Villain gets weaker for each Wound on it until it's defeated or leaves the city." },
+  { term: "X-Treme Attack", definition: "A keyword giving a Villain a Fight Point bonus for each other Villain in the city that also has X-Treme Attack." },
 ];
 
 /** Real deck-construction table from the rulebook (Legendary: A Marvel Deck
