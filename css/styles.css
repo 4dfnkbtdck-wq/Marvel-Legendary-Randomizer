@@ -721,6 +721,27 @@ body {
   color: var(--label-tertiary);
 }
 
+/* Same look as .sheet-search, for a search box on a standalone page
+ * (e.g. glossary.html) instead of inside the sheet overlay. */
+.page-search-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.page-search {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: var(--grouped-bg);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+  color: var(--label);
+  font-family: inherit;
+}
+
+.page-search::placeholder {
+  color: var(--label-tertiary);
+}
+
 /* ---------- Form rows (Add/Edit Custom Card) ---------- */
 
 .form-row {
