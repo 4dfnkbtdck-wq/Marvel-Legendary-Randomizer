@@ -334,23 +334,33 @@ body {
   color: #fff;
 }
 
-.round-btn.outcome-win {
+.outcome-pill {
+  display: flex;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--switch-off);
+  flex-shrink: 0;
+}
+
+.outcome-pill button {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.36rem 0.62rem;
+  color: var(--label-tertiary);
+  cursor: pointer;
+}
+
+.outcome-pill button.active.outcome-win {
   background: var(--green);
   color: #fff;
-  font-weight: 700;
-  opacity: 0.4;
 }
 
-.round-btn.outcome-loss {
+.outcome-pill button.active.outcome-loss {
   background: var(--red);
   color: #fff;
-  font-weight: 700;
-  opacity: 0.4;
-}
-
-.round-btn.outcome-win.active-outcome,
-.round-btn.outcome-loss.active-outcome {
-  opacity: 1;
 }
 
 .action-group {
@@ -448,6 +458,60 @@ body {
 .round-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+/* ---------- Past Setups row (tappable to open its detail) ---------- */
+
+.history-row {
+  cursor: pointer;
+}
+
+.history-row:active {
+  background: var(--switch-off);
+}
+
+.history-row:hover .row-text-main {
+  color: var(--blue);
+}
+
+/* The "⋯" overflow's Restore/Delete options render as their own row
+ * right below the entry (plain document flow) rather than a floating
+ * popover, so they're never clipped by the sheet's rounded-corner
+ * masking on a short list. */
+.history-menu-row {
+  justify-content: flex-end;
+  gap: 1.3rem;
+  padding: 0.55rem 0.9rem;
+}
+
+.text-action {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.text-action.destructive {
+  color: var(--red);
+}
+
+/* ---------- Past Setups detail (drill-in from a history row) ---------- */
+
+.detail-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.1rem 0.15rem 1.1rem;
+}
+
+.detail-summary .meta {
+  font-size: 0.85rem;
+  color: var(--label-secondary);
 }
 
 /* ---------- Navigation rows (Card Pool / History) ---------- */
@@ -628,7 +692,6 @@ body {
   overflow-y: auto;
   margin: 0 0.9rem 0.9rem;
   width: auto;
-  border-radius: 12px;
   -webkit-overflow-scrolling: touch;
 }
 
