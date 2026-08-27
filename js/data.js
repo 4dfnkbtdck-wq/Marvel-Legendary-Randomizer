@@ -3493,7 +3493,9 @@ const HEROES = [
 const KEYWORDS = [
   { term: "Ambush", definition: "An effect that triggers the instant a Villain is revealed, before Heroes get to act against it." },
   { term: "Bystander", definition: "A civilian card shuffled into the Villain Deck — defeat it for no reward, Rescue it for Victory Points, or let a Villain capture it to advance the Scheme." },
+  { term: "Chivalrous Duel", definition: "A keyword on some Villains that can only be fought using Fight Points from a single Hero Name — you can't combine points from two different Heroes." },
   { term: "Conqueror", definition: "A keyword tied to a specific city space, giving a Fight Point bonus whenever any Villain — including the Conqueror card itself — occupies that space." },
+  { term: "Empowered", definition: "A keyword giving a Hero, Villain, or Mastermind a Fight Point bonus for each card of a matching color currently in the HQ." },
   { term: "Fight", definition: "Spending Attack Points to defeat a Villain in the city, a Bystander, or a Master Strike." },
   { term: "Focus", definition: "A keyword letting you spend Recruit Points for a repeatable bonus effect for the rest of the turn, as many times as you can afford." },
   { term: "HQ", definition: "The row of face-up Hero cards available to Recruit from." },
@@ -3501,9 +3503,11 @@ const KEYWORDS = [
   { term: "Man and Woman Out of Time", definition: "A keyword letting a Hero be set aside after you use its ability, then played again for free at the start of your next turn before being discarded." },
   { term: "Mass Momentum", definition: "A Mastermind variant of Momentum that scales its bonus with how many Villains in the city entered a new space this turn, not just itself." },
   { term: "Master Strike", definition: "A powerful card unique to the Mastermind, shuffled into the Villain Deck partway through the game and tougher than a normal Villain." },
+  { term: "Microscopic Size-Changing", definition: "A more powerful version of Size-Changing that can reduce a card's Recruit or Fight cost below zero, actually gaining you the difference instead." },
   { term: "Momentum", definition: "A keyword giving a Villain a Fight Point bonus for entering a new city space this turn, whether it walked in, was pushed, or was moved there." },
   { term: "Recruit", definition: "Spending Recruit Points to buy a Hero card from the HQ into your discard pile." },
   { term: "Rescue", definition: "Some Heroes let you save a Bystander instead of fighting it, turning it face-down into a Victory Point card." },
+  { term: "Size-Changing", definition: "A keyword on some Heroes and Villains that discounts their Recruit or Fight cost if you played a card of a specific type this turn." },
   { term: "Twist", definition: "A card in the Villain Deck that triggers a Scheme-specific effect when revealed, instead of being fought." },
   { term: "Wound", definition: "A useless card added to your deck, usually from a Villain's attack — it clutters your hand until you find a way to remove it." },
 ];
