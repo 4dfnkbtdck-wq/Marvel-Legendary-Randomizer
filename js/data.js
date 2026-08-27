@@ -147,6 +147,7 @@ const TEAM_ICONS = {
   "Illuminati": "img/teams/illuminati.webp",
   "Cabal": "img/teams/cabal.webp",
   "HYDRA": "img/teams/hydra.png",
+  "Foes of Asgard": "img/teams/foes-of-asgard.png",
 };
 
 const EXPANSIONS = [
