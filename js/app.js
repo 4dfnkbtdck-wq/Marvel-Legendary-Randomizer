@@ -1744,6 +1744,9 @@
     sheetTitle: document.getElementById("sheet-title"),
     sheetSearchWrap: document.getElementById("sheet-search-wrap"),
     sheetSearch: document.getElementById("sheet-search"),
+    sheetBulkActions: document.getElementById("sheet-bulk-actions"),
+    sheetSelectAll: document.getElementById("sheet-select-all"),
+    sheetDeselectAll: document.getElementById("sheet-deselect-all"),
     sheetList: document.getElementById("sheet-list"),
   };
 
@@ -1759,9 +1762,10 @@
   /** One toggle row for the "Expansions" sheet — same checkbox/switch
    * markup and behavior the inline list used before it moved into its
    * own sheet, just appended to el.sheetList instead of a fixed list on
-   * the main page, and refreshing the sheet itself (so the "Select All"/
-   * "Deselect All" action label and the main page's live count both stay
-   * in sync) rather than just the one row's own list. */
+   * the main page, and refreshing the sheet itself (so the Select
+   * All/Deselect All bulk-action bar's disabled state and the main
+   * page's live count both stay in sync) rather than just the one
+   * row's own list. */
   function expansionRow(exp) {
     const id = `exp-${exp.id}`;
     const li = document.createElement("li");
@@ -2588,20 +2592,35 @@
     openSheet({ mode: "teamTheme" });
   }
 
+  /** Shows the "Select All"/"Deselect All" bulk-action bar (see
+   * index.html #sheet-bulk-actions) and dims out whichever button would
+   * be a no-op against the sheet's current state — everything already
+   * included disables Select All, everything already excluded disables
+   * Deselect All — while keeping both visible at all times, unlike the
+   * old single toggle-text sheetAction button it replaces for the
+   * manage/expansions/teamTheme sheet modes (history's "Clear All"
+   * still uses sheetAction — see below). */
+  function showBulkActions(allSelected, allDeselected) {
+    el.sheetBulkActions.classList.remove("hidden");
+    el.sheetSelectAll.disabled = allSelected;
+    el.sheetDeselectAll.disabled = allDeselected;
+  }
+
   function renderSheet() {
     if (!sheetState) return;
     el.sheetList.innerHTML = "";
     el.sheetAction.classList.add("hidden");
+    el.sheetBulkActions.classList.add("hidden");
 
     if (sheetState.mode === "manage") {
       const category = CATEGORY_BY_KEY[sheetState.categoryKey];
       el.sheetTitle.textContent = `Manage ${category.label}`;
       el.sheetSearchWrap.classList.remove("hidden");
-      el.sheetAction.classList.remove("hidden");
-      el.sheetAction.classList.remove("sheet-header-btn-accent");
+      const pool = category.pool.filter((c) => state.expansions.has(c.exp));
       const excluded = state.exclusions[category.key];
-      const allExcluded = category.pool.filter((c) => state.expansions.has(c.exp)).every((c) => excluded.has(c.name));
-      el.sheetAction.textContent = allExcluded ? "Include All" : "Exclude All";
+      const allIncluded = pool.every((c) => !excluded.has(c.name));
+      const allExcluded = pool.length > 0 && pool.every((c) => excluded.has(c.name));
+      showBulkActions(allIncluded, allExcluded);
 
       const items = category.pool
         .filter((c) => state.expansions.has(c.exp))
@@ -2647,10 +2666,7 @@
     } else if (sheetState.mode === "expansions") {
       el.sheetTitle.textContent = "Expansions";
       el.sheetSearchWrap.classList.add("hidden");
-      el.sheetAction.classList.remove("hidden");
-      el.sheetAction.classList.remove("sheet-header-btn-accent");
-      const allSelected = state.expansions.size === EXPANSIONS.length;
-      el.sheetAction.textContent = allSelected ? "Deselect All" : "Select All";
+      showBulkActions(state.expansions.size === EXPANSIONS.length, state.expansions.size === 0);
 
       const sortedExpansions = [...EXPANSIONS].sort((a, b) => a.name.localeCompare(b.name));
       sortedExpansions.forEach((exp) => el.sheetList.appendChild(expansionRow(exp)));
@@ -2661,15 +2677,13 @@
       const teams = availableTeams();
       const hasUnaffiliated = hasUnaffiliatedHeroes();
       if (!teams.length && !hasUnaffiliated) {
-        el.sheetAction.classList.add("hidden");
         el.sheetList.appendChild(emptyRow("No Heroes in the current pool."));
         return;
       }
 
-      el.sheetAction.classList.remove("hidden");
-      el.sheetAction.classList.remove("sheet-header-btn-accent");
+      const total = teams.length + (hasUnaffiliated ? 1 : 0);
       const excludedCount = teams.filter((t) => state.excludedTeams.has(t)).length + (hasUnaffiliated && state.excludeUnaffiliated ? 1 : 0);
-      el.sheetAction.textContent = excludedCount === 0 ? "Deselect All" : "Select All";
+      showBulkActions(excludedCount === 0, excludedCount === total);
 
       teams.forEach((team) => el.sheetList.appendChild(teamRow(team)));
       if (hasUnaffiliated) el.sheetList.appendChild(teamRow(UNAFFILIATED));
@@ -2841,6 +2855,78 @@
     return li;
   }
 
+  /** "Select All" — include everything for the sheet's current mode.
+   * Shared by the bulk-actions bar's left button (see
+   * showBulkActions/bindSheet) across manage/expansions/teamTheme; a
+   * no-op (button disabled) for any other mode. */
+  function sheetSelectAll() {
+    if (!sheetState) return;
+    if (sheetState.mode === "manage") {
+      const category = CATEGORY_BY_KEY[sheetState.categoryKey];
+      state.exclusions[category.key].clear();
+      syncRequiredCards();
+      saveState();
+      renderWarnings();
+      renderCardPool();
+      renderResults();
+      renderSheet();
+    } else if (sheetState.mode === "expansions") {
+      state.expansions = new Set(EXPANSIONS.map((e) => e.id));
+      syncRequiredCards();
+      saveState();
+      renderWarnings();
+      renderExpansionsCount();
+      renderCardPool();
+      renderTeamThemeCount();
+      renderResults();
+      renderSheet();
+    } else if (sheetState.mode === "teamTheme") {
+      state.excludedTeams = new Set();
+      state.excludeUnaffiliated = false;
+      saveState();
+      renderWarnings();
+      renderCardPool();
+      renderTeamThemeCount();
+      renderResults();
+      renderSheet();
+    }
+  }
+
+  /** "Deselect All" — exclude everything for the sheet's current mode.
+   * Mirror of sheetSelectAll above. */
+  function sheetDeselectAll() {
+    if (!sheetState) return;
+    if (sheetState.mode === "manage") {
+      const category = CATEGORY_BY_KEY[sheetState.categoryKey];
+      category.pool.filter((c) => state.expansions.has(c.exp)).forEach((c) => state.exclusions[category.key].add(c.name));
+      syncRequiredCards();
+      saveState();
+      renderWarnings();
+      renderCardPool();
+      renderResults();
+      renderSheet();
+    } else if (sheetState.mode === "expansions") {
+      state.expansions = new Set();
+      syncRequiredCards();
+      saveState();
+      renderWarnings();
+      renderExpansionsCount();
+      renderCardPool();
+      renderTeamThemeCount();
+      renderResults();
+      renderSheet();
+    } else if (sheetState.mode === "teamTheme") {
+      state.excludedTeams = new Set(availableTeams());
+      state.excludeUnaffiliated = hasUnaffiliatedHeroes();
+      saveState();
+      renderWarnings();
+      renderCardPool();
+      renderTeamThemeCount();
+      renderResults();
+      renderSheet();
+    }
+  }
+
   function bindSheet() {
     el.sheetBackdrop.addEventListener("click", closeSheet);
     el.sheetCancel.addEventListener("click", closeSheet);
@@ -2850,62 +2936,24 @@
       renderSheet();
     });
     el.sheetAction.addEventListener("click", () => {
-      if (!sheetState) return;
-      if (sheetState.mode === "manage") {
-        const category = CATEGORY_BY_KEY[sheetState.categoryKey];
-        const pool = category.pool.filter((c) => state.expansions.has(c.exp));
-        const allExcluded = pool.every((c) => state.exclusions[category.key].has(c.name));
-        if (allExcluded) {
-          state.exclusions[category.key].clear();
-        } else {
-          pool.forEach((c) => state.exclusions[category.key].add(c.name));
-        }
-        syncRequiredCards();
-        saveState();
-        renderWarnings();
-        renderCardPool();
-        renderResults();
-        renderSheet();
-      } else if (sheetState.mode === "history") {
-        state.history.forEach((entry) => {
-          if (entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
-        });
-        state.history = [];
-        state.currentHistoryId = null;
-        saveState();
-        renderSheet();
-        renderHistoryCount();
-        renderOutcomeStatus();
-      } else if (sheetState.mode === "expansions") {
-        const allSelected = state.expansions.size === EXPANSIONS.length;
-        state.expansions = allSelected ? new Set() : new Set(EXPANSIONS.map((e) => e.id));
-        syncRequiredCards();
-        saveState();
-        renderWarnings();
-        renderExpansionsCount();
-        renderCardPool();
-        renderTeamThemeCount();
-        renderResults();
-        renderSheet();
-      } else if (sheetState.mode === "teamTheme") {
-        const teams = availableTeams();
-        const hasUnaffiliated = hasUnaffiliatedHeroes();
-        const excludedCount = teams.filter((t) => state.excludedTeams.has(t)).length + (hasUnaffiliated && state.excludeUnaffiliated ? 1 : 0);
-        if (excludedCount === 0) {
-          state.excludedTeams = new Set(teams);
-          state.excludeUnaffiliated = hasUnaffiliated;
-        } else {
-          state.excludedTeams = new Set();
-          state.excludeUnaffiliated = false;
-        }
-        saveState();
-        renderWarnings();
-        renderCardPool();
-        renderTeamThemeCount();
-        renderResults();
-        renderSheet();
-      }
+      // Only "history" mode still uses the single sheetAction button
+      // (its "Clear All" deletes records rather than toggling a set of
+      // switches) — manage/expansions/teamTheme use the always-visible
+      // Select All/Deselect All bar instead, see sheetSelectAll/
+      // sheetDeselectAll below.
+      if (!sheetState || sheetState.mode !== "history") return;
+      state.history.forEach((entry) => {
+        if (entry.outcome) applyEntryOutcome(entry, entry.outcome, -1);
+      });
+      state.history = [];
+      state.currentHistoryId = null;
+      saveState();
+      renderSheet();
+      renderHistoryCount();
+      renderOutcomeStatus();
     });
+    el.sheetSelectAll.addEventListener("click", sheetSelectAll);
+    el.sheetDeselectAll.addEventListener("click", sheetDeselectAll);
   }
 
   function init() {
