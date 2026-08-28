@@ -70,7 +70,11 @@ body {
 .navbar-inner {
   max-width: 500px;
   margin: 0 auto;
-  padding: 0.6rem 1rem;
+  /* env(safe-area-inset-top) is 0 in an ordinary browser tab, but covers
+   * the notch/Dynamic Island once this is installed to the home screen
+   * and launches without Safari's own chrome (see apple-mobile-web-app-
+   * capable in each page's <head>). */
+  padding: calc(0.6rem + env(safe-area-inset-top)) 1rem 0.6rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -100,7 +104,9 @@ body {
 .screen {
   max-width: 500px;
   margin: 0 auto;
-  padding: 1rem 1rem 3rem;
+  /* Same reasoning as .navbar-inner's top inset — keeps the last button
+   * clear of the home indicator once this runs as an installed app. */
+  padding: 1rem 1rem calc(3rem + env(safe-area-inset-bottom));
 }
 
 .large-title-block {
