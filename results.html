@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Setup — Marvel Legendary Randomizer</title>
-  <meta name="description" content="Manage expansions, Team Filter, Past Setups, and the Mastermind/Scheme/Villain Group/Henchmen/Hero card pools." />
+  <title>Results — Marvel Legendary Randomizer</title>
+  <meta name="description" content="Your randomized Marvel Legendary setup: reroll, review, copy, and log the result." />
   <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23ed1d24'/%3E%3Ctext x='50' y='68' font-family='Arial' font-weight='bold' font-size='56' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E" />
@@ -20,60 +20,59 @@
   <div class="navbar" id="navbar">
     <div class="navbar-inner">
       <a href="index.html" class="navbar-badge" style="text-decoration: none;">L</a>
-      <span class="navbar-title">Setup</span>
+      <span class="navbar-title">Results</span>
     </div>
   </div>
 
   <main class="screen" id="screen">
-    <div class="large-title-block">
-      <h1 class="large-title">Setup</h1>
-      <p class="large-subtitle">Expansions, card pools, and Past Setups</p>
-    </div>
+    <p class="page-footer page-footer-top">
+      <a href="index.html" class="footer-button">‹ Back to Randomizer</a>
+    </p>
 
-    <section class="ios-group">
-      <div class="group-header"><span>History</span></div>
+    <section class="ios-group action-group hidden" id="reroll-group">
       <ul class="ios-list">
-        <li>
-          <button type="button" class="ios-row nav-row" id="open-history">
-            <span class="row-text">Past Setups</span>
-            <span class="row-trailing" id="history-count">0 saved</span>
-            <span class="chevron">›</span>
-          </button>
+        <li class="ios-row-button">
+          <button type="button" id="reroll-all" class="ios-list-button">Reroll All</button>
         </li>
       </ul>
     </section>
 
-    <section class="ios-group">
-      <div class="group-header"><span>Expansions</span></div>
+    <div id="results"></div>
+
+    <section class="ios-group action-group hidden" id="copy-group">
       <ul class="ios-list">
-        <li>
-          <button type="button" class="ios-row nav-row" id="open-expansions">
-            <span class="row-text">Manage Expansions</span>
-            <span class="row-trailing" id="expansions-count">0 of 0</span>
-            <span class="chevron">›</span>
-          </button>
+        <li class="ios-row-button">
+          <button type="button" id="copy-setup" class="ios-list-button">Copy Setup</button>
         </li>
       </ul>
     </section>
 
-    <section class="ios-group hidden" id="team-theme-section">
-      <div class="group-header"><span>Hero Team Theme</span></div>
+    <section class="ios-group action-group hidden" id="setup-keywords-group">
       <ul class="ios-list">
-        <li>
-          <button type="button" class="ios-row nav-row" id="open-team-theme">
-            <span class="row-text">Team Filter</span>
-            <span class="row-trailing" id="team-theme-count">0 of 0</span>
-            <span class="chevron">›</span>
-          </button>
+        <li class="ios-row-button">
+          <button type="button" id="setup-keywords" class="ios-list-button">Setup Keywords</button>
         </li>
       </ul>
     </section>
 
-    <section class="ios-group">
-      <div class="group-header">
-        <span>Card Pool</span>
-      </div>
-      <ul class="ios-list" id="card-pool-list"></ul>
+    <section class="ios-group action-group hidden" id="outcome-group">
+      <div class="group-header"><span>Log Result</span></div>
+      <ul class="ios-list">
+        <li class="ios-row-button">
+          <button type="button" id="log-win" class="ios-list-button outcome-btn outcome-win">Heroes Won</button>
+        </li>
+        <li class="ios-row-button">
+          <button type="button" id="log-loss" class="ios-list-button outcome-btn outcome-loss">Evil Won</button>
+        </li>
+      </ul>
+    </section>
+
+    <section class="ios-group action-group hidden" id="exclude-group">
+      <ul class="ios-list">
+        <li class="ios-row-button">
+          <button type="button" id="exclude-setup" class="ios-list-button">Exclude This Setup's Cards</button>
+        </li>
+      </ul>
     </section>
 
     <p class="page-footer">

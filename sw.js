@@ -2,23 +2,24 @@
 // content) changes — same discipline as the ?v= query strings the HTML
 // pages use. A new name here makes install() re-fetch everything fresh
 // and activate() drops the old cache instead of leaving it to grow.
-const CACHE_VERSION = "v166";
+const CACHE_VERSION = "v167";
 const CACHE_NAME = `legendary-randomizer-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   "index.html",
+  "results.html",
   "setup.html",
   "stats.html",
   "glossary.html",
   "manifest.webmanifest",
-  `css/styles.css?v=166`,
-  `js/data.js?v=166`,
-  `js/app.js?v=166`,
-  `js/stats.js?v=166`,
-  `js/glossary.js?v=166`,
-  "img/icons/icon-180.png?v=166",
-  "img/icons/icon-192.png?v=166",
-  "img/icons/icon-512.png?v=166",
+  `css/styles.css?v=167`,
+  `js/data.js?v=167`,
+  `js/app.js?v=167`,
+  `js/stats.js?v=167`,
+  `js/glossary.js?v=167`,
+  "img/icons/icon-180.png?v=167",
+  "img/icons/icon-192.png?v=167",
+  "img/icons/icon-512.png?v=167",
   "img/teams/avengers.webp",
   "img/teams/brotherhood.png",
   "img/teams/cabal.webp",

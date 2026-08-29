@@ -2192,10 +2192,14 @@
     return li;
   }
 
+  function hasCurrentResult() {
+    return CATEGORIES.some((c) => (state.result[c.key] || []).length);
+  }
+
   function renderResults() {
-    if (!el.results) return; // results/randomize stay on index.html only
+    if (!el.results) return; // results now live on results.html only
     el.results.innerHTML = "";
-    const hasAnyResult = CATEGORIES.some((c) => (state.result[c.key] || []).length);
+    const hasAnyResult = hasCurrentResult();
 
     if (!hasAnyResult) {
       el.rerollGroup.classList.add("hidden");
@@ -2935,16 +2939,16 @@
     return li;
   }
 
-  /** Restore this Past Setup onto the main screen and dismiss the
-   * sheet entirely — shared by the compact row's overflow menu and the
-   * detail screen's own Restore button. */
+  /** Restore this Past Setup and dismiss the sheet entirely — shared by
+   * the compact row's overflow menu and the detail screen's own Restore
+   * button. */
   function restoreEntryAndClose(entry) {
     restoreHistoryEntry(entry);
     closeSheet();
-    // Past Setups now lives on setup.html, but the restored setup itself
-    // only shows on index.html's results screen — hop back there so
-    // "Restore" still feels like it actually did something.
-    if (!el.results) window.location.href = "index.html";
+    // Past Setups lives on setup.html, but the restored setup itself only
+    // shows on results.html — hop over there so "Restore" still feels
+    // like it actually did something.
+    if (!el.results) window.location.href = "results.html";
   }
 
   /** Delete this Past Setup and re-render the sheet in place — shared
@@ -3940,10 +3944,28 @@
     bindSheet();
     render();
 
-    // index.html and setup.html share this one script, so every binding
-    // below is guarded — each element only exists on whichever page its
-    // row actually lives on now (see the render*() guards above).
-    if (el.randomizeAll) el.randomizeAll.addEventListener("click", randomizeAll);
+    // results.html has nothing to show without a current setup (e.g. a
+    // bookmark, or the browser's back/forward cache after a Reroll All
+    // reset elsewhere) — send it back to the "Randomize Setup" screen
+    // instead of rendering an empty page.
+    if (el.results && !hasCurrentResult()) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    // index.html, setup.html, and results.html share this one script, so
+    // every binding below is guarded — each element only exists on
+    // whichever page its row actually lives on now (see the render*()
+    // guards above).
+    if (el.randomizeAll) {
+      el.randomizeAll.addEventListener("click", () => {
+        randomizeAll();
+        // Results now live on their own page — jump there so there's
+        // something to see. randomizeAll() already saved the new setup,
+        // so results.html picks it straight up on load.
+        window.location.href = "results.html";
+      });
+    }
     if (el.rerollAllBtn) el.rerollAllBtn.addEventListener("click", rerollAllUnlocked);
 
     if (el.openExpansions) el.openExpansions.addEventListener("click", openExpansionsSheet);
